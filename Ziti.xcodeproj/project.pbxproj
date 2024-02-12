@@ -1,0 +1,494 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6032B7A6E14003D618A /* RealityKitContent */; };
+		2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6052B7A6E14003D618A /* ZitiApp.swift */; };
+		2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6072B7A6E14003D618A /* ContentView.swift */; };
+		2D40E60A2B7A6E14003D618A /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6092B7A6E14003D618A /* ImmersiveView.swift */; };
+		2D40E60C2B7A6E15003D618A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60B2B7A6E15003D618A /* Assets.xcassets */; };
+		2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */; };
+		2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6192B7A6E15003D618A /* ZitiTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2D40E6162B7A6E15003D618A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D40E5F62B7A6E13003D618A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D40E5FD2B7A6E13003D618A;
+			remoteInfo = Ziti;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2D40E5FE2B7A6E14003D618A /* Ziti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ziti.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D40E6022B7A6E14003D618A /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
+		2D40E6052B7A6E14003D618A /* ZitiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiApp.swift; sourceTree = "<group>"; };
+		2D40E6072B7A6E14003D618A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2D40E6092B7A6E14003D618A /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
+		2D40E60B2B7A6E15003D618A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2D40E6102B7A6E15003D618A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2D40E6152B7A6E15003D618A /* ZitiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZitiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D40E6192B7A6E15003D618A /* ZitiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2D40E5FB2B7A6E13003D618A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D40E6122B7A6E15003D618A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2D40E5F52B7A6E13003D618A = {
+			isa = PBXGroup;
+			children = (
+				2D40E6002B7A6E14003D618A /* Ziti */,
+				2D40E6012B7A6E14003D618A /* Packages */,
+				2D40E6182B7A6E15003D618A /* ZitiTests */,
+				2D40E5FF2B7A6E14003D618A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2D40E5FF2B7A6E14003D618A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2D40E5FE2B7A6E14003D618A /* Ziti.app */,
+				2D40E6152B7A6E15003D618A /* ZitiTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2D40E6002B7A6E14003D618A /* Ziti */ = {
+			isa = PBXGroup;
+			children = (
+				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
+				2D40E6072B7A6E14003D618A /* ContentView.swift */,
+				2D40E6092B7A6E14003D618A /* ImmersiveView.swift */,
+				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
+				2D40E6102B7A6E15003D618A /* Info.plist */,
+				2D40E60D2B7A6E15003D618A /* Preview Content */,
+			);
+			path = Ziti;
+			sourceTree = "<group>";
+		};
+		2D40E6012B7A6E14003D618A /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				2D40E6022B7A6E14003D618A /* RealityKitContent */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		2D40E60D2B7A6E15003D618A /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		2D40E6182B7A6E15003D618A /* ZitiTests */ = {
+			isa = PBXGroup;
+			children = (
+				2D40E6192B7A6E15003D618A /* ZitiTests.swift */,
+			);
+			path = ZitiTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2D40E5FD2B7A6E13003D618A /* Ziti */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D40E61D2B7A6E15003D618A /* Build configuration list for PBXNativeTarget "Ziti" */;
+			buildPhases = (
+				2D40E5FA2B7A6E13003D618A /* Sources */,
+				2D40E5FB2B7A6E13003D618A /* Frameworks */,
+				2D40E5FC2B7A6E13003D618A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Ziti;
+			packageProductDependencies = (
+				2D40E6032B7A6E14003D618A /* RealityKitContent */,
+			);
+			productName = Ziti;
+			productReference = 2D40E5FE2B7A6E14003D618A /* Ziti.app */;
+			productType = "com.apple.product-type.application";
+		};
+		2D40E6142B7A6E15003D618A /* ZitiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D40E6202B7A6E15003D618A /* Build configuration list for PBXNativeTarget "ZitiTests" */;
+			buildPhases = (
+				2D40E6112B7A6E15003D618A /* Sources */,
+				2D40E6122B7A6E15003D618A /* Frameworks */,
+				2D40E6132B7A6E15003D618A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2D40E6172B7A6E15003D618A /* PBXTargetDependency */,
+			);
+			name = ZitiTests;
+			productName = ZitiTests;
+			productReference = 2D40E6152B7A6E15003D618A /* ZitiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2D40E5F62B7A6E13003D618A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					2D40E5FD2B7A6E13003D618A = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					2D40E6142B7A6E15003D618A = {
+						CreatedOnToolsVersion = 15.2;
+						TestTargetID = 2D40E5FD2B7A6E13003D618A;
+					};
+				};
+			};
+			buildConfigurationList = 2D40E5F92B7A6E13003D618A /* Build configuration list for PBXProject "Ziti" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2D40E5F52B7A6E13003D618A;
+			productRefGroup = 2D40E5FF2B7A6E14003D618A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2D40E5FD2B7A6E13003D618A /* Ziti */,
+				2D40E6142B7A6E15003D618A /* ZitiTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2D40E5FC2B7A6E13003D618A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */,
+				2D40E60C2B7A6E15003D618A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D40E6132B7A6E15003D618A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2D40E5FA2B7A6E13003D618A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
+				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
+				2D40E60A2B7A6E14003D618A /* ImmersiveView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D40E6112B7A6E15003D618A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2D40E6172B7A6E15003D618A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;
+			targetProxy = 2D40E6162B7A6E15003D618A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2D40E61B2B7A6E15003D618A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = xros;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Debug;
+		};
+		2D40E61C2B7A6E15003D618A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = xros;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Release;
+		};
+		2D40E61E2B7A6E15003D618A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Ziti/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = NREL.Ziti;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Debug;
+		};
+		2D40E61F2B7A6E15003D618A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Ziti/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = NREL.Ziti;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Release;
+		};
+		2D40E6212B7A6E15003D618A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = NREL.ZitiTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ziti.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ziti";
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Debug;
+		};
+		2D40E6222B7A6E15003D618A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = NREL.ZitiTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ziti.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ziti";
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2D40E5F92B7A6E13003D618A /* Build configuration list for PBXProject "Ziti" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D40E61B2B7A6E15003D618A /* Debug */,
+				2D40E61C2B7A6E15003D618A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D40E61D2B7A6E15003D618A /* Build configuration list for PBXNativeTarget "Ziti" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D40E61E2B7A6E15003D618A /* Debug */,
+				2D40E61F2B7A6E15003D618A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D40E6202B7A6E15003D618A /* Build configuration list for PBXNativeTarget "ZitiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D40E6212B7A6E15003D618A /* Debug */,
+				2D40E6222B7A6E15003D618A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2D40E6032B7A6E14003D618A /* RealityKitContent */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RealityKitContent;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2D40E5F62B7A6E13003D618A /* Project object */;
+}
