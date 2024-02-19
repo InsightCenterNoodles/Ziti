@@ -14,6 +14,13 @@
 		2D40E60C2B7A6E15003D618A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60B2B7A6E15003D618A /* Assets.xcassets */; };
 		2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */; };
 		2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6192B7A6E15003D618A /* ZitiTests.swift */; };
+		2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6232B7A7608003D618A /* MeshGeneration.swift */; };
+		2D40E6262B7BC051003D618A /* CommandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6252B7BC051003D618A /* CommandView.swift */; };
+		2D40E6292B7BCD10003D618A /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6282B7BCD10003D618A /* Starscream */; };
+		2D40E62B2B7BD671003D618A /* Communication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62A2B7BD671003D618A /* Communication.swift */; };
+		2D40E62D2B7C0162003D618A /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62C2B7C0162003D618A /* Messages.swift */; };
+		2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E62F2B7C02C5003D618A /* SwiftCBOR */; };
+		2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6312B80116F003D618A /* NoodlesWorld.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +44,11 @@
 		2D40E6102B7A6E15003D618A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2D40E6152B7A6E15003D618A /* ZitiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZitiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E6192B7A6E15003D618A /* ZitiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiTests.swift; sourceTree = "<group>"; };
+		2D40E6232B7A7608003D618A /* MeshGeneration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshGeneration.swift; sourceTree = "<group>"; };
+		2D40E6252B7BC051003D618A /* CommandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandView.swift; sourceTree = "<group>"; };
+		2D40E62A2B7BD671003D618A /* Communication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communication.swift; sourceTree = "<group>"; };
+		2D40E62C2B7C0162003D618A /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
+		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +57,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */,
+				2D40E6292B7BCD10003D618A /* Starscream in Frameworks */,
+				2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,6 +75,8 @@
 		2D40E5F52B7A6E13003D618A = {
 			isa = PBXGroup;
 			children = (
+				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
+				2D40E62C2B7C0162003D618A /* Messages.swift */,
 				2D40E6002B7A6E14003D618A /* Ziti */,
 				2D40E6012B7A6E14003D618A /* Packages */,
 				2D40E6182B7A6E15003D618A /* ZitiTests */,
@@ -82,10 +98,13 @@
 			children = (
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
 				2D40E6072B7A6E14003D618A /* ContentView.swift */,
+				2D40E62A2B7BD671003D618A /* Communication.swift */,
+				2D40E6252B7BC051003D618A /* CommandView.swift */,
 				2D40E6092B7A6E14003D618A /* ImmersiveView.swift */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
 				2D40E6102B7A6E15003D618A /* Info.plist */,
 				2D40E60D2B7A6E15003D618A /* Preview Content */,
+				2D40E6232B7A7608003D618A /* MeshGeneration.swift */,
 			);
 			path = Ziti;
 			sourceTree = "<group>";
@@ -132,6 +151,8 @@
 			name = Ziti;
 			packageProductDependencies = (
 				2D40E6032B7A6E14003D618A /* RealityKitContent */,
+				2D40E6282B7BCD10003D618A /* Starscream */,
+				2D40E62F2B7C02C5003D618A /* SwiftCBOR */,
 			);
 			productName = Ziti;
 			productReference = 2D40E5FE2B7A6E14003D618A /* Ziti.app */;
@@ -183,6 +204,10 @@
 				Base,
 			);
 			mainGroup = 2D40E5F52B7A6E13003D618A;
+			packageReferences = (
+				2D40E6272B7BCD10003D618A /* XCRemoteSwiftPackageReference "Starscream" */,
+				2D40E62E2B7C02C5003D618A /* XCRemoteSwiftPackageReference "SwiftCBOR" */,
+			);
 			productRefGroup = 2D40E5FF2B7A6E14003D618A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -217,8 +242,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */,
+				2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */,
 				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
+				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
+				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
+				2D40E6262B7BC051003D618A /* CommandView.swift in Sources */,
 				2D40E60A2B7A6E14003D618A /* ImmersiveView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -369,6 +399,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Ziti/Preview Content\"";
+				DEVELOPMENT_TEAM = VH9288Q25P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
@@ -394,6 +425,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Ziti/Preview Content\"";
+				DEVELOPMENT_TEAM = VH9288Q25P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
@@ -483,10 +515,39 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		2D40E6272B7BCD10003D618A /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.6;
+			};
+		};
+		2D40E62E2B7C02C5003D618A /* XCRemoteSwiftPackageReference "SwiftCBOR" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/valpackett/SwiftCBOR";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		2D40E6032B7A6E14003D618A /* RealityKitContent */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RealityKitContent;
+		};
+		2D40E6282B7BCD10003D618A /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2D40E6272B7BCD10003D618A /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+		2D40E62F2B7C02C5003D618A /* SwiftCBOR */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2D40E62E2B7C02C5003D618A /* XCRemoteSwiftPackageReference "SwiftCBOR" */;
+			productName = SwiftCBOR;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

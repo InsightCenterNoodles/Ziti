@@ -9,63 +9,60 @@ import SwiftUI
 import RealityKit
 import RealityKitContent
 
+import Starscream
+
 struct ContentView: View {
-
-    @State private var enlarge = false
-    @State private var showImmersiveSpace = false
-    @State private var immersiveSpaceIsShown = false
-
-    @Environment(\.openImmersiveSpace) var openImmersiveSpace
-    @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
-
+    
+    @State private var global_scale = 1.0
+    @State private var hostname = ""
+    @State private var noodles_state : NoodlesCommunicator?
+    @State private var is_bad_host = false
+    
+    @State private var current_scene : RealityViewContent?
+    
     var body: some View {
-        VStack {
+        ZStack {
             RealityView { content in
-                // Add the initial RealityKit content
-                if let scene = try? await Entity(named: "Scene", in: realityKitContentBundle) {
-                    content.add(scene)
-                }
+                //let gen = MeshGeneration()
+                
+                //content.add(gen.build_simple_mesh())
+                
+                self.current_scene = content
+                
+                //noodles_state = NoodlesCommunicator(set_scene(scene: content)
             } update: { content in
-                // Update the RealityKit content when SwiftUI state changes
-                if let scene = content.entities.first {
-                    let uniformScale: Float = enlarge ? 1.4 : 1.0
-                    scene.transform.scale = [uniformScale, uniformScale, uniformScale]
-                }
-            }
-            .gesture(TapGesture().targetedToAnyEntity().onEnded { _ in
-                enlarge.toggle()
-            })
-
-            VStack (spacing: 12) {
-                Toggle("Enlarge RealityView Content", isOn: $enlarge)
-                    .font(.title)
-
-                Toggle("Show ImmersiveSpace", isOn: $showImmersiveSpace)
-                    .font(.title)
-            }
-            .frame(width: 360)
-            .padding(36)
-            .glassBackgroundEffect()
-
-        }
-        .onChange(of: showImmersiveSpace) { _, newValue in
-            Task {
-                if newValue {
-                    switch await openImmersiveSpace(id: "ImmersiveSpace") {
-                    case .opened:
-                        immersiveSpaceIsShown = true
-                    case .error, .userCancelled:
-                        fallthrough
-                    @unknown default:
-                        immersiveSpaceIsShown = false
-                        showImmersiveSpace = false
+                let scalar = Float(global_scale)
+                noodles_state?.world.root_entity.transform.scale = [scalar, scalar, scalar]
+            } //.gesture(magnification)
+            
+            VStack {
+                HStack {
+                    TextField("Address", text: $hostname).onSubmit {
+                        do_connect()
+                    }.disableAutocorrection(true)
+                    Button(action: do_connect) {
+                        Text("Go")
+                    }.alert("Hostname is not valid", isPresented: $is_bad_host) {
+                        Button("OK", role: .cancel) { }
                     }
-                } else if immersiveSpaceIsShown {
-                    await dismissImmersiveSpace()
-                    immersiveSpaceIsShown = false
                 }
-            }
+                Slider(value: $global_scale, in: 0.001 ... 1.0) {
+                    Text("Scale")
+                }
+                Text("Current Scale: \(global_scale)")
+            }.frame(width: 360).padding().glassBackgroundEffect()
+        }.frame(alignment: .bottom)
+    }
+    
+    func do_connect() {
+        print("Connecting to \(hostname)")
+        if let u = URL(string: hostname) {
+            noodles_state = NoodlesCommunicator(url: u, scene: current_scene!)
+            is_bad_host = false
+        } else {
+            is_bad_host = true
         }
+        
     }
 }
 

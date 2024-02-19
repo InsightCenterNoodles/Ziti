@@ -12,10 +12,10 @@ struct ZitiApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-        }.windowStyle(.volumetric)
+        }.windowStyle(.volumetric).defaultSize(width: 2, height: 1, depth: 2, in: .meters)
 
-        ImmersiveSpace(id: "ImmersiveSpace") {
-            ImmersiveView()
-        }
+//        ImmersiveSpace(id: "ImmersiveSpace") {
+//            ImmersiveView()
+//        }
     }
 }
