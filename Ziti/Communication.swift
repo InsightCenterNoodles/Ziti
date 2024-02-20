@@ -55,9 +55,9 @@ class NoodlesCommunicator {
     }
     
     func on_message_data(data: Data) {
-        let slice = data.withUnsafeBytes { (ptr: UnsafePointer<UInt8>) in
-            let buffer = UnsafeBufferPointer(start: ptr, count: data.count)
-            return ArraySlice(buffer)
+        let slice = data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
+            //let buffer = UnsafeBufferPointer(start: ptr, count: data.count)
+            return ArraySlice(ptr)
         }
         let messages = decoder.decode(bytes: slice)
         DispatchQueue.main.async {
