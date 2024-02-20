@@ -10,7 +10,6 @@
 		2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6032B7A6E14003D618A /* RealityKitContent */; };
 		2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6052B7A6E14003D618A /* ZitiApp.swift */; };
 		2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6072B7A6E14003D618A /* ContentView.swift */; };
-		2D40E60A2B7A6E14003D618A /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6092B7A6E14003D618A /* ImmersiveView.swift */; };
 		2D40E60C2B7A6E15003D618A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60B2B7A6E15003D618A /* Assets.xcassets */; };
 		2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */; };
 		2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6192B7A6E15003D618A /* ZitiTests.swift */; };
@@ -38,7 +37,6 @@
 		2D40E6022B7A6E14003D618A /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2D40E6052B7A6E14003D618A /* ZitiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiApp.swift; sourceTree = "<group>"; };
 		2D40E6072B7A6E14003D618A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		2D40E6092B7A6E14003D618A /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
 		2D40E60B2B7A6E15003D618A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2D40E6102B7A6E15003D618A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -75,8 +73,6 @@
 		2D40E5F52B7A6E13003D618A = {
 			isa = PBXGroup;
 			children = (
-				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
-				2D40E62C2B7C0162003D618A /* Messages.swift */,
 				2D40E6002B7A6E14003D618A /* Ziti */,
 				2D40E6012B7A6E14003D618A /* Packages */,
 				2D40E6182B7A6E15003D618A /* ZitiTests */,
@@ -96,11 +92,12 @@
 		2D40E6002B7A6E14003D618A /* Ziti */ = {
 			isa = PBXGroup;
 			children = (
+				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
+				2D40E62C2B7C0162003D618A /* Messages.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
 				2D40E6072B7A6E14003D618A /* ContentView.swift */,
 				2D40E62A2B7BD671003D618A /* Communication.swift */,
 				2D40E6252B7BC051003D618A /* CommandView.swift */,
-				2D40E6092B7A6E14003D618A /* ImmersiveView.swift */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
 				2D40E6102B7A6E15003D618A /* Info.plist */,
 				2D40E60D2B7A6E15003D618A /* Preview Content */,
@@ -249,7 +246,6 @@
 				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
 				2D40E6262B7BC051003D618A /* CommandView.swift in Sources */,
-				2D40E60A2B7A6E14003D618A /* ImmersiveView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

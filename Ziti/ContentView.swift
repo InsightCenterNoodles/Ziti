@@ -9,8 +9,6 @@ import SwiftUI
 import RealityKit
 import RealityKitContent
 
-import Starscream
-
 struct ContentView: View {
     var new_noodles_config : NewNoodles!
     
@@ -21,6 +19,9 @@ struct ContentView: View {
     @State private var auto_extent = false
     
     @State private var current_scene : RealityViewContent?
+    
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
     var body: some View {
         ZStack {
@@ -45,7 +46,6 @@ struct ContentView: View {
                         } else if global_scale < 0 {
                             fv = 1.0 / (-global_scale)
                         }
-                        print("SCALING TO \(fv)")
                         let scalar = Float(fv)
                         let root = state.world.root_entity
                         var current_tf = root.transform
@@ -65,9 +65,30 @@ struct ContentView: View {
                     Text("Scale")
                 }
                 Text("Current Scale: \(global_scale)")
-                Button(action: frame_all) {
-                    Text("Frame")
+                HStack {
+                    Button(action: frame_all) {
+                        Text("Frame")
+                    }
+                    Button("Immersive") {
+                        Task {
+                            print("Open window for \(new_noodles_config.hostname)")
+                            let nn = new_noodles_config!
+                            let result = await openImmersiveSpace(id: "noodles_immersive_space", value: nn)
+                            
+                            if case .error = result {
+                                print("An error occurred")
+                            }
+                        }
+                    }
+                    
+                    Button("No Immersive") {
+                        Task {
+                            print("Close window for \(new_noodles_config.hostname)")
+                            await dismissImmersiveSpace()
+                        }
+                    }
                 }
+                
             }.frame(maxWidth: 360).padding().glassBackgroundEffect()
         }
     }
