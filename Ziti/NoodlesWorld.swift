@@ -183,6 +183,10 @@ class NooEntity : NoodlesComponent {
             entity.addChild(new_entity)
         }
     }
+    
+    func update(world: NoodlesWorld, _ update: MsgEntityUpdate) {
+        
+    }
 }
 
 enum VAttribFormat {
@@ -279,6 +283,10 @@ class ComponentList<T: NoodlesComponent> {
     func get(_ id: NooID) -> T? {
         return list[id.slot]
     }
+    
+    func erase(_ id: NooID) {
+        list.removeValue(forKey: id.slot)
+    }
 }
 
 class NoodlesWorld {
@@ -322,77 +330,93 @@ class NoodlesWorld {
             break
         case .method_delete(_):
             break
+            
         case .signal_create(_):
             break
         case .signal_delete(_):
             break
+            
         case .entity_create(let x):
             let e = NooEntity(msg: x)
             entity_list.set(x.id, e, self)
         case .entity_update(_):
             break
-        case .entity_delete(_):
-            break
+        case .entity_delete(let x):
+            entity_list.erase(x.id)
+            
         case .plot_create(_):
             break
         case .plot_update(_):
             break
         case .plot_delete(_):
             break
+            
         case .buffer_create(let x):
             let e = NooBuffer(msg: x)
             buffer_list.set(x.id, e, self)
-        case .buffer_delete(_):
-            break
+        case .buffer_delete(let x):
+            buffer_list.erase(x.id)
+            
         case .buffer_view_create(let x):
             let e = NooBufferView(msg: x)
             buffer_view_list.set(x.id, e, self)
-        case .buffer_view_delete(_):
-            break
+        case .buffer_view_delete(let x):
+            buffer_view_list.erase(x.id)
+            
         case .material_create(let x):
             let e = NooMaterial(msg: x)
             material_list.set(x.id, e, self)
         case .material_update(_):
             break
-        case .material_delete(_):
-            break
+        case .material_delete(let x):
+            material_list.erase(x.id)
+            
         case .image_create(_):
             break
         case .image_delete(_):
             break
+            
         case .texture_create(_):
             break
         case .texture_delete(_):
             break
+            
         case .sampler_create(_):
             break
         case .sampler_delete(_):
             break
+            
         case .light_create(_):
             break
         case .light_update(_):
             break
         case .light_delete(_):
             break
+            
         case .geometry_create(let x):
             let e = NooGeometry(msg: x)
             geometry_list.set(x.id, e, self)
-        case .geometry_delete(_):
-            break
+        case .geometry_delete(let x):
+            geometry_list.erase(x.id)
+            
         case .table_create(_):
             break
         case .table_update(_):
             break
         case .table_delete(_):
             break
+            
         case .document_update(_):
             break
         case .document_reset(_):
             break
+            
         case .signal_invoke(_):
             break
+            
         case .method_reply(_):
             break
+            
         case .document_initialized(_):
             break
         }

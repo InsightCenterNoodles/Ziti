@@ -14,7 +14,7 @@ struct ZitiApp: App {
     var body: some Scene {
         WindowGroup("NOODLES Client") {
             CommandView()
-                .frame(minWidth: 100, maxWidth: 400, minHeight: 100, maxHeight: 100)
+                .frame(minWidth: 100, maxWidth: 400, minHeight: 100, maxHeight: 400)
         }.windowResizability(.contentSize)
         
         WindowGroup(id: "noodles_content_window", for: NewNoodles.self) {

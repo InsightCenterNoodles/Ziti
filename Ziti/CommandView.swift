@@ -29,7 +29,10 @@ struct CommandView: View {
                         isPresented: $is_bad_host) {
                     Button("OK", role: .cancel) { }
                 }
-            }
+            }.padding()
+            Divider()
+            NetBrowseView().frame(minHeight: 120)
+            Text("List Above here")
         }.padding().glassBackgroundEffect()
     }
     

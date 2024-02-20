@@ -774,8 +774,10 @@ struct MsgDocumentInitialized : NoodlesServerMessage {
 }
 
 struct MsgCommonDelete {
+    var id : NooID
     static func from_cbor(c: CBOR) -> Self {
-        return MsgCommonDelete()
+        let id = NooID(c["id"]!)!
+        return MsgCommonDelete(id: id)
     }
 }
 

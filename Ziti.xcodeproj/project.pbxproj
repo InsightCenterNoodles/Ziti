@@ -20,6 +20,7 @@
 		2D40E62D2B7C0162003D618A /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62C2B7C0162003D618A /* Messages.swift */; };
 		2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E62F2B7C02C5003D618A /* SwiftCBOR */; };
 		2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6312B80116F003D618A /* NoodlesWorld.swift */; };
+		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,7 @@
 		2D40E62A2B7BD671003D618A /* Communication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communication.swift; sourceTree = "<group>"; };
 		2D40E62C2B7C0162003D618A /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
 		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
+		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 			children = (
 				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
 				2D40E62C2B7C0162003D618A /* Messages.swift */,
+				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
 				2D40E6072B7A6E14003D618A /* ContentView.swift */,
 				2D40E62A2B7BD671003D618A /* Communication.swift */,
@@ -242,6 +245,7 @@
 				2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */,
 				2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */,
 				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
+				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
 				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
