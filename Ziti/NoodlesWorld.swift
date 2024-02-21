@@ -54,6 +54,77 @@ class NooBufferView : NoodlesComponent {
     }
 }
 
+class NooTexture : NoodlesComponent {
+    var info : MsgTextureCreate
+    
+    var tex_resource : TextureResource?
+    
+    init(msg: MsgTextureCreate) {
+        info = msg
+    }
+    
+    func create(world: NoodlesWorld) {
+        guard let img = world.image_list.get(info.image_id) else {
+            return
+        }
+        
+        // TODO: Update spec to help inform APIs about texture use
+        
+        tex_resource = try? TextureResource.generate(from: img.image, options: .init(semantic: .color, mipmapsMode: .allocateAndGenerateAll))
+        
+    }
+    
+    
+}
+
+class NooSampler : NoodlesComponent {
+    var info : MsgSamplerCreate
+    
+    init(msg: MsgSamplerCreate) {
+        info = msg
+    }
+    
+    func create(world: NoodlesWorld) {
+        
+    }
+    
+    
+}
+
+class NooImage : NoodlesComponent {
+    var info : MsgImageCreate
+    
+    var image : CGImage!
+    
+    init(msg: MsgImageCreate) {
+        info = msg
+    }
+    
+    func create(world: NoodlesWorld) {
+        let src_bytes = get_slice(world: world)
+        
+        //let is_jpg = src_bytes.starts(with: [0xFF, 0xD8, 0xFF])
+        //let is_png = src_bytes.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+        
+        image = UIImage(data: src_bytes)?.cgImage
+    }
+    
+    func get_slice(world: NoodlesWorld) -> Data {
+        if let d = info.saved_bytes {
+            return d
+        }
+        
+        if let v_id = info.buffer_source {
+            if let v = world.buffer_view_list.get(v_id) {
+                return v.get_slice(offset: 0)
+            }
+        }
+        
+        return Data()
+    }
+    
+}
+
 class NooMaterial : NoodlesComponent {
     var info: MsgMaterialCreate
     
@@ -305,8 +376,9 @@ class NoodlesWorld {
     
     //public var light_list = ComponentList<MsgLightCreate>()
     
-    //public var image_list = ComponentList<MsgImageCreate>()
-    //public var texture_list = ComponentList<MsgTextureCreate>()
+    public var image_list = ComponentList<NooImage>()
+    public var texture_list = ComponentList<NooTexture>()
+    public var sampler_list = ComponentList<NooSampler>()
     //public var signal_list = ComponentList<MsgSignalCreate>()
     
     public var buffer_view_list = ComponentList<NooBufferView>()

@@ -9,12 +9,12 @@ import SwiftUI
 
 @main
 struct ZitiApp: App {
-    @State private var current_style: ImmersionStyle = .full
+    @State private var current_style: ImmersionStyle = .mixed
     
     var body: some Scene {
         WindowGroup("NOODLES Client") {
             CommandView()
-                .frame(minWidth: 100, maxWidth: 400, minHeight: 100, maxHeight: 400)
+                .frame(minWidth: 100, maxWidth: 500, minHeight: 100, maxHeight: 500)
         }.windowResizability(.contentSize)
         
         WindowGroup(id: "noodles_content_window", for: NewNoodles.self) {
@@ -27,7 +27,7 @@ struct ZitiApp: App {
         ImmersiveSpace(id: "noodles_immersive_space", for: NewNoodles.self) {
             $nn in
             ContentView(new_noodles_config: nn)
-        }.immersionStyle(selection: $current_style, in: .full)
+        }.immersionStyle(selection: $current_style, in: .mixed)
     }
 }
 

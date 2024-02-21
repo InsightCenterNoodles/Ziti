@@ -15,8 +15,9 @@ struct CommandView: View {
     
     var body: some View {
         VStack {
+            Text("Connect to a Server").font(.title2)
             HStack {
-                TextField("Address", text: $hostname).onSubmit {
+                TextField("Custom Address", text: $hostname).onSubmit {
                     do_connect()
                 }
                 .disableAutocorrection(true)
@@ -31,8 +32,8 @@ struct CommandView: View {
                 }
             }.padding()
             Divider()
+            Text("Local Servers")
             NetBrowseView().frame(minHeight: 120)
-            Text("List Above here")
         }.padding().glassBackgroundEffect()
     }
     

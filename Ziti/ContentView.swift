@@ -108,7 +108,7 @@ struct ContentView: View {
         
         let target_box = SIMD3<Float>(2,1,2)
         
-        let scales = target_box / bounds.extents
+        let scales = target_box / (bounds.extents * 1.1)
         
         let new_uniform_scale = scales.min()
         

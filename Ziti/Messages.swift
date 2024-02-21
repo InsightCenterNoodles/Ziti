@@ -11,59 +11,75 @@ import OSLog
 import simd
 import UIKit
 
+class DecodeInfo {
+    var current_host: String
+    
+    init(_ h: String) {
+        current_host = h
+    }
+}
+
 protocol NoodlesMessage {
     static var message_id: Int { get }
     
     func to_cbor() -> CBOR
 }
 
-protocol NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self
+private protocol NoodlesServerMessage {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self
 }
 
 var default_log = Logger()
 
 struct MessageDecoder {
-    private static func decode_single(mid: CBOR, content: CBOR) -> FromServerMessage? {
+    
+    let dec_info: DecodeInfo
+    
+    init(current_host : String) {
+        dec_info = DecodeInfo(current_host)
+    }
+    
+    private func decode_single(mid: CBOR, content: CBOR) -> FromServerMessage? {
         
         switch to_int64(mid)  {
-            case 0 :  
-            return FromServerMessage.method_create(MsgMethodCreate.from_cbor(c: content))
-        case  1 :  return FromServerMessage.method_delete(MsgCommonDelete.from_cbor(c: content))
-        case  2 :  return FromServerMessage.signal_create(MsgSignalCreate.from_cbor(c: content))
-        case  3 :  return FromServerMessage.signal_delete(MsgCommonDelete.from_cbor(c: content))
-        case  4 :  return FromServerMessage.entity_create(MsgEntityCreate.from_cbor(c: content))
-        case  5 :  return FromServerMessage.entity_update(MsgEntityUpdate.from_cbor(c: content))
-        case  6 :  return FromServerMessage.entity_delete(MsgCommonDelete.from_cbor(c: content))
-        case  7 :  return FromServerMessage.plot_create(MsgPlotCreate.from_cbor(c: content))
-        case  8 :  return FromServerMessage.plot_update(MsgPlotUpdate.from_cbor(c: content))
-        case  9 :  return FromServerMessage.plot_delete(MsgCommonDelete.from_cbor(c: content))
-        case  10 :  return FromServerMessage.buffer_create(MsgBufferCreate.from_cbor(c: content))
-        case  11 :  return FromServerMessage.buffer_delete(MsgCommonDelete.from_cbor(c: content))
-        case  12 :  return FromServerMessage.buffer_view_create(MsgBufferViewCreate.from_cbor(c: content))
-        case  13 :  return FromServerMessage.buffer_view_delete(MsgCommonDelete.from_cbor(c: content))
-        case  14 :  return FromServerMessage.material_create(MsgMaterialCreate.from_cbor(c: content))
-        case  15 :  return FromServerMessage.material_update(MsgMaterialUpdate.from_cbor(c: content))
-        case  16 :  return FromServerMessage.material_delete(MsgCommonDelete.from_cbor(c: content))
-        case  17 :  return FromServerMessage.image_create(MsgImageCreate.from_cbor(c: content))
-        case  18 :  return FromServerMessage.image_delete(MsgCommonDelete.from_cbor(c: content))
-        case  19 :  return FromServerMessage.texture_create(MsgTextureCreate.from_cbor(c: content))
-        case  20 :  return FromServerMessage.texture_delete(MsgCommonDelete.from_cbor(c: content))
-        case  21 :  return FromServerMessage.sampler_create(MsgSamplerCreate.from_cbor(c: content))
-        case  22 :  return FromServerMessage.sampler_delete(MsgCommonDelete.from_cbor(c: content))
-        case  23 :  return FromServerMessage.light_create(MsgLightCreate.from_cbor(c: content))
-        case  24 :  return FromServerMessage.light_update(MsgLightUpdate.from_cbor(c: content))
-        case  25 :  return FromServerMessage.light_delete(MsgCommonDelete.from_cbor(c: content))
-        case  26 :  return FromServerMessage.geometry_create(MsgGeometryCreate.from_cbor(c: content))
-        case  27 :  return FromServerMessage.geometry_delete(MsgCommonDelete.from_cbor(c: content))
-        case  28 :  return FromServerMessage.table_create(MsgTableCreate.from_cbor(c: content))
-        case  29 :  return FromServerMessage.table_update(MsgTableUpdate.from_cbor(c: content))
-        case  30 :  return FromServerMessage.table_delete(MsgCommonDelete.from_cbor(c: content))
-        case  31 :  return FromServerMessage.document_update(MsgDocumentUpdate.from_cbor(c: content))
-        case  32 :  return FromServerMessage.document_reset(MsgDocumentReset.from_cbor(c: content))
-        case  33 :  return FromServerMessage.signal_invoke(MsgSignalInvoke.from_cbor(c: content))
-        case  34 :  return FromServerMessage.method_reply(MsgMethodReply.from_cbor(c: content))
-        case  35 :  return FromServerMessage.document_initialized(MsgDocumentInitialized.from_cbor(c: content))
+        case 0 :
+            return FromServerMessage.method_create(MsgMethodCreate.from_cbor(c: content, info: dec_info))
+        case  1 :
+            return FromServerMessage.method_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  2 :  return FromServerMessage.signal_create(MsgSignalCreate.from_cbor(c: content, info: dec_info))
+        case  3 :  return FromServerMessage.signal_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  4 :  return FromServerMessage.entity_create(MsgEntityCreate.from_cbor(c: content, info: dec_info))
+        case  5 :  return FromServerMessage.entity_update(MsgEntityUpdate.from_cbor(c: content, info: dec_info))
+        case  6 :  return FromServerMessage.entity_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  7 :  return FromServerMessage.plot_create(MsgPlotCreate.from_cbor(c: content, info: dec_info))
+        case  8 :  return FromServerMessage.plot_update(MsgPlotUpdate.from_cbor(c: content, info: dec_info))
+        case  9 :  return FromServerMessage.plot_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  10 :  return FromServerMessage.buffer_create(MsgBufferCreate.from_cbor(c: content, info: dec_info))
+        case  11 :  return FromServerMessage.buffer_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  12 :  return FromServerMessage.buffer_view_create(MsgBufferViewCreate.from_cbor(c: content, info: dec_info))
+        case  13 :  return FromServerMessage.buffer_view_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  14 :  return FromServerMessage.material_create(MsgMaterialCreate.from_cbor(c: content, info: dec_info))
+        case  15 :  return FromServerMessage.material_update(MsgMaterialUpdate.from_cbor(c: content, info: dec_info))
+        case  16 :  return FromServerMessage.material_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  17 :  return FromServerMessage.image_create(MsgImageCreate.from_cbor(c: content, info: dec_info))
+        case  18 :  return FromServerMessage.image_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  19 :  return FromServerMessage.texture_create(MsgTextureCreate.from_cbor(c: content, info: dec_info))
+        case  20 :  return FromServerMessage.texture_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  21 :  return FromServerMessage.sampler_create(MsgSamplerCreate.from_cbor(c: content, info: dec_info))
+        case  22 :  return FromServerMessage.sampler_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  23 :  return FromServerMessage.light_create(MsgLightCreate.from_cbor(c: content, info: dec_info))
+        case  24 :  return FromServerMessage.light_update(MsgLightUpdate.from_cbor(c: content, info: dec_info))
+        case  25 :  return FromServerMessage.light_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  26 :  return FromServerMessage.geometry_create(MsgGeometryCreate.from_cbor(c: content, info: dec_info))
+        case  27 :  return FromServerMessage.geometry_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  28 :  return FromServerMessage.table_create(MsgTableCreate.from_cbor(c: content, info: dec_info))
+        case  29 :  return FromServerMessage.table_update(MsgTableUpdate.from_cbor(c: content, info: dec_info))
+        case  30 :  return FromServerMessage.table_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
+        case  31 :  return FromServerMessage.document_update(MsgDocumentUpdate.from_cbor(c: content, info: dec_info))
+        case  32 :  return FromServerMessage.document_reset(MsgDocumentReset.from_cbor(c: content, info: dec_info))
+        case  33 :  return FromServerMessage.signal_invoke(MsgSignalInvoke.from_cbor(c: content, info: dec_info))
+        case  34 :  return FromServerMessage.method_reply(MsgMethodReply.from_cbor(c: content, info: dec_info))
+        case  35 :  return FromServerMessage.document_initialized(MsgDocumentInitialized.from_cbor(c: content, info: dec_info))
         default:
             return nil
         }
@@ -92,7 +108,7 @@ struct MessageDecoder {
             let mid = array[i]
             let content = array[i+1]
             
-            guard let msg = MessageDecoder.decode_single(mid: mid, content: content) else {
+            guard let msg = decode_single(mid: mid, content: content) else {
                 //default_log.warning("Unable to decode message \(mid)")
                 continue
             }
@@ -113,6 +129,64 @@ public extension CBOR {
         } else {
             return CBOR.unsignedInt(UInt64(int))
         }
+    }
+}
+
+struct PartialLocation {
+    var scheme : String
+    var host : String?
+    var port : Int64?
+    var path : String?
+    
+    func to_url(current_host: String?) -> URL? {
+        let real_host = (current_host ?? self.host) ?? ""
+        
+        var s = "\(scheme)://\(real_host)"
+        
+        if let p = self.port {
+            s += ":\(p)"
+        }
+        
+        s += "/"
+        
+        if let p = self.path {
+            s += "/\(p)"
+        }
+        
+        return URL(string: s)
+    }
+}
+
+enum Location {
+    case Link(String)
+    case Partial(PartialLocation)
+}
+
+extension Location {
+    func to_url(current_host: String?) -> URL? {
+        switch self {
+        case .Link(let x):
+            return URL(string: x)
+        case .Partial(let x):
+            return x.to_url(current_host: current_host)
+        }
+    }
+}
+
+func to_location(_ mc: CBOR?) -> Location? {
+    guard let c = mc else {
+        return nil
+    }
+    if case let CBOR.utf8String(x) = c {
+        return Location.Link(x)
+    } else {
+        let pl = PartialLocation(
+            scheme: to_string(c["sceme"]) ?? "ws",
+            host: to_string(c["host"]),
+            port: to_int64(c["port"]) ?? 50001,
+            path: to_string(c["path"])
+        )
+        return Location.Partial(pl)
     }
 }
 
@@ -304,12 +378,12 @@ struct IntroductionMessage : NoodlesMessage {
 //
 
 struct MsgMethodCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgMethodCreate()
     }
 }
 struct MsgSignalCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgSignalCreate()
     }
 }
@@ -372,7 +446,7 @@ struct MsgEntityCreate : NoodlesServerMessage {
     var visible = true
     
     
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         var ret = MsgEntityCreate()
         
         ret.id = to_id(c["id"]) ?? NooID.NULL
@@ -387,17 +461,17 @@ struct MsgEntityCreate : NoodlesServerMessage {
     }
 }
 struct MsgEntityUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgEntityUpdate()
     }
 }
 struct MsgPlotCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgPlotCreate()
     }
 }
 struct MsgPlotUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgPlotUpdate()
     }
 }
@@ -406,7 +480,7 @@ struct MsgBufferCreate : NoodlesServerMessage {
     var size: Int64 = 0
     var bytes: Data = Data()
     
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         guard case let CBOR.map(m) = c else {
             return MsgBufferCreate()
         }
@@ -434,8 +508,9 @@ struct MsgBufferCreate : NoodlesServerMessage {
             }
         }
         
-        if let oline = m["uri_bytes"] {
-            if let dl = try? Data(contentsOf: URL(string: to_string(oline))!) {
+        if let oline = to_location(m["uri_bytes"]) {
+            let real_loc = oline.to_url(current_host: info.current_host)
+            if let dl = try? Data(contentsOf: real_loc!) {
                 ret.bytes = dl
             }
         }
@@ -448,7 +523,7 @@ struct MsgBufferViewCreate : NoodlesServerMessage {
     var source_buffer = NooID.NULL
     var offset = Int64(0)
     var length = Int64(0)
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         var ret = MsgBufferViewCreate()
         /*
          id : BufferViewID,
@@ -541,7 +616,7 @@ struct MsgMaterialCreate : NoodlesServerMessage {
     var id = NooID.NULL
     var pbr_info = PBRInfo()
     
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         var ret = MsgMaterialCreate()
         
         ret.id = NooID(c["id"]!)!
@@ -552,32 +627,103 @@ struct MsgMaterialCreate : NoodlesServerMessage {
 }
 
 struct MsgMaterialUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgMaterialUpdate()
     }
 }
 struct MsgImageCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
-        return MsgImageCreate()
+    /*
+     id : ImageID,
+     ? name : tstr,
+
+     ; ONE OF
+     (
+         buffer_source : BufferViewID //
+         uri_source : Location
+     ),
+     ; END ONE OF
+     */
+    
+    var id : NooID
+    var buffer_source : NooID?
+    var saved_bytes : Data?
+    
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
+        
+        let id = NooID(c["id"]!)!
+        
+        let buffer_source = to_id(c["buffer_source"])
+        
+        let saved_bytes = c["uri_source"]
+            .map({ to_location($0) })?
+            .map({ $0.to_url(current_host: info.current_host) })?
+            .map({ (try? Data(contentsOf: $0))! })
+        
+        return MsgImageCreate(id: id, buffer_source: buffer_source, saved_bytes: saved_bytes )
     }
 }
 struct MsgTextureCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
-        return MsgTextureCreate()
+    /*
+     id : TextureID,
+     ? name : tstr,
+     image : ImageID,
+     ? sampler : SamplerID, ; if missing use a default sampler
+     */
+    
+    var id : NooID
+    var image_id : NooID
+    var sampler_id : NooID?
+    
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
+        
+        let id = NooID(c["id"]!)!
+        let image_id = to_id(c["image_id"]) ?? NooID.NULL
+        let sampler_id = to_id(c["sampler"]) ?? NooID.NULL
+        
+        return MsgTextureCreate(
+            id: id,
+            image_id: image_id,
+            sampler_id: sampler_id
+        )
     }
 }
 struct MsgSamplerCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
-        return MsgSamplerCreate()
+    /*
+     id : SamplerID,
+     ? name : tstr,
+     
+     ? mag_filter : "NEAREST" / "LINEAR", ; default is LINEAR
+     ? min_filter : MinFilters, ; default is LINEAR_MIPMAP_LINEAR
+
+     ? wrap_s : SamplerMode, ; default is REPEAT
+     ? wrap_t : SamplerMode, ; default is REPEAT
+     */
+    
+    var id : NooID
+    var mag_filter : String
+    var min_filter : String
+    
+    var wrap_s : String
+    var wrap_t : String
+    
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
+        let id = to_id(c["id"])!
+        let mag = to_string(c["mag_filter"]) ?? "LINEAR"
+        let min = to_string(c["min_filter"]) ?? "LINEAR_MIPMAP_LINEAR"
+        let ws = to_string(c["wrap_s"]) ?? "REPEAT"
+        let wt = to_string(c["wrap_t"]) ?? "REPEAT"
+        return MsgSamplerCreate(
+            id: id, mag_filter: mag, min_filter: min, wrap_s: ws, wrap_t: wt
+        )
     }
 }
 struct MsgLightCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgLightCreate()
     }
 }
 struct MsgLightUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgLightUpdate()
     }
 }
@@ -723,7 +869,7 @@ struct MsgGeometryCreate : NoodlesServerMessage {
     var name = String()
     var patches : Array<GeomPatch> = []
     
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         var ret = MsgGeometryCreate()
         
         ret.id = NooID(c["id"]!)!
@@ -738,44 +884,44 @@ struct MsgGeometryCreate : NoodlesServerMessage {
     }
 }
 struct MsgTableCreate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgTableCreate()
     }
 }
 struct MsgTableUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgTableUpdate()
     }
 }
 struct MsgDocumentUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgDocumentUpdate()
     }
 }
 struct MsgDocumentReset : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgDocumentReset()
     }
 }
 struct MsgSignalInvoke : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgSignalInvoke()
     }
 }
 struct MsgMethodReply : NoodlesServerMessage  {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgMethodReply()
     }
 }
 struct MsgDocumentInitialized : NoodlesServerMessage {
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgDocumentInitialized()
     }
 }
 
 struct MsgCommonDelete {
     var id : NooID
-    static func from_cbor(c: CBOR) -> Self {
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         let id = NooID(c["id"]!)!
         return MsgCommonDelete(id: id)
     }

@@ -17,11 +17,12 @@ class NoodlesCommunicator {
     var socket : WebSocket;
     var queue = DispatchQueue(label: "gov.nrel.noodles.ziti")
     var scene : RealityViewContent;
-    var decoder = MessageDecoder()
+    var decoder : MessageDecoder
     var world : NoodlesWorld
     
     init(url: URL, scene: RealityViewContent) {
         self.scene = scene
+        decoder = MessageDecoder(current_host: url.host()!)
         world = NoodlesWorld(scene)
         var request = URLRequest(url: url)
         request.timeoutInterval = 5
