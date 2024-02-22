@@ -269,6 +269,21 @@ func to_float_array(_ mc: CBOR?) -> [Float]? {
     return nil
 }
 
+func to_mat3(_ mc: CBOR?) -> simd_float3x3? {
+    guard let arr = to_float_array(mc) else {
+        return nil
+    }
+    
+    if arr.count < 9 {
+        return nil
+    }
+    
+    
+    return simd_float3x3(SIMD3<Float>(arr[0...2]),
+                  SIMD3<Float>(arr[3...5]),
+                  SIMD3<Float>(arr[6...8]));
+}
+
 func to_mat4(_ mc: CBOR?) -> simd_float4x4? {
     guard let arr = to_float_array(mc) else {
         return nil
@@ -567,6 +582,31 @@ func to_color(_ c: CBOR?) -> UIColor? {
     return UIColor(red: r, green: g, blue: b, alpha: a)
 }
 
+struct TexRef {
+    /*
+     TextureRef = {
+         texture : TextureID,
+         ? transform : Mat3, ; if missing assume identity
+         ? texture_coord_slot : uint, ; if missing, assume 0
+     }
+     */
+    var texture : NooID = NooID.NULL
+    var transform: simd_float3x3 = matrix_identity_float3x3
+    var texture_coord_slot: Int16 = 0
+    
+    init() {
+    }
+    
+    init?(_ mc: CBOR?) {
+        guard let c = mc else {
+            return nil
+        }
+        texture = to_id(c["texture"]) ?? NooID.NULL
+        transform = to_mat3(c["transform"]) ?? matrix_identity_float3x3
+        texture_coord_slot = Int16(to_int64(c["texture_coord_slot"]) ?? Int64(1.0))
+    }
+}
+
 struct PBRInfo {
     /*
      base_color : RGBA, ; Default is all white
@@ -577,11 +617,11 @@ struct PBRInfo {
     ? metal_rough_texture : TextureRef, ; Assumed to be linear, ONLY RG used
      */
     var base_color: UIColor = .white
+    var base_color_texture: TexRef?
     var metallic: Float = 1.0
     var roughness: Float = 1.0
     
     init() {
-        
     }
     
     init?(_ mc: CBOR?) {
@@ -589,6 +629,7 @@ struct PBRInfo {
             return nil
         }
         base_color = to_color(c["base_color"]) ?? .white
+        base_color_texture = TexRef(c["base_color_texture"])
         metallic = to_float(c["metallic"]) ?? 1.0
         roughness = to_float(c["roughness"]) ?? 1.0
     }
@@ -613,16 +654,17 @@ struct MsgMaterialCreate : NoodlesServerMessage {
 
      ? double_sided : bool, ; false by default
      */
-    var id = NooID.NULL
-    var pbr_info = PBRInfo()
+    var id : NooID
+    var pbr_info : PBRInfo
+    var normal_texture : TexRef?
     
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        var ret = MsgMaterialCreate()
         
-        ret.id = NooID(c["id"]!)!
-        ret.pbr_info = PBRInfo(c["pbr_info"]) ?? PBRInfo()
+        let id = NooID(c["id"]!)!
+        let pbr_info = PBRInfo(c["pbr_info"]) ?? PBRInfo()
+        let normal_texture = TexRef(c["normal_texture"])
         
-        return ret
+        return MsgMaterialCreate(id: id, pbr_info: pbr_info, normal_texture: normal_texture)
     }
 }
 
@@ -677,7 +719,7 @@ struct MsgTextureCreate : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         
         let id = NooID(c["id"]!)!
-        let image_id = to_id(c["image_id"]) ?? NooID.NULL
+        let image_id = to_id(c["image"]) ?? NooID.NULL
         let sampler_id = to_id(c["sampler"]) ?? NooID.NULL
         
         return MsgTextureCreate(

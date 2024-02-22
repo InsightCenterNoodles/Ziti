@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import OSLog
 import RealityKit
 import RealityKitContent
 
@@ -57,21 +58,41 @@ class NooBufferView : NoodlesComponent {
 class NooTexture : NoodlesComponent {
     var info : MsgTextureCreate
     
-    var tex_resource : TextureResource?
+    var noo_world : NoodlesWorld!
+    
+    private var resources : [TextureResource.Semantic : TextureResource] = [:]
     
     init(msg: MsgTextureCreate) {
         info = msg
     }
     
     func create(world: NoodlesWorld) {
-        guard let img = world.image_list.get(info.image_id) else {
-            return
+        noo_world = world
+    }
+    
+    func get_texture_resource_for(semantic: TextureResource.Semantic) -> TextureResource? {
+        
+        if let resource = resources[semantic] {
+            return resource
+        }
+        
+        guard let img = noo_world.image_list.get(info.image_id) else {
+            default_log.error("Image is missing!")
+            return nil
         }
         
         // TODO: Update spec to help inform APIs about texture use
+        do {
+            let resource = try TextureResource.generate(from: img.image, options: .init(semantic: semantic, mipmapsMode: .allocateAndGenerateAll))
+            
+            resources[semantic] = resource
+            
+            return resource
+        } catch let error {
+            default_log.error("Unable to create texture: \(error.localizedDescription)")
+        }
         
-        tex_resource = try? TextureResource.generate(from: img.image, options: .init(semantic: .color, mipmapsMode: .allocateAndGenerateAll))
-        
+        return nil
     }
     
     
@@ -107,6 +128,8 @@ class NooImage : NoodlesComponent {
         //let is_png = src_bytes.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
         
         image = UIImage(data: src_bytes)?.cgImage
+        
+        print("Creating image: \(image.width)x\(image.height)");
     }
     
     func get_slice(world: NoodlesWorld) -> Data {
@@ -125,6 +148,19 @@ class NooImage : NoodlesComponent {
     
 }
 
+private func resolve_texture(world: NoodlesWorld, semantic: TextureResource.Semantic, ref: TexRef) -> MaterialParameters.Texture? {
+    guard let tex_info = world.texture_list.get(ref.texture) else {
+        return nil
+    }
+    
+    // can add sampler in here
+    guard let resource = tex_info.get_texture_resource_for(semantic: semantic) else {
+        return nil
+    }
+    
+    return MaterialParameters.Texture(resource);
+}
+
 class NooMaterial : NoodlesComponent {
     var info: MsgMaterialCreate
     
@@ -135,9 +171,30 @@ class NooMaterial : NoodlesComponent {
     }
     
     func create(world: NoodlesWorld) {
+        print("Creating NooMaterial")
         
         var tri_mat = PhysicallyBasedMaterial()
+        
         tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: info.pbr_info.base_color)
+        
+        if let x = info.pbr_info.base_color_texture {
+            if let tex_info = resolve_texture(world: world, semantic: .color, ref: x) {
+                tri_mat.baseColor.texture = tex_info;
+                
+            } else {
+                print("Missing texture!")
+            }
+        }
+        
+        if let x = info.normal_texture {
+            if let tex_info = resolve_texture(world: world, semantic: .normal, ref: x) {
+                tri_mat.normal = PhysicallyBasedMaterial.Normal(texture: tex_info);
+                
+            } else {
+                print("Missing texture!")
+            }
+        }
+        
         tri_mat.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: info.pbr_info.roughness)
         tri_mat.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: info.pbr_info.metallic)
         
@@ -175,6 +232,18 @@ class NooGeometry : NoodlesComponent {
             case "POSITION":
                 let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
                 description.positions = MeshBuffers.Positions(attrib_data);
+                
+            case "TEXTURE":
+                switch attrib.format {
+                case "VEC2":
+                    let attrib_data = realize_tex_vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
+                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+                case "U16VEC2":
+                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
+                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+                default:
+                    print("Unknown texture coord format \(attrib.format)")
+                }
                 
             default:
                 print("Not handling attribute \(attrib.semantic)")
@@ -273,6 +342,50 @@ extension VAttribFormat {
         case .V3:
             return 3 * 4
         }
+    }
+}
+
+func realize_tex_u16vec2(_ data: Data, vcount: Int, stride: Int) -> [SIMD2<Float>] {
+    let true_stride = max(stride, 2*2);
+    
+    return data.withUnsafeBytes {
+        (pointer: UnsafeRawBufferPointer) -> [SIMD2<Float>] in
+        
+        var ret : [SIMD2<Float>] = []
+        
+        ret.reserveCapacity(vcount)
+        
+        for vertex_i in 0 ..< vcount {
+            let place = vertex_i * true_stride
+            let item = pointer.loadUnaligned(fromByteOffset: place, as: SIMD2<UInt16>.self)
+            var p = SIMD2<Float>(item) / Float(UInt16.max)
+            p.y = 1.0 - p.y;
+            ret.append( p )
+        }
+        
+        return ret
+    }
+}
+
+
+func realize_tex_vec2(_ data: Data, vcount: Int, stride: Int) -> [SIMD2<Float>] {
+    let true_stride = max(stride, 2*4);
+    
+    return data.withUnsafeBytes {
+        (pointer: UnsafeRawBufferPointer) -> [SIMD2<Float>] in
+        
+        var ret : [SIMD2<Float>] = []
+        
+        ret.reserveCapacity(vcount)
+        
+        for vertex_i in 0 ..< vcount {
+            let place = vertex_i * true_stride
+            var p = pointer.loadUnaligned(fromByteOffset: place, as: SIMD2<Float>.self)
+            p.y = 1.0 - p.y;
+            ret.append( p )
+        }
+        
+        return ret
     }
 }
 
@@ -443,20 +556,23 @@ class NoodlesWorld {
         case .material_delete(let x):
             material_list.erase(x.id)
             
-        case .image_create(_):
-            break
-        case .image_delete(_):
-            break
+        case .image_create(let x):
+            let e = NooImage(msg: x)
+            image_list.set(x.id, e, self)
+        case .image_delete(let x):
+            image_list.erase(x.id)
             
-        case .texture_create(_):
-            break
-        case .texture_delete(_):
-            break
+        case .texture_create(let x):
+            let e = NooTexture(msg: x)
+            texture_list.set(x.id, e, self)
+        case .texture_delete(let x):
+            texture_list.erase(x.id)
             
-        case .sampler_create(_):
-            break
-        case .sampler_delete(_):
-            break
+        case .sampler_create(let x):
+            let e = NooSampler(msg: x)
+            sampler_list.set(x.id, e, self)
+        case .sampler_delete(let x):
+            sampler_list.erase(x.id)
             
         case .light_create(_):
             break
