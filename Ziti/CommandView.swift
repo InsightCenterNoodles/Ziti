@@ -15,26 +15,28 @@ struct CommandView: View {
     
     var body: some View {
         VStack {
-            Text("Connect to a Server").font(.title2)
-            HStack {
-                TextField("Custom Address", text: $hostname).onSubmit {
-                    do_connect()
+            Text("Ziti").font(.title2)
+            Form {
+                Section(header: Text("Connect to Specific Server")) {
+                    TextField("Custom Address", text: $hostname).onSubmit {
+                        do_connect()
+                    }
+                    .disableAutocorrection(true)
+                    .textInputAutocapitalization(.never)
+                    Button("Connect", action: do_connect)
+                        .alert("Hostname is not valid",
+                               isPresented: $is_bad_host) {
+                            Button("OK", role: .cancel) { }
+                        }
                 }
-                .disableAutocorrection(true)
-                .textInputAutocapitalization(.never)
                 
-                Button(action: do_connect) {
-                    Text("Connect")
+                Section(header: Text("Available Servers")) {
+                    Text("Hi")
                 }
-                .alert("Hostname is not valid",
-                        isPresented: $is_bad_host) {
-                    Button("OK", role: .cancel) { }
-                }
-            }.padding()
+            }
             Divider()
-            Text("Local Servers")
             NetBrowseView().frame(minHeight: 120)
-        }.padding().glassBackgroundEffect()
+        }.padding()
     }
     
     func do_connect() {
@@ -43,6 +45,8 @@ struct CommandView: View {
     }
 }
 
-#Preview {
-    CommandView()
+struct CommandView_Previews: PreviewProvider {
+    static var previews: some View {
+        CommandView()
+    }
 }

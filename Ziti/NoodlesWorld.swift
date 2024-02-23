@@ -13,6 +13,7 @@ import RealityKitContent
 
 protocol NoodlesComponent {
     func create(world: NoodlesWorld);
+    func destroy(world: NoodlesWorld);
 }
 
 class NooBuffer : NoodlesComponent {
@@ -25,6 +26,8 @@ class NooBuffer : NoodlesComponent {
     func create(world: NoodlesWorld) {
         print("Created buffer")
     }
+    
+    func destroy(world: NoodlesWorld) { }
 }
 
 class NooBufferView : NoodlesComponent {
@@ -53,6 +56,8 @@ class NooBufferView : NoodlesComponent {
         let ending = total_offset + length
         return buffer.info.bytes[total_offset ..< ending]
     }
+    
+    func destroy(world: NoodlesWorld) { }
 }
 
 class NooTexture : NoodlesComponent {
@@ -95,7 +100,7 @@ class NooTexture : NoodlesComponent {
         return nil
     }
     
-    
+    func destroy(world: NoodlesWorld) { }
 }
 
 class NooSampler : NoodlesComponent {
@@ -109,7 +114,7 @@ class NooSampler : NoodlesComponent {
         
     }
     
-    
+    func destroy(world: NoodlesWorld) { }
 }
 
 class NooImage : NoodlesComponent {
@@ -146,6 +151,7 @@ class NooImage : NoodlesComponent {
         return Data()
     }
     
+    func destroy(world: NoodlesWorld) { }
 }
 
 private func resolve_texture(world: NoodlesWorld, semantic: TextureResource.Semantic, ref: TexRef) -> MaterialParameters.Texture? {
@@ -202,6 +208,8 @@ class NooMaterial : NoodlesComponent {
         
         print("Created material")
     }
+    
+    func destroy(world: NoodlesWorld) { }
 }
 
 class NooGeometry : NoodlesComponent {
@@ -269,44 +277,61 @@ class NooGeometry : NoodlesComponent {
         mesh_resources.append( try! .generate(from: [description]) )
         
     }
+    
+    func destroy(world: NoodlesWorld) { }
 }
 
 class NooEntity : NoodlesComponent {
-    var info: MsgEntityCreate
+    var last_info: MsgEntityCreate
     
     var entity: Entity
     
     var sub_entities: [Entity]
     
     init(msg: MsgEntityCreate) {
-        info = msg
+        last_info = msg
         entity = Entity()
         sub_entities = []
     }
     
+    func common(world: NoodlesWorld, msg: MsgEntityCreate) {
+        // setting parent?
+        if let parent = msg.parent {
+            // a set or unset?
+            if parent.is_valid() {
+                let parent_ent = world.entity_list.get(parent)!
+                parent_ent.entity.addChild(entity)
+            } else {
+                world.root_entity.addChild(entity)
+            }
+        }
+        
+        if let tf = msg.tf {
+            entity.move(to: tf, relativeTo: entity.parent, duration: 1)
+        }
+        
+        if let _ = msg.null_rep {
+            unset_representation(world);
+        } else if let g = msg.rep {
+            set_render_representation(g, world)
+        }
+    }
+    
     func create(world: NoodlesWorld) {
-        // TODO: Needs remove
         world.scene.add(entity)
+        world.root_entity.addChild(entity)
         
-        if info.parent.is_valid() {
-            let parent_ent = world.entity_list.get(info.parent)!
-            parent_ent.entity.addChild(entity)
-        } else {
-            world.root_entity.addChild(entity)
-        }
-        
-        if let g = info.rep {
-            set_representation(g, world)
-        }
+        common(world: world, msg: last_info)
         
         print("Created entity")
     }
     
-    func set_representation(_ rep: RenderRep, _ world: NoodlesWorld) {
-        for sub_entity in sub_entities {
-            world.scene.remove(sub_entity)
-        }
-        sub_entities.removeAll(keepingCapacity: true)
+    func unset_representation(_ world: NoodlesWorld) {
+        clear_subs(world)
+    }
+    
+    func set_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) {
+        unset_representation(world)
         
         guard let geom = world.geometry_list.get(rep.mesh) else {
             print("Unable to find geometry")
@@ -324,9 +349,23 @@ class NooEntity : NoodlesComponent {
         }
     }
     
-    func update(world: NoodlesWorld, _ update: MsgEntityUpdate) {
-        
+    func update(world: NoodlesWorld, _ update: MsgEntityCreate) {
+        common(world: world, msg: update)
+        last_info = update
     }
+    
+    private func clear_subs(_ world: NoodlesWorld) {
+        for sub_entity in sub_entities {
+            world.scene.remove(sub_entity)
+        }
+        sub_entities.removeAll(keepingCapacity: true)
+    }
+    
+    func destroy(world: NoodlesWorld) {
+        clear_subs(world)
+        world.scene.remove(entity)
+    }
+    
 }
 
 enum VAttribFormat {
@@ -468,8 +507,10 @@ class ComponentList<T: NoodlesComponent> {
         return list[id.slot]
     }
     
-    func erase(_ id: NooID) {
-        list.removeValue(forKey: id.slot)
+    func erase(_ id: NooID, _ world: NoodlesWorld) {
+        if let v = list.removeValue(forKey: id.slot) {
+            v.destroy(world: world)
+        }
     }
 }
 
@@ -524,10 +565,12 @@ class NoodlesWorld {
         case .entity_create(let x):
             let e = NooEntity(msg: x)
             entity_list.set(x.id, e, self)
-        case .entity_update(_):
-            break
+        case .entity_update(let x):
+            if let item = entity_list.get(x.id) {
+                item.update(world: self, x);
+            }
         case .entity_delete(let x):
-            entity_list.erase(x.id)
+            entity_list.erase(x.id, self)
             
         case .plot_create(_):
             break
@@ -540,13 +583,13 @@ class NoodlesWorld {
             let e = NooBuffer(msg: x)
             buffer_list.set(x.id, e, self)
         case .buffer_delete(let x):
-            buffer_list.erase(x.id)
+            buffer_list.erase(x.id, self)
             
         case .buffer_view_create(let x):
             let e = NooBufferView(msg: x)
             buffer_view_list.set(x.id, e, self)
         case .buffer_view_delete(let x):
-            buffer_view_list.erase(x.id)
+            buffer_view_list.erase(x.id, self)
             
         case .material_create(let x):
             let e = NooMaterial(msg: x)
@@ -554,25 +597,25 @@ class NoodlesWorld {
         case .material_update(_):
             break
         case .material_delete(let x):
-            material_list.erase(x.id)
+            material_list.erase(x.id, self)
             
         case .image_create(let x):
             let e = NooImage(msg: x)
             image_list.set(x.id, e, self)
         case .image_delete(let x):
-            image_list.erase(x.id)
+            image_list.erase(x.id, self)
             
         case .texture_create(let x):
             let e = NooTexture(msg: x)
             texture_list.set(x.id, e, self)
         case .texture_delete(let x):
-            texture_list.erase(x.id)
+            texture_list.erase(x.id, self)
             
         case .sampler_create(let x):
             let e = NooSampler(msg: x)
             sampler_list.set(x.id, e, self)
         case .sampler_delete(let x):
-            sampler_list.erase(x.id)
+            sampler_list.erase(x.id, self)
             
         case .light_create(_):
             break
@@ -585,7 +628,7 @@ class NoodlesWorld {
             let e = NooGeometry(msg: x)
             geometry_list.set(x.id, e, self)
         case .geometry_delete(let x):
-            geometry_list.erase(x.id)
+            geometry_list.erase(x.id, self)
             
         case .table_create(_):
             break

@@ -20,13 +20,21 @@ struct NetBrowseView : View {
     @StateObject var instance = NooServerListener()
     
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     
     var body: some View {
         List(instance.dest, id: \.self) { service in
-            Text(service.name).onTapGesture {
-                let host = "ws://\(service.host_ip):\(service.port)"
-                print("Open window for \(host)")
-                openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
+            HStack {
+                Text(service.name)
+                Spacer()
+                Divider()
+                Button("Window") {
+                    launch_window(target: service)
+                }
+                Divider()
+                Button("Immersive") {
+                    launch_immersive(target: service)
+                }
             }
         }
         .onAppear() {
@@ -38,8 +46,21 @@ struct NetBrowseView : View {
         instance.startDiscovery()
     }
     
-    func on_service_update(_ items: [NetService]) {
+    func launch_window(target: DiscoveredNooService) {
+        let host = "ws://\(target.host_ip):\(target.port)"
+        openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
+    }
+    
+    func launch_immersive(target: DiscoveredNooService) {
+        let host = "ws://\(target.host_ip):\(target.port)"
         
+        Task {
+            let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: host))
+            
+            if case .error = result {
+                print("An error occurred")
+            }
+        }
     }
 }
 

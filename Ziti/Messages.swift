@@ -49,7 +49,7 @@ struct MessageDecoder {
         case  2 :  return FromServerMessage.signal_create(MsgSignalCreate.from_cbor(c: content, info: dec_info))
         case  3 :  return FromServerMessage.signal_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
         case  4 :  return FromServerMessage.entity_create(MsgEntityCreate.from_cbor(c: content, info: dec_info))
-        case  5 :  return FromServerMessage.entity_update(MsgEntityUpdate.from_cbor(c: content, info: dec_info))
+        case  5 :  return FromServerMessage.entity_update(MsgEntityCreate.from_cbor(c: content, info: dec_info))
         case  6 :  return FromServerMessage.entity_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
         case  7 :  return FromServerMessage.plot_create(MsgPlotCreate.from_cbor(c: content, info: dec_info))
         case  8 :  return FromServerMessage.plot_update(MsgPlotUpdate.from_cbor(c: content, info: dec_info))
@@ -300,6 +300,40 @@ func to_mat4(_ mc: CBOR?) -> simd_float4x4? {
                   SIMD4<Float>(arr[12...15]));
 }
 
+func to_vec3(_ mc: CBOR?) -> simd_float3? {
+    guard let arr = to_float_array(mc) else {
+        return nil
+    }
+    
+    if arr.count < 3 {
+        return nil
+    }
+    
+    return simd_float3(arr[0...2]);
+}
+
+struct BB {
+    var min: simd_float3
+    var max: simd_float3
+}
+
+func to_bb(_ mc: CBOR?) -> BB? {
+    /*
+     BoundingBox = {
+         min : Vec3,
+         max : Vec3,
+     }
+     */
+    guard let c = mc else {
+        return nil
+    }
+    
+    let min = to_vec3(c["min"])!
+    let max = to_vec3(c["max"])!
+    
+    return BB(min: min, max: max)
+}
+
 func to_bool(_ mc: CBOR?) -> Bool? {
     guard let c = mc else {
         return nil
@@ -403,6 +437,34 @@ struct MsgSignalCreate : NoodlesServerMessage {
     }
 }
 
+struct InstanceSource {
+    /*
+     InstanceSource = {
+         ; this is a view of mat4.
+         view : BufferViewID,
+
+         ; bytes between instance matrices. For best performance, there should be
+         ; no padding. If missing, assume tightly packed.
+         ? stride : uint,
+
+         ? bb : BoundingBox,
+     }
+     */
+    
+    var view : NooID
+    var stride: Int64
+    var bb : BB?
+    
+    init?(_ mc: CBOR?) {
+        guard let c = mc else {
+            return nil
+        }
+        
+        view = to_id(c["view"]) ?? NooID.NULL
+        stride = to_int64(c["stride"]) ?? 0
+        bb = to_bb(c["bb"])
+    }
+}
 
 struct RenderRep {
     /*
@@ -412,12 +474,22 @@ struct RenderRep {
     
     var mesh: NooID
     
+    var instances: InstanceSource?
+    
     init?(_ mc: CBOR?) {
         guard let c = mc else {
             return nil
         }
         
         mesh = to_id(c["mesh"]) ?? NooID.NULL
+    }
+}
+
+struct NullRep {
+    init?(_ mc: CBOR?) {
+        guard let _ = mc else {
+            return nil
+        }
     }
 }
 
@@ -446,40 +518,43 @@ struct MsgEntityCreate : NoodlesServerMessage {
          ? visible : bool, ; default to true
      */
     
-    var id = NooID.NULL
-    var name = ""
-    var parent = NooID.NULL
-    var tf = matrix_identity_float4x4
+    var id : NooID
+    var name : String
+    var parent : NooID?
+    var tf : simd_float4x4?
+    var null_rep: NullRep?
     var rep : RenderRep?
     
-    var lights : [NooID] = []
-    var tables : [NooID] = []
-    var plots : [NooID] = []
-    var tags : [String] = []
-    var methods_list : [NooID] = []
-    var signals_list : [NooID] = []
-    var visible = true
+    var lights : [NooID]? = []
+    var tables : [NooID]? = []
+    var plots : [NooID]? = []
+    var tags : [String]? = []
+    var methods_list : [NooID]? = []
+    var signals_list : [NooID]? = []
+    var visible : Bool? = true
     
     
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        var ret = MsgEntityCreate()
+        let id = to_id(c["id"]) ?? NooID.NULL
+        let name = to_string(c["name"]) ?? ""
         
-        ret.id = to_id(c["id"]) ?? NooID.NULL
-        ret.name = to_string(c["name"]) ?? ""
-        ret.parent = to_id(c["parent"]) ?? NooID.NULL
+        var ret = MsgEntityCreate(id: id, name: name)
+
+        ret.parent = to_id(c["parent"])
                 
-        ret.tf = to_mat4(c["transform"]) ?? matrix_identity_float4x4
+        ret.tf = to_mat4(c["transform"])
         
+        ret.null_rep = NullRep(c["null_rep"])
         ret.rep = RenderRep(c["render_rep"])
         
         return ret
     }
 }
-struct MsgEntityUpdate : NoodlesServerMessage {
-    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        return MsgEntityUpdate()
-    }
-}
+//struct MsgEntityUpdate : NoodlesServerMessage {
+//    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
+//        return MsgEntityUpdate()
+//    }
+//}
 struct MsgPlotCreate : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgPlotCreate()
@@ -975,7 +1050,7 @@ enum FromServerMessage {
     case signal_create(MsgSignalCreate)
     case signal_delete(MsgCommonDelete)
     case entity_create(MsgEntityCreate)
-    case entity_update(MsgEntityUpdate)
+    case entity_update(MsgEntityCreate)
     case entity_delete(MsgCommonDelete)
     case plot_create(MsgPlotCreate)
     case plot_update(MsgPlotUpdate)
