@@ -49,6 +49,7 @@
 		2D40E62C2B7C0162003D618A /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
 		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
+		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +76,7 @@
 		2D40E5F52B7A6E13003D618A = {
 			isa = PBXGroup;
 			children = (
+				2DF315172B89357A006DCD1D /* TODO.md */,
 				2D40E6002B7A6E14003D618A /* Ziti */,
 				2D40E6012B7A6E14003D618A /* Packages */,
 				2D40E6182B7A6E15003D618A /* ZitiTests */,

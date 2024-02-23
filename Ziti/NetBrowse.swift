@@ -30,11 +30,11 @@ struct NetBrowseView : View {
                 Divider()
                 Button("Window") {
                     launch_window(target: service)
-                }
+                }.buttonStyle(.borderless)
                 Divider()
                 Button("Immersive") {
                     launch_immersive(target: service)
-                }
+                }.buttonStyle(.borderless)
             }
         }
         .onAppear() {
@@ -47,11 +47,13 @@ struct NetBrowseView : View {
     }
     
     func launch_window(target: DiscoveredNooService) {
+        print("Launching window")
         let host = "ws://\(target.host_ip):\(target.port)"
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
     }
     
     func launch_immersive(target: DiscoveredNooService) {
+        print("Launching immersive window")
         let host = "ws://\(target.host_ip):\(target.port)"
         
         Task {

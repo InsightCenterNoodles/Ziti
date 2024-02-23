@@ -29,10 +29,6 @@ struct CommandView: View {
                             Button("OK", role: .cancel) { }
                         }
                 }
-                
-                Section(header: Text("Available Servers")) {
-                    Text("Hi")
-                }
             }
             Divider()
             NetBrowseView().frame(minHeight: 120)
