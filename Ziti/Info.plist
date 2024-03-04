@@ -2,12 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Ziti uses the local network to connect to NOODLES-speaking servers.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_noodles._tcp</string>
-	</array>
+	<key>NSHandsTrackingUsageDescription</key>
+	<string>Hand tracking is used to add more UI and navigation options</string>
+	<key>NSWorldSensingUsageDescription</key>
+	<string>World sensing is used to find flat surfaces to aid in object placement</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationPreferredDefaultSceneSessionRole</key>

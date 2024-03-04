@@ -21,6 +21,7 @@
 		2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E62F2B7C02C5003D618A /* SwiftCBOR */; };
 		2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6312B80116F003D618A /* NoodlesWorld.swift */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
+		2DF315192B9131E9006DCD1D /* NooRealityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooRealityView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
+		2DF315182B9131E9006DCD1D /* NooRealityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooRealityView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 				2D40E6072B7A6E14003D618A /* ContentView.swift */,
 				2D40E62A2B7BD671003D618A /* Communication.swift */,
 				2D40E6252B7BC051003D618A /* CommandView.swift */,
+				2DF315182B9131E9006DCD1D /* NooRealityView.swift */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
 				2D40E6102B7A6E15003D618A /* Info.plist */,
 				2D40E60D2B7A6E15003D618A /* Preview Content */,
@@ -246,6 +249,7 @@
 			files = (
 				2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */,
 				2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */,
+				2DF315192B9131E9006DCD1D /* NooRealityView.swift in Sources */,
 				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
 				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,

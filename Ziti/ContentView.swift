@@ -8,6 +8,7 @@
 import SwiftUI
 import RealityKit
 import RealityKitContent
+import ARKit
 
 struct ContentView: View {
     var new_noodles_config : NewNoodles!
@@ -53,7 +54,7 @@ struct ContentView: View {
                         root.move(to: current_tf, relativeTo: root.parent, duration: 1)
                     }
                 }
-            } //.gesture(magnification)
+            }
             
             VStack {
                 Text("Current Host: \(new_noodles_config.hostname)")
@@ -89,7 +90,7 @@ struct ContentView: View {
                     }
                 }
                 
-            }.frame(maxWidth: 360).padding().glassBackgroundEffect()
+            }.frame(maxWidth: 360).padding().offset(x: 0, y: -100).glassBackgroundEffect()
         }
     }
     
@@ -100,27 +101,7 @@ struct ContentView: View {
         
         auto_extent = true
         
-        let root = state.world.root_entity
-        
-        let bounds = root.visualBounds(recursive: true, relativeTo: nil)
-        
-        // ok has to be a better way to do this
-        
-        let target_box = SIMD3<Float>(2,1,2)
-        
-        let scales = target_box / (bounds.extents * 1.1)
-        
-        let new_uniform_scale = scales.min()
-        
-        global_scale = Double(new_uniform_scale)
-        
-        var current_tf = root.transform
-        
-        current_tf.translation = -bounds.center * new_uniform_scale
-        current_tf.scale = SIMD3<Float>(repeating: new_uniform_scale)
-        
-        root.move(to: current_tf, relativeTo: root.parent, duration: 2)
-        
+        state.world.frame_all(target_volume: SIMD3<Float>(2,1,2))
     }
 }
 

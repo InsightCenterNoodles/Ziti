@@ -11,6 +11,14 @@ import OSLog
 import RealityKit
 import RealityKitContent
 
+final class NInstallGesture : Event {
+    let entity : NEntity
+    
+    init(entity: NEntity) {
+        self.entity = entity
+    }
+}
+
 protocol NoodlesComponent {
     func create(world: NoodlesWorld);
     func destroy(world: NoodlesWorld);
@@ -218,6 +226,8 @@ class NooGeometry : NoodlesComponent {
     var mesh_resources: [MeshResource] = []
     var mesh_materials: [any RealityKit.Material] = []
     
+    var bounding_box: BoundingBox = BoundingBox()
+    
     init(msg: MsgGeometryCreate) {
         info = msg
     }
@@ -226,6 +236,11 @@ class NooGeometry : NoodlesComponent {
         for patch in info.patches {
             add_patch(patch, world)
         }
+        
+        for res in mesh_resources {
+            bounding_box = res.bounds.union(bounding_box)
+        }
+        
         print("Created geometry")
     }
     
@@ -275,23 +290,29 @@ class NooGeometry : NoodlesComponent {
         }
         
         mesh_resources.append( try! .generate(from: [description]) )
-        
     }
     
     func destroy(world: NoodlesWorld) { }
 }
 
+class NEntity : Entity, HasCollision {
+    
+}
+
 class NooEntity : NoodlesComponent {
     var last_info: MsgEntityCreate
     
-    var entity: Entity
+    var entity: NEntity
     
     var sub_entities: [Entity]
     
     init(msg: MsgEntityCreate) {
         last_info = msg
-        entity = Entity()
+        entity = NEntity()
         sub_entities = []
+        
+        //assert(((entity as? HasCollision) != nil))
+        //assert(((entity as? HasHierarchy) != nil))
     }
     
     func common(world: NoodlesWorld, msg: MsgEntityCreate) {
@@ -347,6 +368,16 @@ class NooEntity : NoodlesComponent {
             
             entity.addChild(new_entity)
         }
+        
+        let bb = geom.bounding_box
+        
+        let cc = CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
+        
+        entity.collision = cc
+    }
+    
+    func update_methods(_ world: NoodlesWorld, _ method_list: [NooID] ) {
+        
     }
     
     func update(world: NoodlesWorld, _ update: MsgEntityCreate) {
@@ -517,6 +548,8 @@ class ComponentList<T: NoodlesComponent> {
 class NoodlesWorld {
     var scene : RealityViewContent;
     
+    //var install_gesture_publisher :
+    
     //public var methods_list = ComponentList<MsgMethodCreate>()
     //public var signals_list = ComponentList<MsgSignalCreate>()
     
@@ -651,5 +684,24 @@ class NoodlesWorld {
         case .document_initialized(_):
             break
         }
+    }
+    
+    func frame_all(target_volume : SIMD3<Float> = SIMD3<Float>(2,1,2)) {
+        let bounds = root_entity.visualBounds(recursive: true, relativeTo: root_entity.parent)
+        
+        // ok has to be a better way to do this
+        
+        let target_box = target_volume
+        
+        let scales = target_box / (bounds.extents * 1.5)
+        
+        let new_uniform_scale = scales.min()
+        
+        var current_tf = root_entity.transform
+        
+        current_tf.translation = -bounds.center * new_uniform_scale
+        current_tf.scale = SIMD3<Float>(repeating: new_uniform_scale)
+        
+        root_entity.move(to: current_tf, relativeTo: root_entity.parent, duration: 2)
     }
 }

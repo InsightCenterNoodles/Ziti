@@ -28,14 +28,23 @@ struct NetBrowseView : View {
                 Text(service.name)
                 Spacer()
                 Divider()
-                Button("Window") {
-                    launch_window(target: service)
-                }.buttonStyle(.borderless)
-                Divider()
-                Button("Immersive") {
-                    launch_immersive(target: service)
-                }.buttonStyle(.borderless)
+                Menu() {
+                    Button() {
+                        launch_window(target: service)
+                    } label: {
+                        Label("Window", systemImage: "macwindow")
+                    }
+                    Divider()
+                    Button() {
+                        launch_immersive(target: service)
+                    } label: {
+                        Label("Immersive", systemImage: "globe")
+                    }
+                } label: {
+                    Label(service.name, systemImage: "plus").labelStyle(.iconOnly)
+                }.menuStyle(.borderlessButton)
             }
+            
         }
         .onAppear() {
             start_browsing()

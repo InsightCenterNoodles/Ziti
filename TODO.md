@@ -11,3 +11,8 @@
 - Scene inspection support
 
 
+## Other Notes
+
+- Color attribs not well supported in vertex
+- instances only really support positions
+    - how to add in color?
