@@ -482,6 +482,7 @@ struct RenderRep {
         }
         
         mesh = to_id(c["mesh"]) ?? NooID.NULL
+        instances = InstanceSource(c["instances"])
     }
 }
 

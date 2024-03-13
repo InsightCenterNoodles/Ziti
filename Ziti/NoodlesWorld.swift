@@ -223,6 +223,7 @@ class NooMaterial : NoodlesComponent {
 class NooGeometry : NoodlesComponent {
     var info: MsgGeometryCreate
     
+    var descriptors   : [MeshDescriptor] = []
     var mesh_resources: [MeshResource] = []
     var mesh_materials: [any RealityKit.Material] = []
     
@@ -289,10 +290,155 @@ class NooGeometry : NoodlesComponent {
             mesh_materials.append( tri_mat )
         }
         
+        descriptors.append(description)
+        
         mesh_resources.append( try! .generate(from: [description]) )
     }
     
     func destroy(world: NoodlesWorld) { }
+    
+    func generate_emulated_instances(world: NoodlesWorld, src: InstanceSource) -> [MeshDescriptor] {
+        assert(src.stride < (4*4*4));
+        
+        guard let v = world.buffer_view_list.get(src.view) else {
+            print("Warning: missing instance view")
+            return []
+        }
+        
+        let slice = v.get_slice(offset: 0)
+        
+        let instance_list = realize_mat4(slice)
+        
+        print("Building \(instance_list.count) instances")
+        
+        /*
+         | p~x~ | c~r~ | r~x~ | s~x~
+         | p~y~ | c~g~ | r~y~ | s~y~
+         | p~z~ | c~b~ | r~z~ | s~z~
+         | tx   | c~a~ | r~w~ | ty
+         */
+        
+        var emulated_descriptors : [MeshDescriptor] = []
+        
+        let instance_count = instance_list.count
+        
+        // nonoptimal looping, but this is all non-optimal anyway
+        for patch in descriptors {
+            
+            let v_count = patch.positions.count
+            var f_count = 0;
+            
+            if let prims = patch.primitives {
+                if case let MeshDescriptor.Primitives.triangles(x) = prims {
+                    f_count = x.count
+                }
+            }
+            
+            print("Realizing patch with \(v_count) verts and \(f_count) indicies")
+            
+            assert(f_count * instance_list.count < UInt32.max);
+            
+            var position_cache : [SIMD3<Float>] = []
+            position_cache.reserveCapacity(v_count * instance_count)
+            var normal_cache : [SIMD3<Float>] = []
+            if let _ = patch.normals {
+                normal_cache.reserveCapacity(v_count * instance_count)
+            }
+            var tangent_cache : [SIMD3<Float>] = []
+            if let _ = patch.tangents {
+                tangent_cache.reserveCapacity(v_count * instance_count)
+            }
+            var bitangent_cache : [SIMD3<Float>] = []
+            if let _ = patch.bitangents {
+                bitangent_cache.reserveCapacity(v_count * instance_count)
+            }
+            var tex_cache : [SIMD2<Float>] = []
+            if let _ = patch.textureCoordinates {
+                tex_cache.reserveCapacity(v_count * instance_count)
+            }
+            
+            var index_cache : [UInt32] = []
+            index_cache.reserveCapacity(f_count * instance_count)
+            
+            for imat in instance_list {
+                let (ipos,_,irot,iscale) = imat.columns
+                
+                let irot_quat = simd_quaternion(irot.x, irot.y, irot.z, irot.w)
+                let scale     = vec4_to_vec3(iscale)
+                let texture   = simd_float2(ipos.w, iscale.w)
+                
+                if let prims = patch.primitives {
+                    if case let MeshDescriptor.Primitives.triangles(x) = prims {
+                        let offset = UInt32(position_cache.count);
+                        for pi in x {
+                            index_cache.append(pi + offset)
+                        }
+                        
+                    }
+                }
+                
+                for mesh_pos in patch.positions {
+                    let pos = irot_quat.act(mesh_pos * scale) + vec4_to_vec3(ipos)
+                    position_cache.append(pos)
+                }
+                
+                if let mesh_normals = patch.normals {
+                    for mesh_normal in mesh_normals {
+                        normal_cache.append(irot_quat.act(mesh_normal))
+                    }
+                }
+                
+                if let mesh_tangents = patch.tangents {
+                    for vector in mesh_tangents {
+                        tangent_cache.append(irot_quat.act(vector))
+                    }
+                }
+                
+                if let mesh_bitangents = patch.bitangents {
+                    for vector in mesh_bitangents {
+                        bitangent_cache.append(irot_quat.act(vector))
+                    }
+                }
+                
+                if let mesh_texs = patch.textureCoordinates {
+                    for mesh_tex in mesh_texs {
+                        tex_cache.append(mesh_tex + texture)
+                    }
+                }
+                
+            }
+            
+            for o in index_cache {
+                assert(o < position_cache.count)
+            }
+            
+            var new_desc = MeshDescriptor()
+            
+            new_desc.positions = MeshBuffers.Positions(position_cache)
+            
+            if !normal_cache.isEmpty {
+                new_desc.normals = MeshBuffers.Normals(normal_cache)
+            }
+            
+            if !tangent_cache.isEmpty {
+                new_desc.tangents = MeshBuffers.Tangents(tangent_cache)
+            }
+            
+            if !bitangent_cache.isEmpty {
+                new_desc.bitangents = MeshBuffers.Tangents(bitangent_cache)
+            }
+            
+            if !tex_cache.isEmpty {
+                new_desc.textureCoordinates = MeshBuffers.TextureCoordinates(tex_cache)
+            }
+            
+            new_desc.primitives = .triangles(index_cache)
+            
+            emulated_descriptors.append(new_desc)
+        }
+        
+        return emulated_descriptors
+    }
 }
 
 class NEntity : Entity, HasCollision {
@@ -351,6 +497,14 @@ class NooEntity : NoodlesComponent {
         clear_subs(world)
     }
     
+    func add_sub(_ world: NoodlesWorld, _ ent: Entity) {
+        world.scene.add(ent)
+        
+        sub_entities.append(ent)
+        
+        entity.addChild(ent)
+    }
+    
     func set_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) {
         unset_representation(world)
         
@@ -359,18 +513,35 @@ class NooEntity : NoodlesComponent {
             return
         }
         
-        for (mat, mesh) in zip(geom.mesh_materials, geom.mesh_resources) {
-            let new_entity = ModelEntity(mesh: mesh, materials: [mat])
+        var bb = BoundingBox()
+        
+        if let instances = rep.instances {
             
-            world.scene.add(new_entity)
+            let mat = geom.mesh_materials[0]
             
-            sub_entities.append(new_entity)
+            let generated = geom.generate_emulated_instances(world: world, src: instances)
             
-            entity.addChild(new_entity)
+            do  {
+                let resource = try MeshResource.generate(from: generated)
+                
+                let new_entity = ModelEntity(mesh: resource, materials: [mat])
+                
+                add_sub(world, new_entity)
+            } catch {
+                print("Uh oh \(error)");
+                assert(false)
+            }
+            
+        } else {
+            for (mat, mesh) in zip(geom.mesh_materials, geom.mesh_resources) {
+                let new_entity = ModelEntity(mesh: mesh, materials: [mat])
+                
+                add_sub(world, new_entity)
+            }
+            
+            bb = geom.bounding_box
         }
-        
-        let bb = geom.bounding_box
-        
+
         let cc = CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
         
         entity.collision = cc
@@ -481,6 +652,35 @@ func realize_vec3(_ data: Data, _ fmt: VAttribFormat, vcount: Int, stride: Int) 
         
         return ret
     }
+}
+
+func realize_mat4(_ data: Data) -> [simd_float4x4] {
+    let mat_count = data.count / (4*4*4);
+    
+    return data.withUnsafeBytes {
+        (pointer: UnsafeRawBufferPointer) -> [simd_float4x4] in
+        
+        var ret : [simd_float4x4] = []
+        
+        ret.reserveCapacity(mat_count)
+        
+        for mat_i in 0 ..< mat_count {
+            let place = mat_i * (4*4*4)
+            ret.append( pointer.loadUnaligned(fromByteOffset: place, as: simd_float4x4.self) )
+        }
+        
+        return ret
+    }
+}
+
+func vec4_to_vec3(_ v : simd_float4) -> simd_float3 {
+    return simd_float3(v.x, v.y, v.z)
+}
+
+func matrix_multiply(_ mat: simd_float4x4, _ v : simd_float3) -> simd_float3 {
+    let v4 = simd_float4(v, 1.0)
+    let ret = matrix_multiply(mat, v4)
+    return vec4_to_vec3(ret) / ret.w
 }
 
 func realize_index(_ buffer_view: NooBufferView, _ idx: GeomIndex) -> [UInt32] {
@@ -686,20 +886,27 @@ class NoodlesWorld {
         }
     }
     
-    func frame_all(target_volume : SIMD3<Float> = SIMD3<Float>(2,1,2)) {
+    func frame_all(target_volume : SIMD3<Float>) {
         let bounds = root_entity.visualBounds(recursive: true, relativeTo: root_entity.parent)
+        
+        print("Frame bounds \(bounds) \(bounds.center)");
         
         // ok has to be a better way to do this
         
         let target_box = target_volume
         
-        let scales = target_box / (bounds.extents * 1.5)
+        let scales = target_box / (bounds.extents)
+        
+        print("Scales \(scales)")
         
         let new_uniform_scale = scales.min()
+        
+        print("Scales min \(new_uniform_scale)")
         
         var current_tf = root_entity.transform
         
         current_tf.translation = -bounds.center * new_uniform_scale
+        //current_tf.translation = -bounds.center
         current_tf.scale = SIMD3<Float>(repeating: new_uniform_scale)
         
         root_entity.move(to: current_tf, relativeTo: root_entity.parent, duration: 2)

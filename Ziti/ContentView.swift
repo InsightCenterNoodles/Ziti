@@ -90,7 +90,7 @@ struct ContentView: View {
                     }
                 }
                 
-            }.frame(maxWidth: 360).padding().offset(x: 0, y: -100).glassBackgroundEffect()
+            }.padding().glassBackgroundEffect().frame(width: 350).offset(y: 500)
         }
     }
     
@@ -101,7 +101,7 @@ struct ContentView: View {
         
         auto_extent = true
         
-        state.world.frame_all(target_volume: SIMD3<Float>(2,1,2))
+        state.world.frame_all(target_volume: SIMD3<Float>(1,1,1))
     }
 }
 

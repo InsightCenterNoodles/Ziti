@@ -22,7 +22,7 @@ struct ZitiApp: App {
             ContentView(new_noodles_config: nn)
         }
         .windowStyle(.volumetric)
-        .defaultSize(width: 2, height: 1, depth: 2, in: .meters)
+        .defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "noodles_immersive_space", for: NewNoodles.self) {
             $nn in
