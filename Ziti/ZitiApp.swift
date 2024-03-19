@@ -19,14 +19,14 @@ struct ZitiApp: App {
         
         WindowGroup(id: "noodles_content_window", for: NewNoodles.self) {
             $nn in
-            ContentView(new_noodles_config: nn)
+            ContentView(new: nn!)
         }
         .windowStyle(.volumetric)
         .defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "noodles_immersive_space", for: NewNoodles.self) {
             $nn in
-            NooRealityView(new_noodles_config: nn)
+            NooRealityView(new: nn!)
         }.immersionStyle(selection: $current_style, in: .mixed)
     }
 }

@@ -24,6 +24,18 @@ protocol NoodlesComponent {
     func destroy(world: NoodlesWorld);
 }
 
+class NooMethod : NoodlesComponent {
+    var info: MsgMethodCreate
+    
+    init(msg: MsgMethodCreate) {
+        info = msg
+    }
+    
+    func create(world: NoodlesWorld) { }
+    
+    func destroy(world: NoodlesWorld) { }
+}
+
 class NooBuffer : NoodlesComponent {
     var info: MsgBufferCreate
     
@@ -750,7 +762,7 @@ class NoodlesWorld {
     
     //var install_gesture_publisher :
     
-    //public var methods_list = ComponentList<MsgMethodCreate>()
+    public var methods_list = ComponentList<NooMethod>()
     //public var signals_list = ComponentList<MsgSignalCreate>()
     
     public var entity_list = ComponentList<NooEntity>()
@@ -771,10 +783,14 @@ class NoodlesWorld {
     public var buffer_view_list = ComponentList<NooBufferView>()
     public var buffer_list = ComponentList<NooBuffer>()
     
+    public var attached_method_list = [NooMethod]()
+    public var visible_method_list: MethodListObservable
+    
     var root_entity : Entity
     
-    init(_ scene: RealityViewContent) {
+    init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable) {
         self.scene = scene
+        self.visible_method_list = doc_method_list
         
         root_entity = Entity()
         
@@ -784,11 +800,11 @@ class NoodlesWorld {
     func handle_message(_ msg: FromServerMessage) {
         switch (msg) {
             
-        case .method_create(_):
-            //methods_list.set(x.id, x)
-            break
-        case .method_delete(_):
-            break
+        case .method_create(let x):
+            let e = NooMethod(msg: x)
+            methods_list.set(x.id, e, self)
+        case .method_delete(let x):
+            methods_list.erase(x.id, self)
             
         case .signal_create(_):
             break
@@ -870,8 +886,16 @@ class NoodlesWorld {
         case .table_delete(_):
             break
             
-        case .document_update(_):
-            break
+        case .document_update(let x):
+            print("updating document methods and signals")
+            self.attached_method_list = x.methods_list?.compactMap({f in methods_list.get(f)}) ?? []
+            
+            self.visible_method_list.list.removeAll();
+            
+            for m in self.attached_method_list {
+                self.visible_method_list.list.append(AvailableMethod(method: m, context_type: String()))
+            }
+
         case .document_reset(_):
             break
             

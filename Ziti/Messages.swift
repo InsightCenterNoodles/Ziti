@@ -407,6 +407,17 @@ struct NooID : Codable, Equatable, Hashable {
     func is_valid() -> Bool {
         return slot < UInt32.max && gen < UInt32.max
     }
+    
+    static func array_from_cbor(_ cbor: CBOR?) -> [NooID]? {
+        guard let ex = cbor else {
+            return nil
+        }
+        guard case let CBOR.array(arr) = ex else {
+            return nil
+        }
+        
+        return arr.compactMap({ f in NooID(f) });
+    }
 }
 
 //
@@ -426,9 +437,45 @@ struct IntroductionMessage : NoodlesMessage {
 
 //
 
+struct MethodArg {
+    var name : String
+    var doc : String?
+    var editor_hint : String?
+    
+    static func from_cbor(c: CBOR?, info: DecodeInfo) -> [Self] {
+        if c == nil { return [] }
+        guard case let CBOR.array(list) = c! else {
+            return []
+        }
+        
+        var ret = [Self]()
+        
+        for l in list {
+            let aname = to_string(l["name"]) ?? "UNKNOWN"
+            let adoc = to_string(l["doc"])
+            let hint = to_string(l["hint"])
+            ret.append(MethodArg(name: aname, doc: adoc, editor_hint: hint))
+        }
+        
+        return ret
+    }
+}
+
 struct MsgMethodCreate : NoodlesServerMessage {
+    var id : NooID
+    var name : String
+    var doc : String?
+    var return_doc : String?
+    var arg_doc : [MethodArg]
+    
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        return MsgMethodCreate()
+        let id = to_id(c["id"]) ?? NooID.NULL
+        let name = to_string(c["name"]) ?? ""
+        let doc = to_string(c["doc"])
+        let return_doc = to_string(c["return_doc"])
+        let arg_doc = MethodArg.from_cbor(c: c["arg_doc"], info: info)
+        
+        return MsgMethodCreate(id: id, name: name, doc: doc, return_doc: return_doc, arg_doc: arg_doc)
     }
 }
 struct MsgSignalCreate : NoodlesServerMessage {
@@ -1012,8 +1059,19 @@ struct MsgTableUpdate : NoodlesServerMessage {
     }
 }
 struct MsgDocumentUpdate : NoodlesServerMessage {
+    /*
+     ? methods_list : [* MethodID],
+     ? signals_list : [* SignalID],
+     */
+    
+    var methods_list : [NooID]?
+    var signals_list : [NooID]?
+    
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        return MsgDocumentUpdate()
+        dump(c)
+        let mlist = NooID.array_from_cbor(c["methods_list"])
+        let slist = NooID.array_from_cbor(c["signals_list"])
+        return MsgDocumentUpdate(methods_list: mlist, signals_list: slist)
     }
 }
 struct MsgDocumentReset : NoodlesServerMessage {

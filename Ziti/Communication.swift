@@ -14,16 +14,19 @@ import Starscream
 
 
 class NoodlesCommunicator {
-    var socket : WebSocket;
+    var url: URL
+    var socket : WebSocket!
     var queue = DispatchQueue(label: "gov.nrel.noodles.ziti")
-    var scene : RealityViewContent;
+    var scene : RealityViewContent!
     var decoder : MessageDecoder
-    var world : NoodlesWorld
+    var world : NoodlesWorld!
     
-    init(url: URL, scene: RealityViewContent) {
-        self.scene = scene
+    init(url: URL, scene: RealityViewContent, doc_method_list: MethodListObservable) {
+        print("Starting connection to \(url.host() ?? "UNKNOWN")")
+        self.url = url
         decoder = MessageDecoder(current_host: url.host()!)
-        world = NoodlesWorld(scene)
+        self.scene = scene
+        world = NoodlesWorld(scene, doc_method_list)
         var request = URLRequest(url: url)
         request.timeoutInterval = 5
         socket = WebSocket(request: request)

@@ -26,7 +26,8 @@ struct NooRealityView: View {
     @State private var global_scale = 1.0
     @State private var auto_extent = false
     
-    @State private var current_scene : RealityViewContent?
+    @State private var current_scene : RealityViewContent!
+    @State private var current_doc_method_list = MethodListObservable()
     
     @State var ar_session = ARKitSession()
     
@@ -35,17 +36,20 @@ struct NooRealityView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
+    init(new: NewNoodles) {
+        new_noodles_config = new
+    }
+    
     var body: some View {
         RealityView { content, attachments in
             self.current_scene = content
-            print("Starting connection to \(new_noodles_config.hostname)")
             
-            if let u = URL(string: new_noodles_config.hostname) {
-                noodles_state = NoodlesCommunicator(url: u, scene: current_scene!)
-                is_bad_host = false
-            } else {
-                is_bad_host = true
-            }
+            let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
+            
+            let comm = NoodlesCommunicator(url: u, scene: content, doc_method_list: current_doc_method_list)
+            
+            noodles_state = comm
+            current_doc_method_list = comm.world.visible_method_list
             
             for h in hands {
                 content.add(h.entity)
@@ -59,19 +63,17 @@ struct NooRealityView: View {
         } update: { content, attachments in
             
             if !auto_extent{
-                if let state = noodles_state {
-                    var fv = 1.0
-                    if global_scale > 0 {
-                        fv = global_scale
-                    } else if global_scale < 0 {
-                        fv = 1.0 / (-global_scale)
-                    }
-                    let scalar = Float(fv)
-                    let root = state.world.root_entity
-                    var current_tf = root.transform
-                    current_tf.scale = [scalar, scalar, scalar]
-                    root.move(to: current_tf, relativeTo: root.parent, duration: 1)
+                var fv = 1.0
+                if global_scale > 0 {
+                    fv = global_scale
+                } else if global_scale < 0 {
+                    fv = 1.0 / (-global_scale)
                 }
+                let scalar = Float(fv)
+                let root = noodles_state!.world.root_entity
+                var current_tf = root.transform
+                current_tf.scale = [scalar, scalar, scalar]
+                root.move(to: current_tf, relativeTo: root.parent, duration: 1)
             }
             
             if let hand_attachment = attachments.entity(for: "hand_label") {
@@ -141,13 +143,9 @@ struct NooRealityView: View {
     }
     
     func frame_all() {
-        guard let state = noodles_state else {
-            return
-        }
-        
         auto_extent = true
         
-        state.world.frame_all(target_volume: SIMD3<Float>(2,1,2))
+        noodles_state?.world.frame_all(target_volume: SIMD3<Float>(2,1,2))
     }
 }
 
