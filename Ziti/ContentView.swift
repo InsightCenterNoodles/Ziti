@@ -14,26 +14,18 @@ struct ContentView: View {
     var new_noodles_config : NewNoodles
     
     @State private var noodles_state : NoodlesCommunicator?
+    @State private var noodles_world : NoodlesWorld?
     @State private var is_bad_host = false
     
     @State private var global_scale = 1.0
     @State private var auto_extent = false
     
     @State private var current_scene : RealityViewContent!
-    @ObservedObject private var current_doc_method_list = MethodListObservable()
+    @State private var current_doc_method_list = MethodListObservable()
     @State private var angle = Angle(degrees: 0.0)
     
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
-    
-    private var rotation: some Gesture {
-        RotateGesture().onChanged{ value in angle = value.rotation }
-    }
-    
-    private var scale: some Gesture {
-        MagnifyGesture().onChanged{ value in
-        }
-    }
     
     init(new: NewNoodles) {
         new_noodles_config = new
@@ -42,19 +34,20 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             VStack {
+                Text("Current Host: \(new_noodles_config.hostname)")
                 Text("Available methods")
                 MethodListView()
                 
-            }.environmentObject(current_doc_method_list).padding().glassBackgroundEffect()
+            }.environment(current_doc_method_list).padding().glassBackgroundEffect()
             
             RealityView { content in
                 self.current_scene = content
                 
                 let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
                 
-                let comm = NoodlesCommunicator(url: u, scene: content, doc_method_list: current_doc_method_list)
+                noodles_world = NoodlesWorld(content, current_doc_method_list)
                 
-                noodles_state = comm
+                noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
                 
             } update: { content in
                 
@@ -71,18 +64,9 @@ struct ContentView: View {
 //                    current_tf.scale = [scalar, scalar, scalar]
 //                    root.move(to: current_tf, relativeTo: root.parent, duration: 1)
 //                }
-            }.gesture(rotation)
+            }.installGestures()
             
             VStack {
-                Text("Current Host: \(new_noodles_config.hostname)")
-                Slider(value: $global_scale,
-                       in: -1000 ... 1000,
-                       onEditingChanged: { v in
-                    auto_extent = false
-                }) {
-                    Text("Scale")
-                }
-                Text("Current Scale: \(global_scale)")
                 HStack {
                     Button(action: frame_all) {
                         Text("Frame")
@@ -106,8 +90,9 @@ struct ContentView: View {
                         }
                     }
                 }
+                CompactMethodView(communicator: $noodles_state)
                 
-            }.padding().frame(maxWidth: 450).glassBackgroundEffect().offset(y: 450)
+            }.environment(current_doc_method_list).padding().frame(maxWidth: 450).glassBackgroundEffect().offset(y: 450)
         }
     }
     

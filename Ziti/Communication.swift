@@ -19,14 +19,13 @@ class NoodlesCommunicator {
     var queue = DispatchQueue(label: "gov.nrel.noodles.ziti")
     var scene : RealityViewContent!
     var decoder : MessageDecoder
-    var world : NoodlesWorld!
+    var world : NoodlesWorld
     
-    init(url: URL, scene: RealityViewContent, doc_method_list: MethodListObservable) {
+    init(url: URL, world : NoodlesWorld) {
         print("Starting connection to \(url.host() ?? "UNKNOWN")")
         self.url = url
         decoder = MessageDecoder(current_host: url.host()!)
-        self.scene = scene
-        world = NoodlesWorld(scene, doc_method_list)
+        self.world = world
         var request = URLRequest(url: url)
         request.timeoutInterval = 5
         socket = WebSocket(request: request)
@@ -116,8 +115,12 @@ class NoodlesCommunicator {
     func handle_messages(mlist : [FromServerMessage]) {
         // should be in the main thread at this point
         for m in mlist {
-            dump(m)
+            //dump(m)
             world.handle_message(m)
         }
+    }
+    
+    func invoke_method(method: NooID, context: InvokeMessageOn, args: [CBOR], on_done: @escaping (MsgMethodReply) -> ()) {
+        world.invoke_method(comm: self, method: method, context: context, args: args, on_done: on_done)
     }
 }

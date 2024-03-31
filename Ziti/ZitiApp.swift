@@ -26,7 +26,7 @@ struct ZitiApp: App {
 
         ImmersiveSpace(id: "noodles_immersive_space", for: NewNoodles.self) {
             $nn in
-            NooRealityView(new: nn!)
+            NooImmersiveView(new: nn!)
         }.immersionStyle(selection: $current_style, in: .mixed)
     }
 }

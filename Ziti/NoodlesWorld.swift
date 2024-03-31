@@ -10,6 +10,7 @@ import SwiftUI
 import OSLog
 import RealityKit
 import RealityKitContent
+import SwiftCBOR
 
 final class NInstallGesture : Event {
     let entity : NEntity
@@ -569,8 +570,10 @@ class NooEntity : NoodlesComponent {
     }
     
     private func clear_subs(_ world: NoodlesWorld) {
+        print("Clearing subs!")
         for sub_entity in sub_entities {
             world.scene.remove(sub_entity)
+            entity.removeChild(sub_entity)
         }
         sub_entities.removeAll(keepingCapacity: true)
     }
@@ -786,13 +789,22 @@ class NoodlesWorld {
     public var attached_method_list = [NooMethod]()
     public var visible_method_list: MethodListObservable
     
+    public var invoke_mapper = [String:(MsgMethodReply) -> ()]()
+    
     var root_entity : Entity
     
     init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable) {
         self.scene = scene
         self.visible_method_list = doc_method_list
         
-        root_entity = Entity()
+        root_entity = MeshGeneration.build_sphere()
+        
+        let gesture = GestureComponent(canDrag: true, canScale: true, canRotate: false)
+        let input = InputTargetComponent()
+        let coll  = CollisionComponent(shapes: [ShapeResource.generateSphere(radius: 1)])
+        root_entity.components.set(gesture)
+        root_entity.components.set(input)
+        root_entity.components.set(coll)
         
         scene.add(root_entity)
     }
@@ -902,8 +914,13 @@ class NoodlesWorld {
         case .signal_invoke(_):
             break
             
-        case .method_reply(_):
-            break
+        case .method_reply(let x):
+            print("Got method reply")
+            if let value = self.invoke_mapper[x.invoke_id] {
+                print("Has value, execute")
+                value(x)
+            }
+            self.invoke_mapper.removeValue(forKey: x.invoke_id)
             
         case .document_initialized(_):
             break
@@ -934,5 +951,24 @@ class NoodlesWorld {
         current_tf.scale = SIMD3<Float>(repeating: new_uniform_scale)
         
         root_entity.move(to: current_tf, relativeTo: root_entity.parent, duration: 2)
+    }
+    
+    func invoke_method(comm: NoodlesCommunicator, method: NooID, context: InvokeMessageOn, args: [CBOR], on_done: @escaping (MsgMethodReply) -> ()) {
+        
+        print("Launch")
+        
+        // generate id
+        
+        let id = UUID().uuidString
+        
+        print("New id is \(id)")
+        
+        let message = InvokeMethodMessage(method: method, context: context, invoke_id: id, args: args)
+        
+        dump(message)
+        
+        self.invoke_mapper[id] = on_done
+        
+        comm.send(msg: message)
     }
 }

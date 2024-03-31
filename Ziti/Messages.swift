@@ -408,6 +408,10 @@ struct NooID : Codable, Equatable, Hashable {
         return slot < UInt32.max && gen < UInt32.max
     }
     
+    func to_cbor() -> CBOR {
+        return [slot.toCBOR(), gen.toCBOR()]
+    }
+    
     static func array_from_cbor(_ cbor: CBOR?) -> [NooID]? {
         guard let ex = cbor else {
             return nil
@@ -420,7 +424,7 @@ struct NooID : Codable, Equatable, Hashable {
     }
 }
 
-//
+// ==
 
 
 struct IntroductionMessage : NoodlesMessage {
@@ -435,7 +439,39 @@ struct IntroductionMessage : NoodlesMessage {
     }
 }
 
-//
+enum InvokeMessageOn {
+case Document
+case Entity(NooID)
+}
+
+struct InvokeMethodMessage : NoodlesMessage {
+    static var message_id: Int = 1
+    
+    var method : NooID
+    var context : InvokeMessageOn
+    var invoke_id : String?
+    
+    var args = [CBOR]()
+    
+    func to_cbor() -> CBOR {
+        var c : CBOR = [
+            "method" : method.to_cbor(),
+            "args" : args.toCBOR(),
+        ]
+        
+        if let inv = invoke_id {
+            c["invoke_id"] = CBOR.utf8String(inv)
+        }
+        
+        if case let InvokeMessageOn.Entity(nooID) = context {
+            c["context"] = [ "entity" : nooID.to_cbor() ]
+        }
+        
+        return c
+    }
+}
+
+// ==
 
 struct MethodArg {
     var name : String
@@ -1068,7 +1104,6 @@ struct MsgDocumentUpdate : NoodlesServerMessage {
     var signals_list : [NooID]?
     
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        dump(c)
         let mlist = NooID.array_from_cbor(c["methods_list"])
         let slist = NooID.array_from_cbor(c["signals_list"])
         return MsgDocumentUpdate(methods_list: mlist, signals_list: slist)
@@ -1084,9 +1119,46 @@ struct MsgSignalInvoke : NoodlesServerMessage {
         return MsgSignalInvoke()
     }
 }
+
+struct MethodReplyException {
+    var code: Int64
+    var message: String?
+    var data: CBOR?
+    
+    init?(_ mc : CBOR?) {
+        guard let c = mc else { return nil }
+        
+        code = to_int64(c["code"]) ?? -1000000
+        message = to_string(c["message"])
+        data = c["data"]
+    }
+}
+
 struct MsgMethodReply : NoodlesServerMessage  {
+    /*
+     MethodException = {
+         code : int,
+         ? message : text,
+         ? data : any,
+     }
+
+     MsgMethodReply = {
+         invoke_id : text,
+         ? result : any,
+         ? method_exception : MethodException,
+     }
+     */
+    
+    var invoke_id : String
+    var result : CBOR?
+    var method_exception: MethodReplyException?
+    
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-        return MsgMethodReply()
+        return MsgMethodReply(
+            invoke_id: to_string(c["invoke_id"]) ?? "UNKNOWN",
+            result: c["result"],
+            method_exception: MethodReplyException(c["method_exception"])
+        )
     }
 }
 struct MsgDocumentInitialized : NoodlesServerMessage {

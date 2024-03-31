@@ -17,10 +17,11 @@ class HandInfo {
     var enabled = false
 }
 
-struct NooRealityView: View {
+struct NooImmersiveView: View {
     var new_noodles_config : NewNoodles!
     
     @State private var noodles_state : NoodlesCommunicator?
+    @State private var noodles_world : NoodlesWorld?
     @State private var is_bad_host = false
     
     @State private var global_scale = 1.0
@@ -46,10 +47,9 @@ struct NooRealityView: View {
             
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            let comm = NoodlesCommunicator(url: u, scene: content, doc_method_list: current_doc_method_list)
+            noodles_world = NoodlesWorld(content, current_doc_method_list)
             
-            noodles_state = comm
-            current_doc_method_list = comm.world.visible_method_list
+            noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             
             for h in hands {
                 content.add(h.entity)
@@ -62,19 +62,19 @@ struct NooRealityView: View {
             
         } update: { content, attachments in
             
-            if !auto_extent{
-                var fv = 1.0
-                if global_scale > 0 {
-                    fv = global_scale
-                } else if global_scale < 0 {
-                    fv = 1.0 / (-global_scale)
-                }
-                let scalar = Float(fv)
-                let root = noodles_state!.world.root_entity
-                var current_tf = root.transform
-                current_tf.scale = [scalar, scalar, scalar]
-                root.move(to: current_tf, relativeTo: root.parent, duration: 1)
-            }
+//            if !auto_extent{
+//                var fv = 1.0
+//                if global_scale > 0 {
+//                    fv = global_scale
+//                } else if global_scale < 0 {
+//                    fv = 1.0 / (-global_scale)
+//                }
+//                let scalar = Float(fv)
+//                let root = noodles_state!.world.root_entity
+//                var current_tf = root.transform
+//                current_tf.scale = [scalar, scalar, scalar]
+//                root.move(to: current_tf, relativeTo: root.parent, duration: 1)
+//            }
             
             if let hand_attachment = attachments.entity(for: "hand_label") {
                 var tf = hands[0].tf;

@@ -21,8 +21,12 @@
 		2D40E62D2B7C0162003D618A /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62C2B7C0162003D618A /* Messages.swift */; };
 		2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E62F2B7C02C5003D618A /* SwiftCBOR */; };
 		2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6312B80116F003D618A /* NoodlesWorld.swift */; };
+		2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */; };
+		2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */; };
+		2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */; };
+		2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
-		2DF315192B9131E9006DCD1D /* NooRealityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooRealityView.swift */; };
+		2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,9 +55,13 @@
 		2D40E62A2B7BD671003D618A /* Communication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communication.swift; sourceTree = "<group>"; };
 		2D40E62C2B7C0162003D618A /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
 		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
+		2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RealityViewExtensions.swift; path = gestures/RealityViewExtensions.swift; sourceTree = "<group>"; };
+		2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EntityExtensions.swift; path = gestures/EntityExtensions.swift; sourceTree = "<group>"; };
+		2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureExtensions.swift; path = gestures/GestureExtensions.swift; sourceTree = "<group>"; };
+		2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureComponent.swift; path = gestures/GestureComponent.swift; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
-		2DF315182B9131E9006DCD1D /* NooRealityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooRealityView.swift; sourceTree = "<group>"; };
+		2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooImmersiveView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +108,10 @@
 		2D40E6002B7A6E14003D618A /* Ziti */ = {
 			isa = PBXGroup;
 			children = (
+				2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */,
+				2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */,
+				2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */,
+				2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */,
 				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
 				2D40E62C2B7C0162003D618A /* Messages.swift */,
 				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
@@ -107,7 +119,7 @@
 				2D40E6072B7A6E14003D618A /* ContentView.swift */,
 				2D40E62A2B7BD671003D618A /* Communication.swift */,
 				2D40E6252B7BC051003D618A /* CommandView.swift */,
-				2DF315182B9131E9006DCD1D /* NooRealityView.swift */,
+				2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */,
 				2D0A4FF12BA394560022469B /* MethodList.swift */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
 				2D40E6102B7A6E15003D618A /* Info.plist */,
@@ -252,13 +264,17 @@
 			files = (
 				2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */,
 				2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */,
-				2DF315192B9131E9006DCD1D /* NooRealityView.swift in Sources */,
+				2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */,
 				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
 				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
 				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
+				2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */,
+				2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */,
 				2D0A4FF22BA394560022469B /* MethodList.swift in Sources */,
+				2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */,
+				2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */,
 				2D40E6262B7BC051003D618A /* CommandView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
