@@ -10,16 +10,34 @@ import SwiftUI
 struct CommandView: View {
     @State private var hostname = ""
     @State private var is_bad_host = false
+    @State var user_name = "Unknown"
+    @State var previous_custom = [String]()
     
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
+    var long_press_delete_all: some Gesture {
+        LongPressGesture(minimumDuration: 1.0).onEnded {
+            _ in
+            previous_custom.removeAll()
+        }
+    }
+    
     var body: some View {
         VStack {
-            Text("Ziti").font(.title2)
-            HStack{
-                VStack{
-                    Text("Connect to a Server")
+            Text("Ziti").font(.title)
+            Divider()
+            
+            TabView {
+                
+                VStack {
+                    Text("Network Servers")
+                    NetBrowseView().frame(minHeight: 120)
+                }.tabItem {
+                    Label("Network Servers", systemImage: "network")
+                }
+                
+                VStack {
                     HStack {
                         TextField("Custom Address", text: $hostname).onSubmit {
                             do_connect()
@@ -34,25 +52,42 @@ struct CommandView: View {
                             Button("OK", role: .cancel) { }
                         }
                     }.padding()
-                    Divider()
-                    VStack {
-                        Text("Network Servers")
-                        NetBrowseView().frame(minHeight: 120)
+                    List {
+                        ForEach(previous_custom, id: \.self) { item in
+                            Text(item).swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button(role: .destructive) {
+                                    if let index = previous_custom.firstIndex(of: item) {
+                                        previous_custom.remove(at: index)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        }
                     }
-                }.frame(maxWidth: .infinity)
-                Divider()
-                Button("Close Immersive") {
-                    Task {
-                        await dismissImmersiveSpace()
+                }.gesture(long_press_delete_all).tabItem {
+                    Label("Custom", systemImage: "rectangle.connected.to.line.below")
+                }
+                
+                Form {
+                    Section("Identity") {
+                        TextField("Name", text: $user_name)
                     }
-                }.frame(maxWidth: .infinity)
+                }.tabItem {
+                    Label("User", systemImage: "person.circle.fill")
+                }
             }
-        }.padding()
+        }.glassBackgroundEffect()
     }
     
     func do_connect() {
         print("Open window for \($hostname)")
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: hostname))
+        previous_custom.append(hostname)
+        hostname = ""
+        if previous_custom.count > 25 {
+            let _ = previous_custom.popLast()
+        }
     }
 }
 

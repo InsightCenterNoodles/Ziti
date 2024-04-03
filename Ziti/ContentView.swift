@@ -17,8 +17,9 @@ struct ContentView: View {
     @State private var noodles_world : NoodlesWorld?
     @State private var is_bad_host = false
     
-    @State private var global_scale = 1.0
     @State private var auto_extent = false
+    @State private var show_details = false
+    @State private var allow_obj_interaction = false
     
     @State private var current_scene : RealityViewContent!
     @State private var current_doc_method_list = MethodListObservable()
@@ -33,12 +34,6 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            VStack {
-                Text("Current Host: \(new_noodles_config.hostname)")
-                Text("Available methods")
-                MethodListView()
-                
-            }.environment(current_doc_method_list).padding().glassBackgroundEffect()
             
             RealityView { content in
                 self.current_scene = content
@@ -49,29 +44,27 @@ struct ContentView: View {
                 
                 noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
                 
+                noodles_world?.comm = noodles_state
+                
             } update: { content in
                 
-//                if !auto_extent{
-//                    var fv = 1.0
-//                    if global_scale > 0 {
-//                        fv = global_scale
-//                    } else if global_scale < 0 {
-//                        fv = 1.0 / (-global_scale)
-//                    }
-//                    let scalar = Float(fv)
-//                    let root = noodles_state!.world.root_entity
-//                    var current_tf = root.transform
-//                    current_tf.scale = [scalar, scalar, scalar]
-//                    root.move(to: current_tf, relativeTo: root.parent, duration: 1)
-//                }
             }.installGestures()
             
             VStack {
+                
+                if show_details {
+                    VStack {
+                        Text("Current Host: \(new_noodles_config.hostname)").font(.headline)
+                        MethodListView()
+                    }.frame(maxHeight: 400)
+                    Divider()
+                }
+                
                 HStack {
                     Button(action: frame_all) {
-                        Text("Frame")
+                        Label("Frame", systemImage: "arrow.up.backward.and.arrow.down.forward.square.fill")
                     }
-                    Button("Immersive") {
+                    Button(action: {
                         Task {
                             print("Open window for \(new_noodles_config.hostname)")
                             let nn = new_noodles_config
@@ -81,18 +74,33 @@ struct ContentView: View {
                                 print("An error occurred")
                             }
                         }
+                    }) {
+                        Label("Enter immersive mode", systemImage: "globe").labelStyle(.iconOnly)
+                    }
+                    Toggle(isOn: $allow_obj_interaction) {
+                        Label("Object Interaction", systemImage: "squareshape.controlhandles.on.squareshape.controlhandles").labelStyle(.iconOnly)
+                    }.toggleStyle(.button).onChange(of: allow_obj_interaction, initial: false) {
+                        _, new_value in
+                        noodles_world?.set_all_entity_input(enabled: new_value)
                     }
                     
-                    Button("No Immersive") {
-                        Task {
-                            print("Close window for \(new_noodles_config.hostname)")
-                            await dismissImmersiveSpace()
+                    Spacer()
+                    
+                    Button(action: {
+                        withAnimation {
+                            show_details.toggle()
                         }
+                    }) {
+                        Label(show_details ? "Hide Details" : "Show Details" , systemImage: "slider.horizontal.3").labelStyle(.iconOnly)
                     }
                 }
                 CompactMethodView(communicator: $noodles_state)
                 
-            }.environment(current_doc_method_list).padding().frame(maxWidth: 450).glassBackgroundEffect().offset(y: 450)
+            }.environment(current_doc_method_list)
+                .padding()
+                .frame(maxWidth: show_details ? 500 : 450)
+                .glassBackgroundEffect()
+                .offset(y: show_details ? 300 : 475)
         }
     }
     

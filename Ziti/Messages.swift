@@ -473,7 +473,7 @@ struct InvokeMethodMessage : NoodlesMessage {
 
 // ==
 
-struct MethodArg {
+struct MethodArg : Hashable {
     var name : String
     var doc : String?
     var editor_hint : String?
@@ -497,7 +497,7 @@ struct MethodArg {
     }
 }
 
-struct MsgMethodCreate : NoodlesServerMessage {
+struct MsgMethodCreate : NoodlesServerMessage, Hashable {
     var id : NooID
     var name : String
     var doc : String?
@@ -512,6 +512,14 @@ struct MsgMethodCreate : NoodlesServerMessage {
         let arg_doc = MethodArg.from_cbor(c: c["arg_doc"], info: info)
         
         return MsgMethodCreate(id: id, name: name, doc: doc, return_doc: return_doc, arg_doc: arg_doc)
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(doc)
+        hasher.combine(return_doc)
+        hasher.combine(arg_doc)
     }
 }
 struct MsgSignalCreate : NoodlesServerMessage {
@@ -603,7 +611,7 @@ struct MsgEntityCreate : NoodlesServerMessage {
      */
     
     var id : NooID
-    var name : String
+    var name : String?
     var parent : NooID?
     var tf : simd_float4x4?
     var null_rep: NullRep?
@@ -630,6 +638,8 @@ struct MsgEntityCreate : NoodlesServerMessage {
         
         ret.null_rep = NullRep(c["null_rep"])
         ret.rep = RenderRep(c["render_rep"])
+        
+        ret.methods_list = NooID.array_from_cbor(c["methods_list"])
         
         return ret
     }
@@ -721,7 +731,7 @@ func to_color(_ c: CBOR?) -> UIColor? {
         return nil
     }
     
-    dump(arr)
+    //dump(arr)
     
     var r : CGFloat = 1.0
     var g : CGFloat = 1.0

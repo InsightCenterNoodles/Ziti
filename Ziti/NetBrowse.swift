@@ -122,12 +122,13 @@ class NooServerListener: NSObject, NetServiceBrowserDelegate, NetServiceDelegate
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
         print ("Found: \(service.name), resolving")
-        service.delegate = self
-        service.resolve(withTimeout: 10)
         
         self.services[self.next_service_id] = service
         self.rservices[service] = self.next_service_id
         self.next_service_id += 1
+        
+        service.delegate = self
+        service.resolve(withTimeout: 10)
     }
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {

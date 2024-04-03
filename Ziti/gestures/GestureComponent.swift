@@ -85,11 +85,17 @@ public struct GestureComponent: Component, Codable {
             state.initialOrientation = value.entity.orientation(relativeTo: nil)
         }
         
+        //print("START TRANSFORM")
+        //dump(state.targetedEntity?.transform)
+        
+        
         if pivotOnDrag {
             handlePivotDrag(value: value)
         } else {
             handleFixedDrag(value: value)
         }
+        
+        update_noodles()
     }
     
     mutating private func handlePivotDrag(value: EntityTargetValue<DragGesture.Value>) {
@@ -197,6 +203,7 @@ public struct GestureComponent: Component, Codable {
         
         let magnification = Float(value.magnification)
         entity.scale = state.startScale * magnification
+        update_noodles()
     }
     
     /// Handle `.onEnded` actions for magnify (scale)  gestures
@@ -225,10 +232,83 @@ public struct GestureComponent: Component, Codable {
                                                               z: -rotation.axis.z))
         let newOrientation = state.startOrientation.rotated(by: flippedRotation)
         entity.setOrientation(.init(newOrientation), relativeTo: nil)
+        update_noodles()
     }
     
     /// Handle `.onChanged` actions for rotate  gestures.
     mutating func onEnded(value: EntityTargetValue<RotateGesture3D.Value>) {
         EntityGestureState.shared.isRotating = false
     }
+    
+    // MARK: Customization of Gesture Support for Ziti
+    
+    func update_noodles() {
+        guard let e = EntityGestureState.shared.targetedEntity else {
+            return
+        }
+        
+        print("Checking noodles update: ", e.name)
+        
+        e.components[GestureSupportComponent.self]?.fire(e: e)
+        
+    }
+    
 }
+
+// MARK: Customizations for Ziti
+
+struct GestureSupportComponent : Component {
+    weak var world: NoodlesWorld?
+    var noo_id: NooID
+    
+    var last_t: SIMD3<Float> = .zero
+    var last_r: simd_quatf = simd_quatf(ix: 0.0, iy: 0.0, iz: 0.0, r: 1.0)
+    var last_s: SIMD3<Float> = .one
+    
+    mutating func fire(e: Entity) {
+        print("Updating remote transforms for entity")
+        guard let world else { return }
+        
+        let n_t = e.transform.translation
+        let n_r = e.transform.rotation
+        let n_s = e.transform.scale
+        
+        if n_t != last_t {
+            print("New translation ", n_t)
+            world.invoke_method_by_name(
+                method_name: CommonStrings.set_position,
+                context: .Entity(noo_id),
+                args: [[n_t.x.toCBOR(), n_t.y.toCBOR(), n_t.z.toCBOR()].toCBOR()]
+            )
+            last_t = n_t
+        }
+        
+        if n_r != last_r {
+            print("New rotation ", n_r)
+            let as_vec = n_r.vector;
+            world.invoke_method_by_name(
+                method_name: CommonStrings.set_rotation,
+                context: .Entity(noo_id),
+                args: [[as_vec.x.toCBOR(), as_vec.y.toCBOR(), as_vec.z.toCBOR(), as_vec.w.toCBOR()].toCBOR()]
+            )
+            last_r = n_r
+        }
+        
+        if n_s != last_s {
+            print("New scale ", n_s)
+            world.invoke_method_by_name(
+                method_name: CommonStrings.set_scale,
+                context: .Entity(noo_id),
+                args: [[n_s.x.toCBOR(), n_s.y.toCBOR(), n_s.z.toCBOR()].toCBOR()]
+                // TODO: maybe add change rejection handling
+            )
+            last_s = n_s
+        }
+        
+        
+    }
+}
+
+
+
+

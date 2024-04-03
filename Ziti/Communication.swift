@@ -121,6 +121,6 @@ class NoodlesCommunicator {
     }
     
     func invoke_method(method: NooID, context: InvokeMessageOn, args: [CBOR], on_done: @escaping (MsgMethodReply) -> ()) {
-        world.invoke_method(comm: self, method: method, context: context, args: args, on_done: on_done)
+        world.invoke_method(method: method, context: context, args: args, on_done: on_done)
     }
 }

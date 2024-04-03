@@ -11,6 +11,7 @@ import OSLog
 import RealityKit
 import RealityKitContent
 import SwiftCBOR
+import Combine
 
 final class NInstallGesture : Event {
     let entity : NEntity
@@ -25,16 +26,28 @@ protocol NoodlesComponent {
     func destroy(world: NoodlesWorld);
 }
 
-class NooMethod : NoodlesComponent {
+class NooMethod : NoodlesComponent, Hashable {
     var info: MsgMethodCreate
     
     init(msg: MsgMethodCreate) {
         info = msg
     }
     
-    func create(world: NoodlesWorld) { }
+    func create(world: NoodlesWorld) {
+        world.method_list_lookup[info.name] = self
+    }
     
-    func destroy(world: NoodlesWorld) { }
+    func destroy(world: NoodlesWorld) { 
+        world.method_list_lookup.removeValue(forKey: info.name)
+    }
+    
+    static func == (lhs: NooMethod, rhs: NooMethod) -> Bool {
+        return lhs.info == rhs.info
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(info)
+    }
 }
 
 class NooBuffer : NoodlesComponent {
@@ -458,23 +471,58 @@ class NEntity : Entity, HasCollision {
     
 }
 
+struct SpecialAbilities {
+    var can_move = false
+    var can_scale = false
+    var can_rotate = false
+    
+    var can_probe = false
+    
+    var can_select = false
+    
+    var can_activate = false
+    
+    init() {
+        
+    }
+    
+    init(_ list: [NooMethod]) {
+        let set = Set(list.map{ $0.info.name })
+        
+        can_activate = set.contains(CommonStrings.activate)
+        
+        can_move = set.contains(CommonStrings.set_position)
+        can_scale = set.contains(CommonStrings.set_scale)
+        can_rotate = set.contains(CommonStrings.set_rotation)
+        
+        can_select = set.contains(CommonStrings.select_region)
+        
+        can_probe = set.contains(CommonStrings.probe_at)
+    }
+}
+
 class NooEntity : NoodlesComponent {
     var last_info: MsgEntityCreate
     
     var entity: NEntity
     
-    var sub_entities: [Entity]
+    var sub_entities: [Entity] = []
+    
+    var methods: [NooMethod] = []
+    var abilities = SpecialAbilities()
     
     init(msg: MsgEntityCreate) {
         last_info = msg
         entity = NEntity()
-        sub_entities = []
-        
-        //assert(((entity as? HasCollision) != nil))
-        //assert(((entity as? HasHierarchy) != nil))
     }
     
     func common(world: NoodlesWorld, msg: MsgEntityCreate) {
+        dump(msg)
+        
+        if let n = msg.name {
+            entity.name = n
+        }
+        
         // setting parent?
         if let parent = msg.parent {
             // a set or unset?
@@ -487,7 +535,7 @@ class NooEntity : NoodlesComponent {
         }
         
         if let tf = msg.tf {
-            entity.move(to: tf, relativeTo: entity.parent, duration: 1)
+            handle_new_tf(world, transform: tf)
         }
         
         if let _ = msg.null_rep {
@@ -495,6 +543,59 @@ class NooEntity : NoodlesComponent {
         } else if let g = msg.rep {
             set_render_representation(g, world)
         }
+        
+        if let mthds = msg.methods_list {
+            methods = mthds.compactMap {
+                world.methods_list.get($0)
+            }
+            
+            //print("Adding entity methods")
+            //dump(methods)
+            
+            abilities = SpecialAbilities(methods)
+            
+            if abilities.can_move || abilities.can_rotate || abilities.can_scale {
+                install_gesture_control(world)
+            }
+        }
+    }
+    
+    func handle_new_tf(_ world: NoodlesWorld, transform: simd_float4x4) {
+        // DONT update the transform if the user is currently working on it!
+        // this is a bad fix, because the update might HAVE to go through
+        // TODO: Use the last updated transform on editing end!
+        if entity.gestureComponent != nil {
+            let shared = EntityGestureState.shared
+            if shared.targetedEntity == entity {
+                if shared.isDragging || shared.isRotating || shared.isScaling {
+                    
+                    return;
+                }
+            }
+        }
+        
+        entity.move(to: transform, relativeTo: entity.parent, duration: 1)
+    }
+    
+    func install_gesture_control(_ world: NoodlesWorld) {
+        print("Installing gesture controls...")
+        
+        // this gets called AFTER we do a render rep
+        // if there is NO render rep, nothing will work
+        
+        let gesture = GestureComponent(canDrag: abilities.can_move,
+                                       pivotOnDrag: false,
+                                       canScale: abilities.can_scale,
+                                       canRotate: abilities.can_rotate
+        )
+        var input = InputTargetComponent()
+        input.isEnabled = false
+        let support = GestureSupportComponent(
+            world: world, noo_id: last_info.id
+        )
+        entity.components.set(gesture)
+        entity.components.set(input)
+        entity.components.set(support)
     }
     
     func create(world: NoodlesWorld) {
@@ -558,10 +659,6 @@ class NooEntity : NoodlesComponent {
         let cc = CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
         
         entity.collision = cc
-    }
-    
-    func update_methods(_ world: NoodlesWorld, _ method_list: [NooID] ) {
-        
     }
     
     func update(world: NoodlesWorld, _ update: MsgEntityCreate) {
@@ -761,11 +858,14 @@ class ComponentList<T: NoodlesComponent> {
 }
 
 class NoodlesWorld {
-    var scene : RealityViewContent;
+    var scene : RealityViewContent
+    
+    weak var comm: NoodlesCommunicator?
     
     //var install_gesture_publisher :
     
     public var methods_list = ComponentList<NooMethod>()
+    public var method_list_lookup = [String: NooMethod]()
     //public var signals_list = ComponentList<MsgSignalCreate>()
     
     public var entity_list = ComponentList<NooEntity>()
@@ -793,20 +893,27 @@ class NoodlesWorld {
     
     var root_entity : Entity
     
-    init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable) {
+    init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable, initial_offset: simd_float3 = .zero) {
         self.scene = scene
         self.visible_method_list = doc_method_list
         
         root_entity = MeshGeneration.build_sphere()
         
+        let bb = root_entity.visualBounds(relativeTo: root_entity.parent)
         let gesture = GestureComponent(canDrag: true, canScale: true, canRotate: false)
         let input = InputTargetComponent()
-        let coll  = CollisionComponent(shapes: [ShapeResource.generateSphere(radius: 1)])
+        let coll  = CollisionComponent(shapes: [ShapeResource.generateSphere(radius: bb.boundingRadius)])
         root_entity.components.set(gesture)
         root_entity.components.set(input)
         root_entity.components.set(coll)
+        root_entity.name = "Root Entity"
         
         scene.add(root_entity)
+        
+        root_entity.transform.translation = initial_offset
+        
+        print("Creating root entity:")
+        dump(root_entity)
     }
     
     func handle_message(_ msg: FromServerMessage) {
@@ -928,6 +1035,20 @@ class NoodlesWorld {
     }
     
     func frame_all(target_volume : SIMD3<Float>) {
+        
+        // check if we need to just reset scale
+        
+        if root_entity.transform.scale.x != 1.0 {
+            var current_tf = root_entity.transform
+            
+            current_tf.translation = .zero
+            current_tf.scale = .one
+            current_tf.rotation = simd_quatf(ix: 0, iy: 0, iz: 0, r: 1)
+            
+            root_entity.move(to: current_tf, relativeTo: root_entity.parent, duration: 2)
+            return
+        }
+        
         let bounds = root_entity.visualBounds(recursive: true, relativeTo: root_entity.parent)
         
         print("Frame bounds \(bounds) \(bounds.center)");
@@ -953,22 +1074,47 @@ class NoodlesWorld {
         root_entity.move(to: current_tf, relativeTo: root_entity.parent, duration: 2)
     }
     
-    func invoke_method(comm: NoodlesCommunicator, method: NooID, context: InvokeMessageOn, args: [CBOR], on_done: @escaping (MsgMethodReply) -> ()) {
-        
+    func invoke_method(method: NooID, 
+                       context: InvokeMessageOn,
+                       args: [CBOR],
+                       on_done: ((MsgMethodReply) -> Void)? = nil
+    ) {
         print("Launch")
         
         // generate id
         
-        let id = UUID().uuidString
+        var message = InvokeMethodMessage(method: method, context: context, args: args)
         
-        print("New id is \(id)")
+        //dump(message)
         
-        let message = InvokeMethodMessage(method: method, context: context, invoke_id: id, args: args)
+        if let od = on_done {
+            let id = UUID().uuidString
+            
+            print("New id is \(id)")
+            
+            message.invoke_id = id
+            self.invoke_mapper[id] = od
+        }
         
-        dump(message)
+        comm!.send(msg: message)
+    }
+    
+    func invoke_method_by_name(method_name: String,
+                               context: InvokeMessageOn,
+                               args: [CBOR],
+                               on_done: ((MsgMethodReply) -> Void)? = nil
+    ) {
+        guard let mthd = method_list_lookup[method_name] else { return }
         
-        self.invoke_mapper[id] = on_done
-        
-        comm.send(msg: message)
+        invoke_method(method: mthd.info.id, context: context, args: args, on_done: on_done)
+    }
+    
+    func set_all_entity_input(enabled: Bool) {
+        print("Setting input component", enabled)
+        for (_,v) in entity_list.list {
+            if var c = v.entity.components[InputTargetComponent.self] {
+                c.isEnabled = enabled
+            }
+        }
     }
 }

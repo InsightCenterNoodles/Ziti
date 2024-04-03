@@ -47,9 +47,11 @@ struct NooImmersiveView: View {
             
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = NoodlesWorld(content, current_doc_method_list)
+            noodles_world = NoodlesWorld(content, current_doc_method_list, initial_offset: simd_float3([0, 1, 0]))
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
+            
+            noodles_world?.comm = noodles_state
             
             for h in hands {
                 content.add(h.entity)
@@ -88,12 +90,12 @@ struct NooImmersiveView: View {
             
         } attachments: {
             Attachment(id: "hand_label") {
-                Button("Stop Immersive") {
-                    Task {
-                        print("Close window for \(new_noodles_config.hostname)")
-                        await dismissImmersiveSpace()
-                    }
-                }
+//                Button("Stop Immersive") {
+//                    Task {
+//                        print("Close window for \(new_noodles_config.hostname)")
+//                        await dismissImmersiveSpace()
+//                    }
+//                }
             }
         } .task {
             let plane_data = PlaneDetectionProvider(alignments: [.horizontal])

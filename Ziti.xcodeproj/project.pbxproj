@@ -25,6 +25,7 @@
 		2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */; };
 		2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */; };
 		2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */; };
+		2DD719142BBC72A500E1391E /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD719132BBC72A500E1391E /* Strings.swift */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
 		2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */; };
 /* End PBXBuildFile section */
@@ -59,6 +60,7 @@
 		2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EntityExtensions.swift; path = gestures/EntityExtensions.swift; sourceTree = "<group>"; };
 		2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureExtensions.swift; path = gestures/GestureExtensions.swift; sourceTree = "<group>"; };
 		2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureComponent.swift; path = gestures/GestureComponent.swift; sourceTree = "<group>"; };
+		2DD719132BBC72A500E1391E /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooImmersiveView.swift; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 				2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */,
 				2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */,
 				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
+				2DD719132BBC72A500E1391E /* Strings.swift */,
 				2D40E62C2B7C0162003D618A /* Messages.swift */,
 				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
@@ -269,6 +272,7 @@
 				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
 				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
+				2DD719142BBC72A500E1391E /* Strings.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
 				2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */,
 				2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */,

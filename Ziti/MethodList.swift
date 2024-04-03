@@ -12,28 +12,40 @@ import SwiftCBOR
 struct MethodListView : View {
     @Environment(MethodListObservable.self) var current_doc_method_list
     
-    @State var current_method: AvailableMethod?
+    @State var search_text = ""
+    
+    @State private var preferred_column =
+    NavigationSplitViewColumn.sidebar
+    
+    var filtered_list : [AvailableMethod] {
+        if search_text.isEmpty {
+            return current_doc_method_list.list
+        } else {
+            return current_doc_method_list.list.filter {
+                $0.method.info.name.lowercased().contains(search_text.lowercased())
+            }
+        }
+    }
     
     var body: some View {
-        List(current_doc_method_list.list) { item in
-            Button(action: {
-                self.current_method = item
-            }) {
-                Text(item.method.info.name)
+        NavigationStack {
+            List(filtered_list) { item in
+                NavigationLink(item.method.info.name, value: item)
             }
-        }.popover(item: $current_method) {
-            item in InvokeMethodView(method: item)
+            .navigationDestination(for: AvailableMethod.self) { item in
+                InvokeMethodView(method: item)
+            }
         }
     }
 }
 
 struct InvokeMethodView : View {
-    var method: AvailableMethod
+    var method: AvailableMethod?
     
     var body: some View {
         VStack {
             Text("Invoke Method").font(.headline).padding()
-            Text("Name: \(method.method.info.name)")
+            Text("Name: \(method?.method.info.name ?? "None" )")
         }
     }
 }
@@ -47,7 +59,7 @@ struct CompactMethodView : View {
         HStack {
             if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::step_time" }) {
                 Button() {
-                    start_invoke("noo::step_time", CBOR(-1))
+                    start_invoke("noo::step_time", CBOR(-1), .Document)
                 } label: {
                     Label("Backward", systemImage: "backward.fill").labelStyle(.iconOnly)
                 }
@@ -55,7 +67,15 @@ struct CompactMethodView : View {
             
             if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::animate_time" }) {
                 Button() {
-                    start_invoke("noo::animate_time", CBOR(1))
+                    start_invoke("noo::animate_time", CBOR(0), .Document)
+                } label: {
+                    Label("Play", systemImage: "stop.fill")
+                }
+            }
+            
+            if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::animate_time" }) {
+                Button() {
+                    start_invoke("noo::animate_time", CBOR(1), .Document)
                 } label: {
                     Label("Play", systemImage: "playpause.fill")
                 }
@@ -63,7 +83,7 @@ struct CompactMethodView : View {
             
             if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::step_time" }) {
                 Button() {
-                    start_invoke("noo::step_time", CBOR(1))
+                    start_invoke("noo::step_time", CBOR(1), .Document)
                 } label: {
                     Label("Forward", systemImage: "forward.fill").labelStyle(.iconOnly)
                 }
@@ -71,7 +91,7 @@ struct CompactMethodView : View {
         }
     }
     
-    func start_invoke(_ target_name: String, _ arg: CBOR) {
+    func start_invoke(_ target_name: String, _ arg: CBOR, _ target: InvokeMessageOn) {
         guard let comm = communicator else {
             return
         }
@@ -82,14 +102,14 @@ struct CompactMethodView : View {
             return
         }
         
-        comm.invoke_method(method: m.method.info.id, context: .Document, args: [arg]) {
+        comm.invoke_method(method: m.method.info.id, context: target, args: [arg]) {
             reply in
-            print("Message reply...");
+            print("Message reply: ", reply);
         }
     }
 }
 
-struct AvailableMethod: Identifiable {
+struct AvailableMethod: Identifiable, Hashable {
     var id = UUID()
     var method: NooMethod
     var context: NooID?
