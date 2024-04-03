@@ -11,6 +11,8 @@ import OSLog
 import simd
 import UIKit
 
+import RealityKit
+
 class DecodeInfo {
     var current_host: String
     
@@ -1070,7 +1072,13 @@ struct GeomPatch {
     var type : String
     var material : NooID
     
-    init(_ c: CBOR) {
+    // precomputed mesh information
+    //var resource : MeshDescriptor?
+    var positions : [SIMD3<Float>]?
+    var textures  : [SIMD2<Float>]?
+    var prims     : [UInt32]?
+    
+    init(_ c: CBOR, _ info: DecodeInfo) {
         vertex_count = to_int64(c["vertex_count"]) ?? 0
         type = to_string(c["type"]) ?? "TRIANGLES"
         material = to_id(c["material"]) ?? NooID.NULL
@@ -1085,6 +1093,95 @@ struct GeomPatch {
         
         if case let Optional<CBOR>.some(idx) = c["indices"] {
             indices = GeomIndex(idx)
+        }
+        
+        //var new_descriptor = MeshDescriptor()
+        
+        print("Caching geometry info")
+        
+        for attribute in attributes {
+            let buffer_view = info.buffer_view_cache[attribute.view.slot]!
+            let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
+            
+            let slice = buffer_view.get_slice(data: buffer.bytes, view_offset: attribute.offset)
+            
+            
+            switch attribute.semantic {
+            case "POSITION":
+                positions = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                //new_descriptor.positions = MeshBuffers.Positions(attrib_data);
+                
+                print("Caching positions: ", positions!.count)
+                
+            case "TEXTURE":
+                switch attribute.format {
+                case "VEC2":
+                    textures = realize_tex_vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                    //new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+                    print("Caching textures: ", textures!.count)
+                case "U16VEC2":
+                    textures = realize_tex_u16vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                    //new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+                    print("Caching textures: ", textures!.count)
+                default:
+                    print("Unknown texture coord format \(attribute.format)")
+                }
+                
+            default:
+                print("Not handling attribute \(attribute.semantic)")
+                break;
+            }
+        }
+        
+        if let idx = indices {
+            let buffer_view = info.buffer_view_cache[idx.view.slot]!
+            let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
+            
+            let byte_count : Int64;
+            switch idx.format {
+            case "U8":
+                byte_count = idx.count
+            case "U16":
+                byte_count = idx.count*2
+            case "U32":
+                byte_count = idx.count*4
+            default:
+                fatalError("unknown index format")
+            }
+            
+            let bytes = buffer_view.get_slice(data: buffer.bytes, view_offset: idx.offset, override_length: byte_count)
+            
+            prims = msg_realize_index(bytes, idx)
+            print("Caching indicies: ", prims!.count)
+            //new_descriptor.primitives = .triangles(idx_list)
+        }
+        
+        //self.resource = new_descriptor
+    }
+}
+
+func msg_realize_index(_ bytes: Data, _ idx: GeomIndex) -> [UInt32] {
+    if idx.stride != 0 {
+        fatalError("Unable to handle strided index buffers")
+    }
+    
+    return bytes.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) -> [UInt32] in
+        
+        switch idx.format {
+        case "U8":
+            let arr = pointer.bindMemory(to: UInt8.self)
+            return Array<UInt8>(arr).map { UInt32($0) }
+            
+        case "U16":
+            let arr = pointer.bindMemory(to: UInt16.self)
+            return Array<UInt16>(arr).map { UInt32($0) }
+
+        case "U32":
+            let arr = pointer.bindMemory(to: UInt32.self)
+            return Array<UInt32>(arr)
+            
+        default:
+            fatalError("unknown index format")
         }
     }
 }
@@ -1109,7 +1206,7 @@ struct MsgGeometryCreate : NoodlesServerMessage {
         
         if case let Optional<CBOR>.some(CBOR.array(arr)) = c["patches"] {
             for att in arr {
-                ret.patches.append(GeomPatch(att))
+                ret.patches.append(GeomPatch(att, info))
             }
         }
         

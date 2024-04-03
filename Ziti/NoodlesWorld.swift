@@ -269,40 +269,55 @@ class NooGeometry : NoodlesComponent {
     func add_patch(_ patch: GeomPatch, _ world: NoodlesWorld) {
         var description = MeshDescriptor()
         
-        for attrib in patch.attributes {
-            let buffer_view = world.buffer_view_list.get(attrib.view)!
-            let slice = buffer_view.get_slice(offset: attrib.offset)
-            
-            switch attrib.semantic {
-            case "POSITION":
-                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
-                description.positions = MeshBuffers.Positions(attrib_data);
-                
-            case "TEXTURE":
-                switch attrib.format {
-                case "VEC2":
-                    let attrib_data = realize_tex_vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
-                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-                case "U16VEC2":
-                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
-                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-                default:
-                    print("Unknown texture coord format \(attrib.format)")
-                }
-                
-            default:
-                print("Not handling attribute \(attrib.semantic)")
-                break;
-            }
+        if let p = patch.positions {
+            print("Cached positions: ", p.count)
+            description.positions = MeshBuffers.Positions(p);
         }
         
-        
-        if let idx = patch.indices {
-            let buffer_view = world.buffer_view_list.get(idx.view)!
-            let idx_list = realize_index(buffer_view, idx)
-            description.primitives = .triangles(idx_list)
+        if let n = patch.textures {
+            print("Cached textures: ", n.count)
+            description.textureCoordinates = MeshBuffers.TextureCoordinates(n)
         }
         
+        if let idx = patch.prims {
+            print("Cached indicies: ", idx.count)
+            description.primitives = .triangles(idx)
+        }
+        
+//        for attrib in patch.attributes {
+//            let buffer_view = world.buffer_view_list.get(attrib.view)!
+//            let slice = buffer_view.get_slice(offset: attrib.offset)
+//            
+//            switch attrib.semantic {
+//            case "POSITION":
+//                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
+//                description.positions = MeshBuffers.Positions(attrib_data);
+//                
+//            case "TEXTURE":
+//                switch attrib.format {
+//                case "VEC2":
+//                    let attrib_data = realize_tex_vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
+//                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+//                case "U16VEC2":
+//                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
+//                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+//                default:
+//                    print("Unknown texture coord format \(attrib.format)")
+//                }
+//                
+//            default:
+//                print("Not handling attribute \(attrib.semantic)")
+//                break;
+//            }
+//        }
+//        
+//        
+//        if let idx = patch.indices {
+//            let buffer_view = world.buffer_view_list.get(idx.view)!
+//            let idx_list = realize_index(buffer_view, idx)
+//            description.primitives = .triangles(idx_list)
+//        }
+//        
         if let mat = world.material_list.get(patch.material) {
             mesh_materials.append( mat.mat )
         } else {
@@ -310,6 +325,7 @@ class NooGeometry : NoodlesComponent {
             tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: .white)
             mesh_materials.append( tri_mat )
         }
+
         
         descriptors.append(description)
         
@@ -790,47 +806,47 @@ func matrix_multiply(_ mat: simd_float4x4, _ v : simd_float3) -> simd_float3 {
     return vec4_to_vec3(ret) / ret.w
 }
 
-func realize_index(_ buffer_view: NooBufferView, _ idx: GeomIndex) -> [UInt32] {
-    if idx.stride != 0 {
-        fatalError("Unable to handle strided index buffers")
-    }
-    
-    let byte_count : Int64;
-    switch idx.format {
-    case "U8":
-        byte_count = idx.count
-    case "U16":
-        byte_count = idx.count*2
-    case "U32":
-        byte_count = idx.count*4
-    default:
-        fatalError("unknown index format")
-    }
-    
-    // TODO: there is something weird here
-    
-    let slice = buffer_view.get_slice(offset: idx.offset, length: byte_count)
-    
-    return slice.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) -> [UInt32] in
-        
-        switch idx.format {
-        case "U8":
-            let arr = pointer.bindMemory(to: UInt8.self)
-            return Array<UInt8>(arr).map { UInt32($0) }
-            
-        case "U16":
-            let arr = pointer.bindMemory(to: UInt16.self)
-            return Array<UInt16>(arr).map { UInt32($0) }
-
-        case "U32":
-            let arr = pointer.bindMemory(to: UInt32.self)
-            return Array<UInt32>(arr)
-            
-        default:
-            fatalError("unknown index format")
-        }
-    }
-}
+//func realize_index(_ buffer_view: NooBufferView, _ idx: GeomIndex) -> [UInt32] {
+//    if idx.stride != 0 {
+//        fatalError("Unable to handle strided index buffers")
+//    }
+//    
+//    let byte_count : Int64;
+//    switch idx.format {
+//    case "U8":
+//        byte_count = idx.count
+//    case "U16":
+//        byte_count = idx.count*2
+//    case "U32":
+//        byte_count = idx.count*4
+//    default:
+//        fatalError("unknown index format")
+//    }
+//    
+//    // TODO: there is something weird here
+//    
+//    let slice = buffer_view.get_slice(offset: idx.offset, length: byte_count)
+//    
+//    return slice.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) -> [UInt32] in
+//        
+//        switch idx.format {
+//        case "U8":
+//            let arr = pointer.bindMemory(to: UInt8.self)
+//            return Array<UInt8>(arr).map { UInt32($0) }
+//            
+//        case "U16":
+//            let arr = pointer.bindMemory(to: UInt16.self)
+//            return Array<UInt16>(arr).map { UInt32($0) }
+//
+//        case "U32":
+//            let arr = pointer.bindMemory(to: UInt32.self)
+//            return Array<UInt32>(arr)
+//            
+//        default:
+//            fatalError("unknown index format")
+//        }
+//    }
+//}
 
 class ComponentList<T: NoodlesComponent> {
     var list : Dictionary<UInt32, T> = [:]
