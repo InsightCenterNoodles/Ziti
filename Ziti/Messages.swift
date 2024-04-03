@@ -14,6 +14,9 @@ import UIKit
 class DecodeInfo {
     var current_host: String
     
+    var buffer_cache = [UInt32: MsgBufferCreate]()
+    var buffer_view_cache = [UInt32: MsgBufferViewCreate]()
+    
     init(_ h: String) {
         current_host = h
     }
@@ -54,9 +57,15 @@ struct MessageDecoder {
         case  7 :  return FromServerMessage.plot_create(MsgPlotCreate.from_cbor(c: content, info: dec_info))
         case  8 :  return FromServerMessage.plot_update(MsgPlotUpdate.from_cbor(c: content, info: dec_info))
         case  9 :  return FromServerMessage.plot_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
-        case  10 :  return FromServerMessage.buffer_create(MsgBufferCreate.from_cbor(c: content, info: dec_info))
+        case  10 :
+            let bc = MsgBufferCreate.from_cbor(c: content, info: dec_info);
+            dec_info.buffer_cache[bc.id.slot] = bc;
+            return FromServerMessage.buffer_create(bc)
         case  11 :  return FromServerMessage.buffer_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
-        case  12 :  return FromServerMessage.buffer_view_create(MsgBufferViewCreate.from_cbor(c: content, info: dec_info))
+        case  12 :
+            let bc = MsgBufferViewCreate.from_cbor(c: content, info: dec_info)
+            dec_info.buffer_view_cache[bc.id.slot] = bc;
+            return FromServerMessage.buffer_view_create(bc)
         case  13 :  return FromServerMessage.buffer_view_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
         case  14 :  return FromServerMessage.material_create(MsgMaterialCreate.from_cbor(c: content, info: dec_info))
         case  15 :  return FromServerMessage.material_update(MsgMaterialUpdate.from_cbor(c: content, info: dec_info))
@@ -723,6 +732,19 @@ struct MsgBufferViewCreate : NoodlesServerMessage {
         ret.offset = to_int64(c["offset"]) ?? 0
         ret.length = to_int64(c["length"]) ?? 0
         return ret
+    }
+    
+    func get_slice(data: Data, view_offset: Int64) -> Data {
+        // get the orig ending
+        let ending = offset + length
+        let total_offset = offset + view_offset
+        return data[total_offset ..< ending]
+    }
+    
+    func get_slice(data: Data, view_offset: Int64, override_length: Int64) -> Data {
+        let total_offset = offset + view_offset
+        let ending = total_offset + override_length
+        return data[total_offset ..< ending]
     }
 }
 

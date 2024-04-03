@@ -79,16 +79,11 @@ class NooBufferView : NoodlesComponent {
     }
     
     func get_slice(offset: Int64) -> Data {
-        // get the orig ending
-        let ending = info.offset + info.length
-        let total_offset = info.offset + offset
-        return buffer.info.bytes[total_offset ..< ending]
+        return info.get_slice(data: buffer.info.bytes, view_offset: offset)
     }
     
     func get_slice(offset: Int64, length: Int64) -> Data {
-        let total_offset = info.offset + offset
-        let ending = total_offset + length
-        return buffer.info.bytes[total_offset ..< ending]
+        return info.get_slice(data: buffer.info.bytes, view_offset: offset, override_length: length)
     }
     
     func destroy(world: NoodlesWorld) { }
