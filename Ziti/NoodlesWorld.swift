@@ -537,12 +537,13 @@ class NooEntity : NoodlesComponent {
             unset_representation(world);
         } else if let g = msg.rep {
             print("adding mesh rep")
-            unset_representation(world);
             
             Task {
                 let new_subs = await self.build_sub_render_representation(g, world);
                 
                 DispatchQueue.main.async {
+                    self.unset_representation(world);
+                    
                     for sub in new_subs {
                         self.add_sub(world, sub)
                     }
@@ -628,7 +629,7 @@ class NooEntity : NoodlesComponent {
         entity.addChild(ent)
     }
     
-    func build_sub_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) async -> [Entity] {  
+    func build_sub_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) async -> [Entity] {
         var subs = [Entity]();
         
         guard let geom = world.geometry_list.get(rep.mesh) else {
@@ -770,7 +771,14 @@ func realize_vec3(_ data: Data, _ fmt: VAttribFormat, vcount: Int, stride: Int) 
         
         for vertex_i in 0 ..< vcount {
             let place = vertex_i * true_stride
-            ret.append( pointer.loadUnaligned(fromByteOffset: place, as: SIMD3<Float>.self) )
+            //print("CONV", place, data.count, data.startIndex, data.endIndex, data[data.count - 1])
+            //print("CONV2", MemoryLayout<SIMD3<Float>>.size, MemoryLayout<SIMD3<Float>>.stride)
+            //padding in the simd causes joy!
+            let x = pointer.loadUnaligned(fromByteOffset: place + 0, as: Float32.self)
+            let y = pointer.loadUnaligned(fromByteOffset: place + 4, as: Float32.self)
+            let z = pointer.loadUnaligned(fromByteOffset: place + 8, as: Float32.self)
+            ret.append(.init(x, y, z))
+            //ret.append( pointer.loadUnaligned(fromByteOffset: place, as: SIMD3<Float>.self) )
         }
         
         return ret
