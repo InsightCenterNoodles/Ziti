@@ -318,10 +318,10 @@ class NooGeometry : NoodlesComponent {
     
     func destroy(world: NoodlesWorld) { }
     
-    func generate_emulated_instances(world: NoodlesWorld, src: InstanceSource) async -> [MeshDescriptor]  {
+    func generate_emulated_instances(src: InstanceSource, _ prep: NooEntityRenderPrep) async -> [MeshDescriptor]  {
         assert(src.stride < (4*4*4));
         
-        guard let v = world.buffer_view_list.get(src.view) else {
+        guard let v = prep.instance_view else {
             print("Warning: missing instance view")
             return []
         }
@@ -496,6 +496,11 @@ struct SpecialAbilities {
     }
 }
 
+struct NooEntityRenderPrep {
+    var geometry: NooGeometry
+    var instance_view: NooBufferView?
+}
+
 class NooEntity : NoodlesComponent {
     var last_info: MsgEntityCreate
     
@@ -537,9 +542,15 @@ class NooEntity : NoodlesComponent {
             unset_representation(world);
         } else if let g = msg.rep {
             print("adding mesh rep")
+            // we need to obtain references to stuff in world to make sure we dont get clobbered
+            // while doing work in another task
+            let prep = NooEntityRenderPrep(
+                geometry: world.geometry_list.get(g.mesh)!,
+                instance_view: g.instances.map { world.buffer_view_list.get($0.view)! }
+            )
             
             Task {
-                let new_subs = await self.build_sub_render_representation(g, world);
+                let new_subs = await self.build_sub_render_representation(g, prep);
                 
                 DispatchQueue.main.async {
                     self.unset_representation(world);
@@ -629,13 +640,10 @@ class NooEntity : NoodlesComponent {
         entity.addChild(ent)
     }
     
-    func build_sub_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) async -> [Entity] {
+    func build_sub_render_representation(_ rep: RenderRep, _ prep: NooEntityRenderPrep) async -> [Entity] {
         var subs = [Entity]();
         
-        guard let geom = world.geometry_list.get(rep.mesh) else {
-            print("Unable to find geometry")
-            return []
-        }
+        let geom = prep.geometry
         
         var bb = BoundingBox()
         
@@ -643,7 +651,7 @@ class NooEntity : NoodlesComponent {
             
             let mat = geom.mesh_materials[0]
             
-            let generated = await geom.generate_emulated_instances(world: world, src: instances)
+            let generated = await geom.generate_emulated_instances(src: instances, prep)
             
             do  {
                 let resource = try await MeshResource.generate(from: generated)
