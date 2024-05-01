@@ -267,57 +267,10 @@ class NooGeometry : NoodlesComponent {
     }
     
     func add_patch(_ patch: GeomPatch, _ world: NoodlesWorld) {
-        var description = MeshDescriptor()
-        
-        if let p = patch.positions {
-            print("Cached positions: ", p.count)
-            description.positions = MeshBuffers.Positions(p);
+        guard let description = patch.resource else {
+            return
         }
-        
-        if let n = patch.textures {
-            print("Cached textures: ", n.count)
-            description.textureCoordinates = MeshBuffers.TextureCoordinates(n)
-        }
-        
-        if let idx = patch.prims {
-            print("Cached indicies: ", idx.count)
-            description.primitives = .triangles(idx)
-        }
-        
-//        for attrib in patch.attributes {
-//            let buffer_view = world.buffer_view_list.get(attrib.view)!
-//            let slice = buffer_view.get_slice(offset: attrib.offset)
-//            
-//            switch attrib.semantic {
-//            case "POSITION":
-//                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
-//                description.positions = MeshBuffers.Positions(attrib_data);
-//                
-//            case "TEXTURE":
-//                switch attrib.format {
-//                case "VEC2":
-//                    let attrib_data = realize_tex_vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
-//                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-//                case "U16VEC2":
-//                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(patch.vertex_count), stride: Int(attrib.stride))
-//                    description.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-//                default:
-//                    print("Unknown texture coord format \(attrib.format)")
-//                }
-//                
-//            default:
-//                print("Not handling attribute \(attrib.semantic)")
-//                break;
-//            }
-//        }
-//        
-//        
-//        if let idx = patch.indices {
-//            let buffer_view = world.buffer_view_list.get(idx.view)!
-//            let idx_list = realize_index(buffer_view, idx)
-//            description.primitives = .triangles(idx_list)
-//        }
-//        
+          
         if let mat = world.material_list.get(patch.material) {
             mesh_materials.append( mat.mat )
         } else {
@@ -329,6 +282,7 @@ class NooGeometry : NoodlesComponent {
         
         descriptors.append(description)
         
+        // we should be able to make this part async
         mesh_resources.append( try! .generate(from: [description]) )
     }
     

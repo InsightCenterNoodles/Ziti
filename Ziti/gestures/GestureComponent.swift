@@ -5,6 +5,10 @@ Abstract:
 A component that handles standard drag, rotate, and scale gestures for an entity.
 */
 
+/*
+ Modified by Nicholas Brunhart-Lupo for Ziti.
+ */
+
 import RealityKit
 import SwiftUI
 
@@ -53,6 +57,9 @@ public class EntityGestureState {
 /// A component that handles gesture logic for an entity.
 public struct GestureComponent: Component, Codable {
     
+    /// Instead of changing the transform of the entity this component is attached to, delegate to the parent instead (MODIFICATION)
+    public var delegateToParent: Bool = false
+    
     /// A Boolean value that indicates whether a gesture can drag the entity.
     public var canDrag: Bool = true
     
@@ -81,8 +88,11 @@ public struct GestureComponent: Component, Codable {
         
         // Only allow a single Entity to be targeted at any given time.
         if state.targetedEntity == nil {
-            state.targetedEntity = value.entity
-            state.initialOrientation = value.entity.orientation(relativeTo: nil)
+            guard let tgt = delegateToParent ? value.entity.parent : value.entity else {
+                return
+            }
+            state.targetedEntity = tgt
+            state.initialOrientation = tgt.orientation(relativeTo: nil)
         }
         
         //print("START TRANSFORM")
@@ -194,7 +204,9 @@ public struct GestureComponent: Component, Codable {
         let state = EntityGestureState.shared
         guard canScale, !state.isDragging else { return }
         
-        let entity = value.entity
+        guard let entity = delegateToParent ? value.entity.parent : value.entity else {
+            return
+        }
         
         if !state.isScaling {
             state.isScaling = true
@@ -218,7 +230,9 @@ public struct GestureComponent: Component, Codable {
         let state = EntityGestureState.shared
         guard canRotate, !state.isDragging else { return }
 
-        let entity = value.entity
+        guard let entity = delegateToParent ? value.entity.parent : value.entity else {
+            return
+        }
         
         if !state.isRotating {
             state.isRotating = true

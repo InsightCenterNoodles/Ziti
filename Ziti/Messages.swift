@@ -1073,10 +1073,10 @@ struct GeomPatch {
     var material : NooID
     
     // precomputed mesh information
-    //var resource : MeshDescriptor?
-    var positions : [SIMD3<Float>]?
-    var textures  : [SIMD2<Float>]?
-    var prims     : [UInt32]?
+    var resource : MeshDescriptor?
+//    var positions : [SIMD3<Float>]?
+//    var textures  : [SIMD2<Float>]?
+//    var prims     : [UInt32]?
     
     init(_ c: CBOR, _ info: DecodeInfo) {
         vertex_count = to_int64(c["vertex_count"]) ?? 0
@@ -1095,7 +1095,7 @@ struct GeomPatch {
             indices = GeomIndex(idx)
         }
         
-        //var new_descriptor = MeshDescriptor()
+        var new_descriptor = MeshDescriptor()
         
         print("Caching geometry info")
         
@@ -1108,24 +1108,28 @@ struct GeomPatch {
             
             switch attribute.semantic {
             case "POSITION":
-                positions = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                //new_descriptor.positions = MeshBuffers.Positions(attrib_data);
+                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                new_descriptor.positions = MeshBuffers.Positions(attrib_data);
                 
-                print("Caching positions: ", positions!.count)
+                //print("Caching positions: ", positions!.count)
                 
             case "TEXTURE":
                 switch attribute.format {
                 case "VEC2":
-                    textures = realize_tex_vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                    //new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-                    print("Caching textures: ", textures!.count)
+                    let attrib_data = realize_tex_vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                    new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+                    //print("Caching textures: ", textures!.count)
                 case "U16VEC2":
-                    textures = realize_tex_u16vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                    //new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-                    print("Caching textures: ", textures!.count)
+                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                    new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+                    //print("Caching textures: ", textures!.count)
                 default:
                     print("Unknown texture coord format \(attribute.format)")
                 }
+                
+            case "NORMAL":
+                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
+                new_descriptor.normals = MeshBuffers.Normals(attrib_data);
                 
             default:
                 print("Not handling attribute \(attribute.semantic)")
@@ -1151,12 +1155,12 @@ struct GeomPatch {
             
             let bytes = buffer_view.get_slice(data: buffer.bytes, view_offset: idx.offset, override_length: byte_count)
             
-            prims = msg_realize_index(bytes, idx)
-            print("Caching indicies: ", prims!.count)
-            //new_descriptor.primitives = .triangles(idx_list)
+            let idx_list = msg_realize_index(bytes, idx)
+            //print("Caching indicies: ", prims!.count)
+            new_descriptor.primitives = .triangles(idx_list)
         }
         
-        //self.resource = new_descriptor
+        self.resource = new_descriptor
     }
 }
 

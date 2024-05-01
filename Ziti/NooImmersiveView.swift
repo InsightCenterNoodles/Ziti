@@ -97,7 +97,7 @@ struct NooImmersiveView: View {
 //                    }
 //                }
             }
-        } .task {
+        } .installGestures().task {
             let plane_data = PlaneDetectionProvider(alignments: [.horizontal])
             let hand_data = HandTrackingProvider()
             
