@@ -245,22 +245,56 @@ class NooGeometry : NoodlesComponent {
     var info: MsgGeometryCreate
     
     var descriptors   : [MeshDescriptor] = []
-    var mesh_resources: [MeshResource] = []
     var mesh_materials: [any RealityKit.Material] = []
     
-    var bounding_box: BoundingBox = BoundingBox()
+    var pending_mesh_resources: [MeshResource] = []
+    
+    var pending_bounding_box: BoundingBox?
     
     init(msg: MsgGeometryCreate) {
         info = msg
     }
     
+    func get_mesh_resources() async -> [MeshResource] {
+        //print("asking for mesh resources")
+        if !pending_mesh_resources.isEmpty {
+            //print("early return")
+            return pending_mesh_resources
+        }
+        
+        for d in descriptors {
+            let res = try! await MeshResource.init(from: [d])
+            self.pending_mesh_resources.append( res )
+        }
+        
+        //print("built")
+        
+        return pending_mesh_resources
+    }
+    
+    func get_bounding_box() async -> BoundingBox {
+        //print("get bounding box")
+        
+        if let bb = self.pending_bounding_box {
+            //print("early return")
+            return bb
+        }
+        var bounding_box = BoundingBox()
+        let resources = await get_mesh_resources()
+        for res in resources {
+            bounding_box = await res.bounds.union(bounding_box)
+        }
+        
+        pending_bounding_box = bounding_box
+        
+        //print("built")
+        
+        return bounding_box
+    }
+    
     func create(world: NoodlesWorld) {
         for patch in info.patches {
             add_patch(patch, world)
-        }
-        
-        for res in mesh_resources {
-            bounding_box = res.bounds.union(bounding_box)
         }
         
         print("Created geometry")
@@ -278,17 +312,13 @@ class NooGeometry : NoodlesComponent {
             tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: .white)
             mesh_materials.append( tri_mat )
         }
-
         
         descriptors.append(description)
-        
-        // we should be able to make this part async
-        mesh_resources.append( try! .generate(from: [description]) )
     }
     
     func destroy(world: NoodlesWorld) { }
     
-    func generate_emulated_instances(world: NoodlesWorld, src: InstanceSource) -> [MeshDescriptor] {
+    func generate_emulated_instances(world: NoodlesWorld, src: InstanceSource) async -> [MeshDescriptor]  {
         assert(src.stride < (4*4*4));
         
         guard let v = world.buffer_view_list.get(src.view) else {
@@ -506,7 +536,21 @@ class NooEntity : NoodlesComponent {
         if let _ = msg.null_rep {
             unset_representation(world);
         } else if let g = msg.rep {
-            set_render_representation(g, world)
+            print("adding mesh rep")
+            unset_representation(world);
+            
+            Task {
+                let new_subs = await self.build_sub_render_representation(g, world);
+                
+                DispatchQueue.main.async {
+                    for sub in new_subs {
+                        self.add_sub(world, sub)
+                    }
+                    
+                    print("adding mesh rep done")
+                }
+
+            }
         }
         
         if let mthds = msg.methods_list {
@@ -584,12 +628,12 @@ class NooEntity : NoodlesComponent {
         entity.addChild(ent)
     }
     
-    func set_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) {
-        unset_representation(world)
+    func build_sub_render_representation(_ rep: RenderRep, _ world: NoodlesWorld) async -> [Entity] {  
+        var subs = [Entity]();
         
         guard let geom = world.geometry_list.get(rep.mesh) else {
             print("Unable to find geometry")
-            return
+            return []
         }
         
         var bb = BoundingBox()
@@ -598,32 +642,34 @@ class NooEntity : NoodlesComponent {
             
             let mat = geom.mesh_materials[0]
             
-            let generated = geom.generate_emulated_instances(world: world, src: instances)
+            let generated = await geom.generate_emulated_instances(world: world, src: instances)
             
             do  {
-                let resource = try MeshResource.generate(from: generated)
+                let resource = try await MeshResource.generate(from: generated)
                 
-                let new_entity = ModelEntity(mesh: resource, materials: [mat])
+                let new_entity = await ModelEntity(mesh: resource, materials: [mat])
                 
-                add_sub(world, new_entity)
+                subs.append(new_entity)
             } catch {
                 print("Uh oh \(error)");
                 assert(false)
             }
             
         } else {
-            for (mat, mesh) in zip(geom.mesh_materials, geom.mesh_resources) {
-                let new_entity = ModelEntity(mesh: mesh, materials: [mat])
+            for (mat, mesh) in zip(geom.mesh_materials, await geom.get_mesh_resources()) {
+                let new_entity = await ModelEntity(mesh: mesh, materials: [mat])
                 
-                add_sub(world, new_entity)
+                subs.append(new_entity)
             }
             
-            bb = geom.bounding_box
+            bb = await geom.get_bounding_box()
         }
 
-        let cc = CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
+        let cc = await CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
         
-        entity.collision = cc
+        await entity.components.set(cc);
+        
+        return subs
     }
     
     func update(world: NoodlesWorld, _ update: MsgEntityCreate) {

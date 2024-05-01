@@ -24,60 +24,54 @@ struct CommandView: View {
     }
     
     var body: some View {
-        VStack {
-            Text("Ziti").font(.title)
-            Divider()
+        TabView {
+            VStack {
+                Text("Network Servers")
+                NetBrowseView().frame(minHeight: 120)
+            }.tabItem {
+                Label("Network Servers", systemImage: "network")
+            }
             
-            TabView {
-                
-                VStack {
-                    Text("Network Servers")
-                    NetBrowseView().frame(minHeight: 120)
-                }.tabItem {
-                    Label("Network Servers", systemImage: "network")
-                }
-                
-                VStack {
-                    HStack {
-                        TextField("Custom Address", text: $hostname).onSubmit {
-                            do_connect()
-                        }
-                        .disableAutocorrection(true)
-                        .textInputAutocapitalization(.never)
-                        .textFieldStyle(.roundedBorder)
-                        Button(action: do_connect){
-                            Label("Connect", systemImage: "arrow.right").labelStyle(.iconOnly)
-                        }
-                        .alert("Hostname is not valid", isPresented: $is_bad_host) {
-                            Button("OK", role: .cancel) { }
-                        }
-                    }.padding()
-                    List {
-                        ForEach(previous_custom, id: \.self) { item in
-                            Text(item).swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    if let index = previous_custom.firstIndex(of: item) {
-                                        previous_custom.remove(at: index)
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
+            VStack {
+                HStack {
+                    TextField("Custom Address", text: $hostname).onSubmit {
+                        do_connect()
+                    }
+                    .disableAutocorrection(true)
+                    .textInputAutocapitalization(.never)
+                    .textFieldStyle(.roundedBorder)
+                    Button(action: do_connect){
+                        Label("Connect", systemImage: "arrow.right").labelStyle(.iconOnly)
+                    }
+                    .alert("Hostname is not valid", isPresented: $is_bad_host) {
+                        Button("OK", role: .cancel) { }
+                    }
+                }.padding()
+                List {
+                    ForEach(previous_custom, id: \.self) { item in
+                        Text(item).swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                if let index = previous_custom.firstIndex(of: item) {
+                                    previous_custom.remove(at: index)
                                 }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                     }
-                }.gesture(long_press_delete_all).tabItem {
-                    Label("Custom", systemImage: "rectangle.connected.to.line.below")
                 }
-                
-                Form {
-                    Section("Identity") {
-                        TextField("Name", text: $user_name)
-                    }
-                }.tabItem {
-                    Label("User", systemImage: "person.circle.fill")
-                }
+            }.gesture(long_press_delete_all).tabItem {
+                Label("Custom", systemImage: "rectangle.connected.to.line.below")
             }
-        }.glassBackgroundEffect()
+            
+            Form {
+                Section("Identity") {
+                    TextField("Name", text: $user_name)
+                }
+            }.tabItem {
+                Label("User", systemImage: "person.circle.fill")
+            }
+        }.padding().glassBackgroundEffect()
     }
     
     func do_connect() {
