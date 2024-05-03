@@ -40,12 +40,14 @@ struct CommandView: View {
                     .disableAutocorrection(true)
                     .textInputAutocapitalization(.never)
                     .textFieldStyle(.roundedBorder)
+                    
                     Button(action: do_connect){
                         Label("Connect", systemImage: "arrow.right").labelStyle(.iconOnly)
                     }
                     .alert("Hostname is not valid", isPresented: $is_bad_host) {
                         Button("OK", role: .cancel) { }
                     }
+                    
                 }.padding()
                 List {
                     ForEach(previous_custom, id: \.self) { item in
@@ -59,14 +61,22 @@ struct CommandView: View {
                             }
                         }
                     }
-                }
-            }.gesture(long_press_delete_all).tabItem {
+                }.gesture(long_press_delete_all)
+            }
+            .tabItem {
                 Label("Custom", systemImage: "rectangle.connected.to.line.below")
             }
             
             Form {
                 Section("Identity") {
                     TextField("Name", text: $user_name)
+                }
+                Section("Misc") {
+                    Button("Stop Immersive") {
+                        Task {
+                            await dismissImmersiveSpace()
+                        }
+                    }
                 }
             }.tabItem {
                 Label("User", systemImage: "person.circle.fill")
@@ -76,6 +86,12 @@ struct CommandView: View {
     
     func do_connect() {
         print("Open window for \($hostname)")
+        
+        guard (URL(string: hostname)?.host()) != nil else {
+            print("Invalid host")
+            return
+        }
+        
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: hostname))
         previous_custom.append(hostname)
         hostname = ""
