@@ -511,6 +511,9 @@ class NooEntity : NoodlesComponent {
     var methods: [NooMethod] = []
     var abilities = SpecialAbilities()
     
+    var physics: [NooPhysics] = []
+    var physics_debug: Entity?
+    
     init(msg: MsgEntityCreate) {
         last_info = msg
         entity = NEntity()
@@ -563,6 +566,43 @@ class NooEntity : NoodlesComponent {
                 }
 
             }
+        }
+        
+        if let p = msg.physics {
+            print("Updating physics!")
+            if let q = physics_debug {
+                world.scene.remove(q)
+                entity.removeChild(q)
+            }
+            
+            let fp = p.first!
+            
+            let physics_data = world.physics_list.get(fp)!
+
+            // create nightmare line system
+            
+            for line in physics_data.advector_state!.lines {
+                for i in 0 ..< line.positions.count - 1 {
+                    let start = line.positions[i]
+                    let end   = line.positions[i+1]
+                    let len   = length(end - start)
+                    let new_ent = ModelEntity(mesh: .generateBox(width: 0.05, height: 0.05, depth: len), materials: [SimpleMaterial(color: .white, isMetallic: false)])
+                    
+                    new_ent.position = start + (end - start) / 2
+                    new_ent.orientation = simd_quatf(from: SIMD3<Float>(0, 0, 1), to: normalize(end - start))
+                                
+                    world.scene.add(new_ent)
+                    entity.addChild(new_ent)
+                }
+            }
+            
+            print("Adding advector physics")
+            
+            let advector_ent = Entity()
+            
+            advector_ent.components.set(AdvectionSpawnComponent(state: physics_data.advector_state!))
+            
+            entity.addChild(advector_ent)
         }
         
         if let mthds = msg.methods_list {
@@ -822,47 +862,138 @@ func matrix_multiply(_ mat: simd_float4x4, _ v : simd_float3) -> simd_float3 {
     return vec4_to_vec3(ret) / ret.w
 }
 
-//func realize_index(_ buffer_view: NooBufferView, _ idx: GeomIndex) -> [UInt32] {
-//    if idx.stride != 0 {
-//        fatalError("Unable to handle strided index buffers")
-//    }
-//    
-//    let byte_count : Int64;
-//    switch idx.format {
-//    case "U8":
-//        byte_count = idx.count
-//    case "U16":
-//        byte_count = idx.count*2
-//    case "U32":
-//        byte_count = idx.count*4
-//    default:
-//        fatalError("unknown index format")
-//    }
-//    
-//    // TODO: there is something weird here
-//    
-//    let slice = buffer_view.get_slice(offset: idx.offset, length: byte_count)
-//    
-//    return slice.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) -> [UInt32] in
-//        
-//        switch idx.format {
-//        case "U8":
-//            let arr = pointer.bindMemory(to: UInt8.self)
-//            return Array<UInt8>(arr).map { UInt32($0) }
-//            
-//        case "U16":
-//            let arr = pointer.bindMemory(to: UInt16.self)
-//            return Array<UInt16>(arr).map { UInt32($0) }
-//
-//        case "U32":
-//            let arr = pointer.bindMemory(to: UInt32.self)
-//            return Array<UInt32>(arr)
-//            
-//        default:
-//            fatalError("unknown index format")
-//        }
-//    }
-//}
+class NooAdvectorState {
+    var lines: [NooFlowLine]
+    
+    var current_particles = 0
+    let max_particles = 10
+    
+    init(sf: StreamFlowInfo, world: NoodlesWorld) {
+        print("Creating debug flow geom")
+        
+        guard let buffer_view = world.buffer_view_list.get(sf.data) else {
+            print("Missing buffer view")
+            lines = []
+            return
+        }
+        
+        // since we cant do offsets of offsets here...
+        let data = buffer_view.get_slice(offset: Int64(sf.offset))
+        
+        var cursor = 0
+        
+        print("Looking for \(sf.header.line_count) lines")
+        
+        lines = []
+        
+        // now lets read lines
+        for _ in 0 ..< sf.header.line_count {
+            let (new_line, new_cursor) = extract_line(data, base_offset: cursor, acount: sf.header.attributes.count)
+            
+            lines.append(new_line)
+            cursor = new_cursor
+        }
+        
+        print("Added \(lines.count) lines")
+    }
+}
+
+class NooPhysics : NoodlesComponent{
+    var info: MsgPhysicsCreate
+    
+    var advector_state : NooAdvectorState?
+    
+    
+    init(msg: MsgPhysicsCreate) {
+        info = msg
+    }
+    
+    func create(world: NoodlesWorld) { 
+        guard let sf = info.stream_flow else {
+            print("Missing stream flow")
+            return
+        }
+        
+        advector_state = NooAdvectorState(sf: sf, world: world)
+    }
+    
+    func destroy(world: NoodlesWorld) { }
+}
+
+struct NooFlowAttr {
+    var data: [Float32]
+}
+struct NooFlowLine {
+    var sample_count: UInt32
+    
+    var positions: [SIMD3<Float>]
+    
+    var attribs: [NooFlowAttr]
+}
+
+func extract_line(_ data: Data, base_offset: Int, acount: Int) -> (NooFlowLine, Int) {
+    // print("EX LINE \(base_offset) \(acount)")
+    
+    var cursor = base_offset
+    
+    let sample_count = data.withUnsafeBytes {
+        (pointer: UnsafeRawBufferPointer) -> UInt32 in
+        return pointer.loadUnaligned(fromByteOffset: cursor, as: UInt32.self)
+    }
+    
+    // print("SAMPLE COUNT \(sample_count)")
+    
+    cursor += 4
+    
+    let positions = data.withUnsafeBytes {
+        (pointer: UnsafeRawBufferPointer) -> [SIMD3<Float>] in
+        
+        var ret : [SIMD3<Float>] = []
+        
+        ret.reserveCapacity(Int(sample_count))
+        
+        for _ in 0 ..< sample_count {
+            //padding in the simd causes joy!
+            let x = pointer.loadUnaligned(fromByteOffset: cursor + 0, as: Float32.self)
+            let y = pointer.loadUnaligned(fromByteOffset: cursor + 4, as: Float32.self)
+            let z = pointer.loadUnaligned(fromByteOffset: cursor + 8, as: Float32.self)
+            ret.append(.init(x, y, z))
+            
+            cursor += 3 * 4
+        }
+        
+        return ret
+    }
+    
+    // print("P_END \(cursor)")
+    
+    var new_line = NooFlowLine(sample_count: sample_count, positions: positions, attribs: [])
+    
+    for _ in 0 ..< acount {
+        let attrib_data = data.withUnsafeBytes {
+            (pointer: UnsafeRawBufferPointer) -> [Float32] in
+            
+            var ret : [Float32] = []
+            
+            ret.reserveCapacity(Int(sample_count))
+            
+            for _ in 0 ..< sample_count {
+                let x = pointer.loadUnaligned(fromByteOffset: cursor , as: Float32.self)
+                ret.append(x)
+                
+                cursor += 4
+            }
+            
+            return ret
+        }
+        
+        new_line.attribs.append(NooFlowAttr(data: attrib_data))
+    }
+    
+    // print("A_END \(cursor)")
+    
+    return (new_line, cursor)
+}
 
 class ComponentList<T: NoodlesComponent> {
     var list : Dictionary<UInt32, T> = [:]
@@ -913,6 +1044,8 @@ class NoodlesWorld {
     public var buffer_view_list = ComponentList<NooBufferView>()
     public var buffer_list = ComponentList<NooBuffer>()
     
+    public var physics_list = ComponentList<NooPhysics>()
+    
     public var attached_method_list = [NooMethod]()
     public var visible_method_list: MethodListObservable
     
@@ -944,6 +1077,7 @@ class NoodlesWorld {
     }
     
     func handle_message(_ msg: FromServerMessage) {
+        dump(msg)
         switch (msg) {
             
         case .method_create(let x):
@@ -1058,6 +1192,12 @@ class NoodlesWorld {
             
         case .document_initialized(_):
             break
+            
+        case .physics_create(let x):
+            let e = NooPhysics(msg: x)
+            physics_list.set(x.id, e, self)
+        case .physics_delete(let x):
+            physics_list.erase(x.id, self)
         }
     }
     

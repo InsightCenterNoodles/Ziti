@@ -91,6 +91,8 @@ struct MessageDecoder {
         case  33 :  return FromServerMessage.signal_invoke(MsgSignalInvoke.from_cbor(c: content, info: dec_info))
         case  34 :  return FromServerMessage.method_reply(MsgMethodReply.from_cbor(c: content, info: dec_info))
         case  35 :  return FromServerMessage.document_initialized(MsgDocumentInitialized.from_cbor(c: content, info: dec_info))
+        case  36 :  return FromServerMessage.physics_create(MsgPhysicsCreate.from_cbor(c: content, info: dec_info))
+        case  37 :  return FromServerMessage.physics_delete(MsgCommonDelete.from_cbor(c: content, info: dec_info))
         default:
             return nil
         }
@@ -120,7 +122,7 @@ struct MessageDecoder {
             let content = array[i+1]
             
             guard let msg = decode_single(mid: mid, content: content) else {
-                //default_log.warning("Unable to decode message \(mid)")
+                default_log.critical("Unable to decode message!")
                 continue
             }
             
@@ -222,13 +224,6 @@ func to_int64(_ mc: CBOR?) -> Int64? {
         return Int64(x)
     }
     return nil
-}
-
-func to_string(_ c: CBOR) -> String {
-    if case let CBOR.utf8String(string) = c {
-        return string
-    }
-    return String()
 }
 
 func to_string(_ mc: CBOR?) -> String? {
@@ -628,13 +623,14 @@ struct MsgEntityCreate : NoodlesServerMessage {
     var null_rep: NullRep?
     var rep : RenderRep?
     
-    var lights : [NooID]? = []
-    var tables : [NooID]? = []
-    var plots : [NooID]? = []
-    var tags : [String]? = []
-    var methods_list : [NooID]? = []
-    var signals_list : [NooID]? = []
-    var visible : Bool? = true
+    var lights : [NooID]?
+    var tables : [NooID]?
+    var plots : [NooID]?
+    var tags : [String]?
+    var physics: [NooID]?
+    var methods_list : [NooID]?
+    var signals_list : [NooID]?
+    var visible : Bool?
     
     
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
@@ -649,6 +645,8 @@ struct MsgEntityCreate : NoodlesServerMessage {
         
         ret.null_rep = NullRep(c["null_rep"])
         ret.rep = RenderRep(c["render_rep"])
+        
+        ret.physics = NooID.array_from_cbor(c["physics"])
         
         ret.methods_list = NooID.array_from_cbor(c["methods_list"])
         
@@ -1300,6 +1298,98 @@ struct MsgDocumentInitialized : NoodlesServerMessage {
     }
 }
 
+struct StreamFlowHeader {
+    var line_count: Int64
+    var attributes : [StreamFlowAttribute]
+    
+    init?(_ c: CBOR?) {
+        guard let lc = c else {
+            return nil
+        }
+        
+        line_count = to_int64(lc["line_count"]) ?? 0
+        attributes = []
+        
+        if case let Optional<CBOR>.some(CBOR.array(arr)) = lc["attributes"] {
+            for att in arr {
+                attributes.append(StreamFlowAttribute(att)!)
+            }
+        }
+    }
+    
+    
+}
+
+struct StreamFlowAttribute {
+    var name : String
+    var data_type: String
+    var data_bounds: [String]
+    
+    init?(_ c: CBOR?) {
+        guard let lc = c else {
+            return nil
+        }
+        
+        name = to_string(lc["name"]) ?? "UNKNOWN"
+        data_type = to_string(lc["data_type"]) ?? "F32"
+        data_bounds = []
+        
+        if case let Optional<CBOR>.some(CBOR.array(arr)) = lc["data_bounds"] {
+            for att in arr {
+                data_bounds.append(to_string(att) ?? "0.0")
+            }
+        }
+    }
+}
+
+struct StreamFlowInfo {
+    var header: StreamFlowHeader
+    var data: NooID
+    var offset: UInt64
+    
+    init?(_ c: CBOR?) {
+        guard let lc = c else {
+            return nil
+        }
+        
+        header = StreamFlowHeader(lc["header"])!
+        data = to_id(lc["data"])!
+        offset = UInt64(to_int64(lc["offset"]) ?? 0);
+    }
+}
+
+struct MsgPhysicsCreate {
+    /*
+     MsgPhysicsCreate = {
+         id: PhysicsID,
+         ? name: text,
+
+         type: PhysicsType,
+
+         ; if STREAMFLOW
+         ; (see noodles_physics)
+         ? stream_flow: any
+         ;
+     }
+     */
+    
+    var id : NooID
+    var name: String?
+    var type: String
+    
+    var stream_flow: StreamFlowInfo?
+    
+    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
+        return MsgPhysicsCreate(
+            id: to_id(c["id"])!,
+            name: to_string(c["name"]) ?? "",
+            type: to_string(c["type"])!,
+            
+            stream_flow: StreamFlowInfo(c["stream_flow"])
+        )
+    }
+}
+
 struct MsgCommonDelete {
     var id : NooID
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
@@ -1345,4 +1435,6 @@ enum FromServerMessage {
     case signal_invoke(MsgSignalInvoke)
     case method_reply(MsgMethodReply)
     case document_initialized(MsgDocumentInitialized)
+    case physics_create(MsgPhysicsCreate)
+    case physics_delete(MsgCommonDelete)
 }

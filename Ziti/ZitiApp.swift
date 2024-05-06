@@ -11,6 +11,13 @@ import SwiftUI
 struct ZitiApp: App {
     @State private var current_style: ImmersionStyle = .mixed
     
+    init() {
+        AdvectionComponent.registerComponent()
+        AdvectionSpawnComponent.registerComponent()
+        AdvectionSystem.registerSystem()
+        AdvectionSpawnSystem.registerSystem()
+    }
+    
     var body: some Scene {
         WindowGroup("NOODLES Client") {
             CommandView()
