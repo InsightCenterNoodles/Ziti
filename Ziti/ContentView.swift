@@ -25,6 +25,8 @@ struct ContentView: View {
     @State private var current_doc_method_list = MethodListObservable()
     @State private var angle = Angle(degrees: 0.0)
     
+    @State private var particle_speed: Double = GlobalAdvectionSettings.shared.advection_speed
+    
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
@@ -58,6 +60,15 @@ struct ContentView: View {
                         MethodListView()
                     }.frame(maxHeight: 400)
                     Divider()
+                    Form {
+                        Section("Particles") {
+                            Slider(value: $particle_speed, in: 0...100, step: 0.0001)
+                                .padding()
+                                .onChange(of: particle_speed) {
+                                    GlobalAdvectionSettings.shared.advection_speed = particle_speed
+                                }
+                        }
+                    }
                 }
                 
                 HStack {

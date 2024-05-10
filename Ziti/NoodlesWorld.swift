@@ -581,20 +581,21 @@ class NooEntity : NoodlesComponent {
 
             // create nightmare line system
             
+            /*
             for line in physics_data.advector_state!.lines {
                 for i in 0 ..< line.positions.count - 1 {
                     let start = line.positions[i]
                     let end   = line.positions[i+1]
                     let len   = length(end - start)
-                    let new_ent = ModelEntity(mesh: .generateBox(width: 0.05, height: 0.05, depth: len), materials: [SimpleMaterial(color: .white, isMetallic: false)])
+                    //let new_ent = ModelEntity(mesh: .generateBox(width: 0.05, height: 0.05, depth: len), materials: [SimpleMaterial(color: .white, isMetallic: false)])
                     
-                    new_ent.position = start + (end - start) / 2
-                    new_ent.orientation = simd_quatf(from: SIMD3<Float>(0, 0, 1), to: normalize(end - start))
+                    //new_ent.position = start + (end - start) / 2
+                    //new_ent.orientation = simd_quatf(from: SIMD3<Float>(0, 0, 1), to: normalize(end - start))
                                 
-                    world.scene.add(new_ent)
-                    entity.addChild(new_ent)
+                    //world.scene.add(new_ent)
+                    //entity.addChild(new_ent)
                 }
-            }
+            }*/
             
             print("Adding advector physics")
             
@@ -862,11 +863,18 @@ func matrix_multiply(_ mat: simd_float4x4, _ v : simd_float3) -> simd_float3 {
     return vec4_to_vec3(ret) / ret.w
 }
 
+struct AdvectionID : Equatable {
+    let line_id: UInt32
+    let offset : UInt32
+}
+
 class NooAdvectorState {
     var lines: [NooFlowLine]
     
     var current_particles = 0
-    let max_particles = 10
+    let max_particles = 500
+    
+    var query_tool : VoxelQuery<AdvectionID>!
     
     init(sf: StreamFlowInfo, world: NoodlesWorld) {
         print("Creating debug flow geom")
@@ -886,15 +894,43 @@ class NooAdvectorState {
         
         lines = []
         
-        // now lets read lines
+        // now lets read lines, and find the bounds of this system
+        
+        var min_b = simd_float3(repeating: 100000000.0) // ha ha
+        var max_b = simd_float3(repeating: -100000000.0) // ha ha haaaa
+        
+        
         for _ in 0 ..< sf.header.line_count {
             let (new_line, new_cursor) = extract_line(data, base_offset: cursor, acount: sf.header.attributes.count)
+            
+            for p in new_line.positions {
+                min_b = simd_min(min_b, p)
+                max_b = simd_max(max_b, p)
+            }
             
             lines.append(new_line)
             cursor = new_cursor
         }
         
         print("Added \(lines.count) lines")
+        
+        query_tool = VoxelQuery(min: min_b, max: max_b, max_bin_count: 50)
+        
+        for (line_i, line) in lines.enumerated() {
+            for (point_i, point) in line.positions.enumerated() {
+                let _ = query_tool.install(
+                    Record(
+                        point: point,
+                        item: AdvectionID(
+                            line_id: UInt32(line_i),
+                            offset: UInt32(point_i)
+                        )
+                    )
+                )
+            }
+        }
+        
+        print("Set up query structure")
     }
 }
 

@@ -28,28 +28,38 @@ func lerp(_ x: Float32, _ x0: Float32, _ x1: Float32, _ y0: SIMD3<Float>, _ y1: 
     return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
 }
 
+class GlobalAdvectionSettings {
+    static var shared = GlobalAdvectionSettings()
+    
+    var advection_speed = 0.0001;
+}
+
 /// A system that advects particles
 struct AdvectionSystem: System {
     static let query = EntityQuery(where: .has(AdvectionComponent.self))
 
     init(scene: RealityKit.Scene) {}
     
-    func schedule_delete(_ e: Entity, _ component: AdvectionComponent?) {
+    static func schedule_delete(_ e: Entity, _ component: AdvectionComponent?) {
         //print("Schedule delete for \(e)")
         e.removeFromParent()
         component?.state.current_particles -= 1
     }
     
-    func handle_entity(e: Entity, context: SceneUpdateContext) {
+    static func handle_entity(e: Entity, context: SceneUpdateContext) {
+        let delta = GlobalAdvectionSettings.shared.advection_speed * context.deltaTime;
+        
+        advect_entity(e: e, delta: delta)
+    }
+    
+    static func advect_entity(e: Entity, delta: Double) {
         guard var component: AdvectionComponent = e.components[AdvectionComponent.self] else {
             schedule_delete(e, nil);
             return
         }
         
-        // TODO: NEED TO ADD IN FRAME TIME
-        
         // increase time
-        let new_time = component.particle_time + 0.00001;
+        let new_time = Float(Double(component.particle_time) + delta);
         
         // find the indicies that bracket the time (OPTIMIZE LATER)
         
@@ -102,7 +112,7 @@ struct AdvectionSystem: System {
 
     func update(context: SceneUpdateContext) {
         for entity in context.entities(matching: Self.query, updatingSystemWhen: .rendering) {
-            handle_entity(e: entity, context: context)
+            Self.handle_entity(e: entity, context: context)
         }
     }
 }
@@ -110,10 +120,14 @@ struct AdvectionSystem: System {
 
 struct AdvectionSpawnComponent : Component {
     var state : NooAdvectorState
+    var last_position = simd_float3(repeating: -10000000.0)
+    var closest_lines = [(AdvectionID, simd_float3)]()
 }
 
 struct AdvectionSpawnSystem: System {
     static let query = EntityQuery(where: .has(AdvectionSpawnComponent.self))
+    
+    static let mesh_resource : MeshResource = .generateSphere(radius: 0.1)
 
     init(scene: RealityKit.Scene) {}
     
@@ -122,9 +136,34 @@ struct AdvectionSpawnSystem: System {
     }
     
     func handle_entity(e: Entity, context: SceneUpdateContext) {
-        guard let component: AdvectionSpawnComponent = e.components[AdvectionSpawnComponent.self] else {
+        guard var component: AdvectionSpawnComponent = e.components[AdvectionSpawnComponent.self] else {
             schedule_delete(e);
             return
+        }
+        
+        if e.position != component.last_position {
+            print("Recompute available lines")
+            
+            component.last_position = e.position
+            
+            component.closest_lines.removeAll(keepingCapacity: true)
+            
+            // run query to find "closest"
+            
+            let sphere_size : Float = 5.0
+            
+            let extent = simd_float3(repeating: sphere_size)
+            
+            let q_min = e.position - extent
+            let q_max = e.position + extent
+            
+            component.state.query_tool.search(a: q_min, b: q_max, {
+                component.closest_lines.append(($0.item, $0.point))
+            })
+            
+            e.components.set(component)
+            
+            print("Recompute done, found \(component.closest_lines.count)")
         }
         
         // spawn one per frame till the max
@@ -139,21 +178,13 @@ struct AdvectionSpawnSystem: System {
         
         // spawn one
         
-        // pick a line?
+        // pick a line and point
         
-        var selected_line = -1
-        var largest_line = 0
-        
-        for (i, line) in st.lines.enumerated() {
-            let p = line.positions.count
+        guard let (spawn_id, _) = component.closest_lines.randomElement() else {
+            // no point?
             
-            if p > largest_line {
-                selected_line = i
-                largest_line = p
-            }
-        }
-        
-        if selected_line < 0 {
+            // ok, but dont delete
+            print("no spawn point")
             return
         }
         
@@ -161,9 +192,20 @@ struct AdvectionSpawnSystem: System {
         
         tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: .white)
         
-        let new_entity = ModelEntity(mesh: .generateSphere(radius: 0.5), materials: [tri_mat])
+        let new_entity = ModelEntity(mesh: Self.mesh_resource, materials: [tri_mat])
         
-        new_entity.components.set(AdvectionComponent(state: st, line_id: selected_line, particle_time: 0.0))
+        // get line for timing info
+        
+        let offset_time = st.lines[Int(spawn_id.line_id)].attribs.first?.data[Int(spawn_id.offset)]
+        
+        new_entity.components.set(AdvectionComponent(
+            state: st,
+            line_id: Int(spawn_id.line_id),
+            particle_time: offset_time ?? 0.0
+        ))
+        
+        // initial
+        AdvectionSystem.advect_entity(e: new_entity, delta: 0.0)
         
         e.addChild(new_entity)
         
