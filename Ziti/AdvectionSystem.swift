@@ -127,7 +127,7 @@ struct AdvectionSpawnComponent : Component {
 struct AdvectionSpawnSystem: System {
     static let query = EntityQuery(where: .has(AdvectionSpawnComponent.self))
     
-    static let mesh_resource : MeshResource = .generateSphere(radius: 0.1)
+    static let mesh_resource : MeshResource = .generateBox(size: 0.1)
 
     init(scene: RealityKit.Scene) {}
     
@@ -150,7 +150,7 @@ struct AdvectionSpawnSystem: System {
             
             // run query to find "closest"
             
-            let sphere_size : Float = 5.0
+            let sphere_size : Float = 1.0
             
             let extent = simd_float3(repeating: sphere_size)
             

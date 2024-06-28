@@ -36,6 +36,8 @@ private protocol NoodlesServerMessage {
 
 var default_log = Logger()
 
+// MARK: Message Decoder
+
 struct MessageDecoder {
     
     let dec_info: DecodeInfo
@@ -133,7 +135,7 @@ struct MessageDecoder {
     }
 }
 
-//
+// MARK: CBOR Tools
 
 public extension CBOR {
     static func int64(_ int: Int64) -> CBOR {
@@ -373,6 +375,8 @@ func force_to_int64(_ c: CBOR) -> Int64 {
     }
     return 0
 }
+
+// MARK: Noodles ID
 
 struct NooID : Codable, Equatable, Hashable {
     var slot: UInt32
@@ -649,6 +653,8 @@ struct MsgEntityCreate : NoodlesServerMessage {
         ret.physics = NooID.array_from_cbor(c["physics"])
         
         ret.methods_list = NooID.array_from_cbor(c["methods_list"])
+        
+        ret.visible = to_bool(c["visible"])
         
         return ret
     }

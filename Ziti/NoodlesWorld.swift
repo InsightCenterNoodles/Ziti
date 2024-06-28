@@ -520,7 +520,7 @@ class NooEntity : NoodlesComponent {
     }
     
     func common(world: NoodlesWorld, msg: MsgEntityCreate) {
-        dump(msg)
+        //dump(msg)
         
         if let n = msg.name {
             entity.name = n
@@ -544,7 +544,7 @@ class NooEntity : NoodlesComponent {
         if let _ = msg.null_rep {
             unset_representation(world);
         } else if let g = msg.rep {
-            print("adding mesh rep")
+            //print("adding mesh rep")
             // we need to obtain references to stuff in world to make sure we dont get clobbered
             // while doing work in another task
             let prep = NooEntityRenderPrep(
@@ -562,7 +562,7 @@ class NooEntity : NoodlesComponent {
                         self.add_sub(world, sub)
                     }
                     
-                    print("adding mesh rep done")
+                    //print("adding mesh rep done")
                 }
 
             }
@@ -620,6 +620,11 @@ class NooEntity : NoodlesComponent {
                 install_gesture_control(world)
             }
         }
+        
+        if let visibility = msg.visible {
+            //dump(msg)
+            entity.isEnabled = visibility
+        }
     }
     
     func handle_new_tf(_ world: NoodlesWorld, transform: simd_float4x4) {
@@ -666,7 +671,7 @@ class NooEntity : NoodlesComponent {
         
         common(world: world, msg: last_info)
         
-        print("Created entity")
+        //print("Created entity")
     }
     
     func unset_representation(_ world: NoodlesWorld) {
@@ -728,7 +733,7 @@ class NooEntity : NoodlesComponent {
     }
     
     private func clear_subs(_ world: NoodlesWorld) {
-        print("Clearing subs!")
+        //print("Clearing subs!")
         for sub_entity in sub_entities {
             world.scene.remove(sub_entity)
             entity.removeChild(sub_entity)
@@ -1109,11 +1114,11 @@ class NoodlesWorld {
         root_entity.transform.translation = initial_offset
         
         print("Creating root entity:")
-        dump(root_entity)
+        //dump(root_entity)
     }
     
     func handle_message(_ msg: FromServerMessage) {
-        dump(msg)
+        //dump(msg)
         switch (msg) {
             
         case .method_create(let x):
