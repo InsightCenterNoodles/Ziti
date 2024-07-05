@@ -124,7 +124,7 @@ struct NooImmersiveView: View {
                         switch update.anchor.chirality {
                         case .left:
                             if let h = update.anchor.handSkeleton {
-                                print("update left")
+                                //print("update left")
                                 self.hands[0].skeleton = h
                             }
                             self.hands[0].tf = update.anchor.originFromAnchorTransform

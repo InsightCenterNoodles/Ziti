@@ -117,7 +117,7 @@ class NooTexture : NoodlesComponent {
         
         // TODO: Update spec to help inform APIs about texture use
         do {
-            let resource = try TextureResource.generate(from: img.image, options: .init(semantic: semantic, mipmapsMode: .allocateAndGenerateAll))
+            let resource = try TextureResource(image: img.image, options: .init(semantic: semantic, mipmapsMode: .allocateAndGenerateAll))
             
             resources[semantic] = resource
             
@@ -241,6 +241,8 @@ class NooMaterial : NoodlesComponent {
     func destroy(world: NoodlesWorld) { }
 }
 
+// MARK: Geometry
+
 class NooGeometry : NoodlesComponent {
     var info: MsgGeometryCreate
     
@@ -255,15 +257,17 @@ class NooGeometry : NoodlesComponent {
         info = msg
     }
     
-    func get_mesh_resources() async -> [MeshResource] {
+    func get_mesh_resources() -> [MeshResource] {
         //print("asking for mesh resources")
+        
+        // backing out async stuff due to race
         if !pending_mesh_resources.isEmpty {
             //print("early return")
             return pending_mesh_resources
         }
         
         for d in descriptors {
-            let res = try! await MeshResource.init(from: [d])
+            let res = try! MeshResource.generate(from: [d])
             self.pending_mesh_resources.append( res )
         }
         
@@ -280,7 +284,7 @@ class NooGeometry : NoodlesComponent {
             return bb
         }
         var bounding_box = BoundingBox()
-        let resources = await get_mesh_resources()
+        let resources = get_mesh_resources()
         for res in resources {
             bounding_box = await res.bounds.union(bounding_box)
         }
@@ -461,6 +465,8 @@ class NooGeometry : NoodlesComponent {
         return emulated_descriptors
     }
 }
+
+// MARK: Entity
 
 class NEntity : Entity, HasCollision {
     
@@ -711,7 +717,7 @@ class NooEntity : NoodlesComponent {
             }
             
         } else {
-            for (mat, mesh) in zip(geom.mesh_materials, await geom.get_mesh_resources()) {
+            for (mat, mesh) in zip(geom.mesh_materials, geom.get_mesh_resources()) {
                 let new_entity = await ModelEntity(mesh: mesh, materials: [mat])
                 
                 subs.append(new_entity)
@@ -1101,7 +1107,7 @@ class NoodlesWorld {
         root_entity = MeshGeneration.build_sphere()
         
         let bb = root_entity.visualBounds(relativeTo: root_entity.parent)
-        let gesture = GestureComponent(canDrag: true, canScale: true, canRotate: false)
+        let gesture = GestureComponent(canDrag: true, pivotOnDrag: false, canScale: true, canRotate: true)
         let input = InputTargetComponent()
         let coll  = CollisionComponent(shapes: [ShapeResource.generateSphere(radius: bb.boundingRadius)])
         root_entity.components.set(gesture)
