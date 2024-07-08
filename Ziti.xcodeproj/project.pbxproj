@@ -3,35 +3,24 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2D0A4FF22BA394560022469B /* MethodList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0A4FF12BA394560022469B /* MethodList.swift */; };
 		2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6032B7A6E14003D618A /* RealityKitContent */; };
 		2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6052B7A6E14003D618A /* ZitiApp.swift */; };
-		2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6072B7A6E14003D618A /* ContentView.swift */; };
 		2D40E60C2B7A6E15003D618A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60B2B7A6E15003D618A /* Assets.xcassets */; };
 		2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */; };
 		2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6192B7A6E15003D618A /* ZitiTests.swift */; };
-		2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6232B7A7608003D618A /* MeshGeneration.swift */; };
-		2D40E6262B7BC051003D618A /* CommandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6252B7BC051003D618A /* CommandView.swift */; };
 		2D40E6292B7BCD10003D618A /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6282B7BCD10003D618A /* Starscream */; };
 		2D40E62B2B7BD671003D618A /* Communication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62A2B7BD671003D618A /* Communication.swift */; };
-		2D40E62D2B7C0162003D618A /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62C2B7C0162003D618A /* Messages.swift */; };
 		2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E62F2B7C02C5003D618A /* SwiftCBOR */; };
-		2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6312B80116F003D618A /* NoodlesWorld.swift */; };
 		2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */; };
 		2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */; };
 		2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */; };
 		2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */; };
-		2DD719142BBC72A500E1391E /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD719132BBC72A500E1391E /* Strings.swift */; };
-		2DE26ACF2BE9476600B55042 /* AdvectionSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE26ACE2BE9476600B55042 /* AdvectionSystem.swift */; };
-		2DE26AD32BEAE9B500B55042 /* VoxelQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE26AD22BEAE9B500B55042 /* VoxelQuery.swift */; };
 		2DE787C42C38C5830050B905 /* ComputeContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE787C32C38C5830050B905 /* ComputeContext.swift */; };
-		2DE787C62C399B240050B905 /* DirectUpload.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2DE787C52C399B240050B905 /* DirectUpload.metal */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
-		2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,34 +34,59 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2D0A4FF12BA394560022469B /* MethodList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MethodList.swift; sourceTree = "<group>"; };
 		2D40E5FE2B7A6E14003D618A /* Ziti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ziti.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E6022B7A6E14003D618A /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2D40E6052B7A6E14003D618A /* ZitiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiApp.swift; sourceTree = "<group>"; };
-		2D40E6072B7A6E14003D618A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2D40E60B2B7A6E15003D618A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2D40E6102B7A6E15003D618A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2D40E6152B7A6E15003D618A /* ZitiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZitiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E6192B7A6E15003D618A /* ZitiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiTests.swift; sourceTree = "<group>"; };
-		2D40E6232B7A7608003D618A /* MeshGeneration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshGeneration.swift; sourceTree = "<group>"; };
-		2D40E6252B7BC051003D618A /* CommandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandView.swift; sourceTree = "<group>"; };
 		2D40E62A2B7BD671003D618A /* Communication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communication.swift; sourceTree = "<group>"; };
-		2D40E62C2B7C0162003D618A /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
-		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
-		2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RealityViewExtensions.swift; path = gestures/RealityViewExtensions.swift; sourceTree = "<group>"; };
-		2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EntityExtensions.swift; path = gestures/EntityExtensions.swift; sourceTree = "<group>"; };
-		2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureExtensions.swift; path = gestures/GestureExtensions.swift; sourceTree = "<group>"; };
-		2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureComponent.swift; path = gestures/GestureComponent.swift; sourceTree = "<group>"; };
-		2DD719132BBC72A500E1391E /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
-		2DE26ACE2BE9476600B55042 /* AdvectionSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvectionSystem.swift; sourceTree = "<group>"; };
-		2DE26AD22BEAE9B500B55042 /* VoxelQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxelQuery.swift; sourceTree = "<group>"; };
+		2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RealityViewExtensions.swift; sourceTree = "<group>"; };
+		2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntityExtensions.swift; sourceTree = "<group>"; };
+		2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GestureExtensions.swift; sourceTree = "<group>"; };
+		2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GestureComponent.swift; sourceTree = "<group>"; };
 		2DE787C32C38C5830050B905 /* ComputeContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputeContext.swift; sourceTree = "<group>"; };
-		2DE787C52C399B240050B905 /* DirectUpload.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = DirectUpload.metal; path = shaders/DirectUpload.metal; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
-		2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooImmersiveView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2DE787C82C3C7E590050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MeshGeneration.swift,
+				MethodList.swift,
+				NoodlesWorld.swift,
+			);
+			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;
+		};
+		2DE787D92C3C7FE20050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AdvectionSystem.swift,
+				VoxelQuery.swift,
+			);
+			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;
+		};
+		2DE787DB2C3C7FFF0050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Messages.swift,
+				Strings.swift,
+			);
+			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		2DE787C72C3C7E590050B905 /* World */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787C82C3C7E590050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = World; sourceTree = "<group>"; };
+		2DE787CF2C3C7F940050B905 /* Shaders */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shaders; sourceTree = "<group>"; };
+		2DE787D42C3C7F9A0050B905 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
+		2DE787D82C3C7FDD0050B905 /* Physics */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787D92C3C7FE20050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Physics; sourceTree = "<group>"; };
+		2DE787DA2C3C7FFF0050B905 /* NoodlesSpec */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787DB2C3C7FFF0050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = NoodlesSpec; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2D40E5FB2B7A6E13003D618A /* Frameworks */ = {
@@ -118,28 +132,19 @@
 		2D40E6002B7A6E14003D618A /* Ziti */ = {
 			isa = PBXGroup;
 			children = (
-				2DE26ACE2BE9476600B55042 /* AdvectionSystem.swift */,
-				2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */,
-				2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */,
-				2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */,
-				2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */,
-				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
-				2DE26AD22BEAE9B500B55042 /* VoxelQuery.swift */,
-				2DD719132BBC72A500E1391E /* Strings.swift */,
-				2D40E62C2B7C0162003D618A /* Messages.swift */,
+				2DE787D82C3C7FDD0050B905 /* Physics */,
+				2DE787CC2C3C7F400050B905 /* RealityGestures */,
+				2DE787C72C3C7E590050B905 /* World */,
+				2DE787DA2C3C7FFF0050B905 /* NoodlesSpec */,
 				2DE787C32C38C5830050B905 /* ComputeContext.swift */,
-				2DE787C52C399B240050B905 /* DirectUpload.metal */,
+				2DE787CF2C3C7F940050B905 /* Shaders */,
 				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
-				2D40E6072B7A6E14003D618A /* ContentView.swift */,
+				2DE787D42C3C7F9A0050B905 /* Views */,
 				2D40E62A2B7BD671003D618A /* Communication.swift */,
-				2D40E6252B7BC051003D618A /* CommandView.swift */,
-				2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */,
-				2D0A4FF12BA394560022469B /* MethodList.swift */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
 				2D40E6102B7A6E15003D618A /* Info.plist */,
 				2D40E60D2B7A6E15003D618A /* Preview Content */,
-				2D40E6232B7A7608003D618A /* MeshGeneration.swift */,
 			);
 			path = Ziti;
 			sourceTree = "<group>";
@@ -168,6 +173,17 @@
 			path = ZitiTests;
 			sourceTree = "<group>";
 		};
+		2DE787CC2C3C7F400050B905 /* RealityGestures */ = {
+			isa = PBXGroup;
+			children = (
+				2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */,
+				2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */,
+				2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */,
+				2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */,
+			);
+			path = RealityGestures;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -182,6 +198,10 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2DE787CF2C3C7F940050B905 /* Shaders */,
+				2DE787D42C3C7F9A0050B905 /* Views */,
 			);
 			name = Ziti;
 			packageProductDependencies = (
@@ -277,25 +297,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */,
-				2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */,
-				2DE26ACF2BE9476600B55042 /* AdvectionSystem.swift in Sources */,
-				2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */,
-				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
-				2DE26AD32BEAE9B500B55042 /* VoxelQuery.swift in Sources */,
 				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
-				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
-				2DD719142BBC72A500E1391E /* Strings.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
 				2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */,
 				2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */,
 				2DE787C42C38C5830050B905 /* ComputeContext.swift in Sources */,
-				2D0A4FF22BA394560022469B /* MethodList.swift in Sources */,
 				2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */,
-				2DE787C62C399B240050B905 /* DirectUpload.metal in Sources */,
 				2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */,
-				2D40E6262B7BC051003D618A /* CommandView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
