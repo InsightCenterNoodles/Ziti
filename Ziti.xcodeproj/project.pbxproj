@@ -28,6 +28,8 @@
 		2DD719142BBC72A500E1391E /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD719132BBC72A500E1391E /* Strings.swift */; };
 		2DE26ACF2BE9476600B55042 /* AdvectionSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE26ACE2BE9476600B55042 /* AdvectionSystem.swift */; };
 		2DE26AD32BEAE9B500B55042 /* VoxelQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE26AD22BEAE9B500B55042 /* VoxelQuery.swift */; };
+		2DE787C42C38C5830050B905 /* ComputeContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE787C32C38C5830050B905 /* ComputeContext.swift */; };
+		2DE787C62C399B240050B905 /* DirectUpload.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2DE787C52C399B240050B905 /* DirectUpload.metal */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
 		2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */; };
 /* End PBXBuildFile section */
@@ -65,6 +67,8 @@
 		2DD719132BBC72A500E1391E /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		2DE26ACE2BE9476600B55042 /* AdvectionSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvectionSystem.swift; sourceTree = "<group>"; };
 		2DE26AD22BEAE9B500B55042 /* VoxelQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxelQuery.swift; sourceTree = "<group>"; };
+		2DE787C32C38C5830050B905 /* ComputeContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputeContext.swift; sourceTree = "<group>"; };
+		2DE787C52C399B240050B905 /* DirectUpload.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = DirectUpload.metal; path = shaders/DirectUpload.metal; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooImmersiveView.swift; sourceTree = "<group>"; };
@@ -123,6 +127,8 @@
 				2DE26AD22BEAE9B500B55042 /* VoxelQuery.swift */,
 				2DD719132BBC72A500E1391E /* Strings.swift */,
 				2D40E62C2B7C0162003D618A /* Messages.swift */,
+				2DE787C32C38C5830050B905 /* ComputeContext.swift */,
+				2DE787C52C399B240050B905 /* DirectUpload.metal */,
 				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
 				2D40E6072B7A6E14003D618A /* ContentView.swift */,
@@ -284,8 +290,10 @@
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
 				2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */,
 				2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */,
+				2DE787C42C38C5830050B905 /* ComputeContext.swift in Sources */,
 				2D0A4FF22BA394560022469B /* MethodList.swift in Sources */,
 				2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */,
+				2DE787C62C399B240050B905 /* DirectUpload.metal in Sources */,
 				2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */,
 				2D40E6262B7BC051003D618A /* CommandView.swift in Sources */,
 			);

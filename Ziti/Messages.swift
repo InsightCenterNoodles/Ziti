@@ -481,7 +481,7 @@ struct InvokeMethodMessage : NoodlesMessage {
     }
 }
 
-// ==
+// MARK: Methods
 
 struct MethodArg : Hashable {
     var name : String
@@ -532,11 +532,16 @@ struct MsgMethodCreate : NoodlesServerMessage, Hashable {
         hasher.combine(arg_doc)
     }
 }
+
+// MARK: Signals
+
 struct MsgSignalCreate : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgSignalCreate()
     }
 }
+
+// MARK: Entities
 
 struct InstanceSource {
     /*
@@ -659,11 +664,9 @@ struct MsgEntityCreate : NoodlesServerMessage {
         return ret
     }
 }
-//struct MsgEntityUpdate : NoodlesServerMessage {
-//    static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
-//        return MsgEntityUpdate()
-//    }
-//}
+
+// MARK: Plot
+
 struct MsgPlotCreate : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgPlotCreate()
@@ -674,6 +677,9 @@ struct MsgPlotUpdate : NoodlesServerMessage {
         return MsgPlotUpdate()
     }
 }
+
+// MARK: Buffer
+
 struct MsgBufferCreate : NoodlesServerMessage {
     var id = NooID.NULL
     var size: Int64 = 0
@@ -717,11 +723,17 @@ struct MsgBufferCreate : NoodlesServerMessage {
         return ret
     }
 }
+
+// MARK: BufferView
+
 struct MsgBufferViewCreate : NoodlesServerMessage {
     var id = NooID.NULL
     var source_buffer = NooID.NULL
     var offset = Int64(0)
     var length = Int64(0)
+    
+    // precomputed cached buffer info?
+    
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         var ret = MsgBufferViewCreate()
         /*
@@ -778,6 +790,8 @@ func to_color(_ c: CBOR?) -> UIColor? {
     
     return UIColor(red: r, green: g, blue: b, alpha: a)
 }
+
+// MARK: Material
 
 struct TexRef {
     /*
@@ -870,6 +884,9 @@ struct MsgMaterialUpdate : NoodlesServerMessage {
         return MsgMaterialUpdate()
     }
 }
+
+// MARK: Image
+
 struct MsgImageCreate : NoodlesServerMessage {
     /*
      id : ImageID,
@@ -901,6 +918,9 @@ struct MsgImageCreate : NoodlesServerMessage {
         return MsgImageCreate(id: id, buffer_source: buffer_source, saved_bytes: saved_bytes )
     }
 }
+
+// MARK: Texture
+
 struct MsgTextureCreate : NoodlesServerMessage {
     /*
      id : TextureID,
@@ -926,6 +946,9 @@ struct MsgTextureCreate : NoodlesServerMessage {
         )
     }
 }
+
+// MARK: Sampler
+
 struct MsgSamplerCreate : NoodlesServerMessage {
     /*
      id : SamplerID,
@@ -956,6 +979,9 @@ struct MsgSamplerCreate : NoodlesServerMessage {
         )
     }
 }
+
+// MARK: Light
+
 struct MsgLightCreate : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgLightCreate()
@@ -966,6 +992,8 @@ struct MsgLightUpdate : NoodlesServerMessage {
         return MsgLightUpdate()
     }
 }
+
+// MARK: Geometry
 
 struct GeomAttrib {
     /*
@@ -1077,10 +1105,7 @@ struct GeomPatch {
     var material : NooID
     
     // precomputed mesh information
-    var resource : MeshDescriptor?
-//    var positions : [SIMD3<Float>]?
-//    var textures  : [SIMD2<Float>]?
-//    var prims     : [UInt32]?
+    var resource : LowLevelMesh?
     
     init(_ c: CBOR, _ info: DecodeInfo) {
         vertex_count = to_int64(c["vertex_count"]) ?? 0
@@ -1099,72 +1124,73 @@ struct GeomPatch {
             indices = GeomIndex(idx)
         }
         
-        var new_descriptor = MeshDescriptor()
+        //var new_descriptor = MeshDescriptor()
         
         print("Caching geometry info")
         
-        for attribute in attributes {
-            let buffer_view = info.buffer_view_cache[attribute.view.slot]!
-            let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
-            
-            let slice = buffer_view.get_slice(data: buffer.bytes, view_offset: attribute.offset)
-            
-            
-            switch attribute.semantic {
-            case "POSITION":
-                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                new_descriptor.positions = MeshBuffers.Positions(attrib_data);
-                
-                //print("Caching positions: ", positions!.count)
-                
-            case "TEXTURE":
-                switch attribute.format {
-                case "VEC2":
-                    let attrib_data = realize_tex_vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                    new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-                    //print("Caching textures: ", textures!.count)
-                case "U16VEC2":
-                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                    new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
-                    //print("Caching textures: ", textures!.count)
-                default:
-                    print("Unknown texture coord format \(attribute.format)")
-                }
-                
-            case "NORMAL":
-                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
-                new_descriptor.normals = MeshBuffers.Normals(attrib_data);
-                
-            default:
-                print("Not handling attribute \(attribute.semantic)")
-                break;
-            }
-        }
         
-        if let idx = indices {
-            let buffer_view = info.buffer_view_cache[idx.view.slot]!
-            let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
-            
-            let byte_count : Int64;
-            switch idx.format {
-            case "U8":
-                byte_count = idx.count
-            case "U16":
-                byte_count = idx.count*2
-            case "U32":
-                byte_count = idx.count*4
-            default:
-                fatalError("unknown index format")
-            }
-            
-            let bytes = buffer_view.get_slice(data: buffer.bytes, view_offset: idx.offset, override_length: byte_count)
-            
-            let idx_list = msg_realize_index(bytes, idx)
-            //print("Caching indicies: ", prims!.count)
-            new_descriptor.primitives = .triangles(idx_list)
-        }
+//        for attribute in attributes {
+//            let buffer_view = info.buffer_view_cache[attribute.view.slot]!
+//            let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
+//            
+//            let slice = buffer_view.get_slice(data: buffer.bytes, view_offset: attribute.offset)
+//            
+//            
+//            switch attribute.semantic {
+//            case "POSITION":
+//                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
+//                new_descriptor.positions = MeshBuffers.Positions(attrib_data);
+//                
+//                //print("Caching positions: ", positions!.count)
+//                
+//            case "TEXTURE":
+//                switch attribute.format {
+//                case "VEC2":
+//                    let attrib_data = realize_tex_vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
+//                    new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+//                    //print("Caching textures: ", textures!.count)
+//                case "U16VEC2":
+//                    let attrib_data = realize_tex_u16vec2(slice, vcount: Int(vertex_count), stride: Int(attribute.stride))
+//                    new_descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(attrib_data);
+//                    //print("Caching textures: ", textures!.count)
+//                default:
+//                    print("Unknown texture coord format \(attribute.format)")
+//                }
+//                
+//            case "NORMAL":
+//                let attrib_data = realize_vec3(slice, VAttribFormat.V3, vcount: Int(vertex_count), stride: Int(attribute.stride))
+//                new_descriptor.normals = MeshBuffers.Normals(attrib_data);
+//                
+//            default:
+//                print("Not handling attribute \(attribute.semantic)")
+//                break;
+//            }
+//        }
+//        
+//        if let idx = indices {
+//            let buffer_view = info.buffer_view_cache[idx.view.slot]!
+//            let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
+//            
+//            let byte_count : Int64;
+//            switch idx.format {
+//            case "U8":
+//                byte_count = idx.count
+//            case "U16":
+//                byte_count = idx.count*2
+//            case "U32":
+//                byte_count = idx.count*4
+//            default:
+//                fatalError("unknown index format")
+//            }
+//            
+//            let bytes = buffer_view.get_slice(data: buffer.bytes, view_offset: idx.offset, override_length: byte_count)
+//            
+//            let idx_list = msg_realize_index(bytes, idx)
+//            //print("Caching indicies: ", prims!.count)
+//            new_descriptor.primitives = .triangles(idx_list)
+//        }
         
-        self.resource = new_descriptor
+        //self.resource = patch_to_low_level_mesh(attributes: attributes, index: indices, primitive: type, vertex_count: vertex_count, info: info)!
     }
 }
 
@@ -1221,6 +1247,9 @@ struct MsgGeometryCreate : NoodlesServerMessage {
         return ret
     }
 }
+
+// MARK: Table
+
 struct MsgTableCreate : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgTableCreate()
@@ -1231,6 +1260,9 @@ struct MsgTableUpdate : NoodlesServerMessage {
         return MsgTableUpdate()
     }
 }
+
+// MARK: Document
+
 struct MsgDocumentUpdate : NoodlesServerMessage {
     /*
      ? methods_list : [* MethodID],
@@ -1256,6 +1288,8 @@ struct MsgSignalInvoke : NoodlesServerMessage {
         return MsgSignalInvoke()
     }
 }
+
+// MARK: Method Reply
 
 struct MethodReplyException {
     var code: Int64
@@ -1298,11 +1332,16 @@ struct MsgMethodReply : NoodlesServerMessage  {
         )
     }
 }
+
+// MARK: Document Init
+
 struct MsgDocumentInitialized : NoodlesServerMessage {
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         return MsgDocumentInitialized()
     }
 }
+
+// MARK: Physics
 
 struct StreamFlowHeader {
     var line_count: Int64

@@ -26,6 +26,8 @@ protocol NoodlesComponent {
     func destroy(world: NoodlesWorld);
 }
 
+// MARK: Method
+
 class NooMethod : NoodlesComponent, Hashable {
     var info: MsgMethodCreate
     
@@ -50,6 +52,8 @@ class NooMethod : NoodlesComponent, Hashable {
     }
 }
 
+// MARK: Buffer
+
 class NooBuffer : NoodlesComponent {
     var info: MsgBufferCreate
     
@@ -63,6 +67,9 @@ class NooBuffer : NoodlesComponent {
     
     func destroy(world: NoodlesWorld) { }
 }
+
+
+// MARK: BufferView
 
 class NooBufferView : NoodlesComponent {
     var info: MsgBufferViewCreate
@@ -88,6 +95,8 @@ class NooBufferView : NoodlesComponent {
     
     func destroy(world: NoodlesWorld) { }
 }
+
+// MARK: Texture
 
 class NooTexture : NoodlesComponent {
     var info : MsgTextureCreate
@@ -146,6 +155,47 @@ class NooSampler : NoodlesComponent {
     func destroy(world: NoodlesWorld) { }
 }
 
+// MARK: Image
+
+private func data_to_cgimage(data: Data) -> CGImage? {
+    let options: [CFString: Any] = [
+        kCGImageSourceShouldCache: true,
+        kCGImageSourceShouldAllowFloat: true
+    ]
+    
+    guard let image_source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary) else {
+        return nil
+    }
+    
+    return CGImageSourceCreateImageAtIndex(image_source, 0, options as CFDictionary)
+}
+
+private func transform_image(image: CGImage) -> CGImage? {
+    let width = image.width
+    let height = image.height
+    let bitsPerComponent = image.bitsPerComponent
+    let bytesPerRow = image.bytesPerRow
+    let colorSpace = image.colorSpace
+    let bitmapInfo = image.bitmapInfo
+    
+    guard let context = CGContext(
+        data: nil,
+        width: width,
+        height: height,
+        bitsPerComponent: bitsPerComponent,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace!,
+        bitmapInfo: bitmapInfo.rawValue
+    ) else { return nil }
+    
+    context.translateBy(x: 0, y: CGFloat(height))
+    context.scaleBy(x: 1.0, y: -1.0)
+    
+    context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+    
+    return context.makeImage()
+}
+
 class NooImage : NoodlesComponent {
     var info : MsgImageCreate
     
@@ -161,7 +211,7 @@ class NooImage : NoodlesComponent {
         //let is_jpg = src_bytes.starts(with: [0xFF, 0xD8, 0xFF])
         //let is_png = src_bytes.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
         
-        image = UIImage(data: src_bytes)?.cgImage
+        image = transform_image(image: data_to_cgimage(data: src_bytes)!)
         
         print("Creating image: \(image.width)x\(image.height)");
     }
@@ -183,6 +233,13 @@ class NooImage : NoodlesComponent {
     func destroy(world: NoodlesWorld) { }
 }
 
+private func resolve_texwrap(_ wrap_string: String) -> MTLSamplerMinMagFilter {
+    if wrap_string == "NEAREST" {
+        return .nearest
+    }
+    return .linear
+}
+
 private func resolve_texture(world: NoodlesWorld, semantic: TextureResource.Semantic, ref: TexRef) -> MaterialParameters.Texture? {
     guard let tex_info = world.texture_list.get(ref.texture) else {
         return nil
@@ -193,7 +250,24 @@ private func resolve_texture(world: NoodlesWorld, semantic: TextureResource.Sema
         return nil
     }
     
-    return MaterialParameters.Texture(resource);
+    var ret = MaterialParameters.Texture(resource);
+    
+    ret.swizzle = MTLTextureSwizzleChannels(red: .red, green: .green, blue: .blue, alpha: .alpha)
+    
+    if let sampler_id = tex_info.info.sampler_id {
+        if let sampler = world.sampler_list.get(sampler_id) {
+
+            let desc = MTLSamplerDescriptor()
+            desc.minFilter = resolve_texwrap(sampler.info.min_filter)
+            desc.magFilter = resolve_texwrap(sampler.info.mag_filter)
+            
+            ret.sampler = MaterialParameters.Texture.Sampler(desc)
+        }
+    }
+    
+    
+    
+    return ret;
 }
 
 class NooMaterial : NoodlesComponent {
@@ -246,7 +320,7 @@ class NooMaterial : NoodlesComponent {
 class NooGeometry : NoodlesComponent {
     var info: MsgGeometryCreate
     
-    var descriptors   : [MeshDescriptor] = []
+    var descriptors   : [LowLevelMesh] = []
     var mesh_materials: [any RealityKit.Material] = []
     
     var pending_mesh_resources: [MeshResource] = []
@@ -267,11 +341,11 @@ class NooGeometry : NoodlesComponent {
         }
         
         for d in descriptors {
-            let res = try! MeshResource.generate(from: [d])
+            let res = try! MeshResource(from: d)
             self.pending_mesh_resources.append( res )
         }
         
-        //print("built")
+        print("Build \(pending_mesh_resources.count) resources for mesh")
         
         return pending_mesh_resources
     }
@@ -305,9 +379,9 @@ class NooGeometry : NoodlesComponent {
     }
     
     func add_patch(_ patch: GeomPatch, _ world: NoodlesWorld) {
-        guard let description = patch.resource else {
-            return
-        }
+        let ll = patch_to_low_level_mesh(patch: patch, world: world)!;
+        
+        self.descriptors.append(ll)
           
         if let mat = world.material_list.get(patch.material) {
             mesh_materials.append( mat.mat )
@@ -316,13 +390,12 @@ class NooGeometry : NoodlesComponent {
             tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: .white)
             mesh_materials.append( tri_mat )
         }
-        
-        descriptors.append(description)
     }
     
     func destroy(world: NoodlesWorld) { }
     
     func generate_emulated_instances(src: InstanceSource, _ prep: NooEntityRenderPrep) async -> [MeshDescriptor]  {
+        /*
         assert(src.stride < (4*4*4));
         
         guard let v = prep.instance_view else {
@@ -463,6 +536,8 @@ class NooGeometry : NoodlesComponent {
         }
         
         return emulated_descriptors
+         */
+        return []
     }
 }
 
@@ -712,8 +787,7 @@ class NooEntity : NoodlesComponent {
                 
                 subs.append(new_entity)
             } catch {
-                print("Uh oh \(error)");
-                assert(false)
+                fatalError("Uh oh \(error)");
             }
             
         } else {
@@ -873,6 +947,8 @@ func matrix_multiply(_ mat: simd_float4x4, _ v : simd_float3) -> simd_float3 {
     let ret = matrix_multiply(mat, v4)
     return vec4_to_vec3(ret) / ret.w
 }
+
+// MARK: Advection
 
 struct AdvectionID : Equatable {
     let line_id: UInt32
@@ -1061,6 +1137,8 @@ class ComponentList<T: NoodlesComponent> {
         }
     }
 }
+
+// MARK: World
 
 class NoodlesWorld {
     var scene : RealityViewContent
