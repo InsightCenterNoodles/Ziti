@@ -32,28 +32,24 @@ struct ContentView: View {
     
     init(new: NewNoodles) {
         new_noodles_config = new
+        
+        
     }
     
     var body: some View {
-        ZStack {
+        RealityView.init(make: { content in
+            self.current_scene = content
             
-            RealityView { content in
-                self.current_scene = content
-                
-                let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
-                
-                noodles_world = NoodlesWorld(content, current_doc_method_list)
-                
-                noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
-                
-                noodles_world?.comm = noodles_state
-                
-            } update: { content in
-                
-            }.installGestures()
+            let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
+            noodles_world = NoodlesWorld(content, current_doc_method_list)
+            
+            noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
+            
+            noodles_world?.comm = noodles_state
+            
+        }).installGestures().ornament(attachmentAnchor: .scene(.bottomFront)) {
             VStack {
-                
                 if show_details {
                     VStack {
                         Text("Current Host: \(new_noodles_config.hostname)").font(.headline)
@@ -98,6 +94,12 @@ struct ContentView: View {
                     Spacer()
                     
                     Button(action: {
+                        self.debug()
+                    }) {
+                        Label("Debug", systemImage: "ladybug.fill").labelStyle(.iconOnly)
+                    }
+                    
+                    Button(action: {
                         withAnimation {
                             show_details.toggle()
                         }
@@ -109,16 +111,23 @@ struct ContentView: View {
                 
             }.environment(current_doc_method_list)
                 .padding()
-                .frame(maxWidth: show_details ? 500 : 450)
+                //.frame(maxWidth: show_details ? 500 : 450)
                 .glassBackgroundEffect()
-                .offset(y: show_details ? 300 : 475)
+                //.offset(y: show_details ? 300 : 475)
         }
+        
     }
     
     func frame_all() {
         auto_extent = true
         
         noodles_state?.world.frame_all(target_volume: SIMD3<Float>(1,1,1))
+    }
+    
+    func debug() {
+        //instance_test.update()
+        
+        noodles_world?.instance_test.update()
     }
 }
 

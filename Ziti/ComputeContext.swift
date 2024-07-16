@@ -19,6 +19,9 @@ class ComputeContext {
     //var compute_pipelines: [MTLComputePipelineState] = []
     
     let direct_upload_function: MTLFunction
+    
+    let construct_from_inst_array: MTLFunction
+    let construct_inst_index: MTLFunction
 
     init(device: MTLDevice? = nil, commandQueue: MTLCommandQueue? = nil) {
         guard let device = device ?? MTLCreateSystemDefaultDevice() else {
@@ -35,33 +38,31 @@ class ComputeContext {
         self.library = library
         
         self.direct_upload_function = library.makeFunction(name: "direct_upload_vertex")!
+        
+        self.construct_from_inst_array = library.makeFunction(name: "construct_from_inst_array")!
+        self.construct_inst_index = library.makeFunction(name: "construct_inst_index")!
+        
+        let max_threadgroup_size = device.maxThreadsPerThreadgroup
+        print("Max Threadgroup Size: \(max_threadgroup_size)")
     }
     
-//    func test() {
-//        var commands = command_queue.makeCommandBuffer()!
-//        
-//        var command_encoder = commands.makeComputeCommandEncoder()!
-//        
-//        command_encoder.
-//    }
+    func get_threadgroups(_ compute_threads: MTLSize, threads_per_threadgroup: MTLSize) -> MTLSize {
+        return MTLSize(
+            width: next_multiple_of(value: compute_threads.width, multiple: threads_per_threadgroup.width),
+            height: next_multiple_of(value: compute_threads.height, multiple: threads_per_threadgroup.height),
+            depth: next_multiple_of(value: compute_threads.depth, multiple: threads_per_threadgroup.depth)
+        )
+    }
+    
+    func make_construct_from_inst_array_state() -> MTLComputePipelineState {
+        return try! device.makeComputePipelineState(function: construct_from_inst_array)
+    }
+    
+    func make_construct_from_inst_index_state() -> MTLComputePipelineState {
+        return try! device.makeComputePipelineState(function: construct_inst_index)
+    }
+}
 
-//    func makePipelines() throws {
-//        guard let library = device.makeDefaultLibrary() else {
-//            throw Error.libraryNotFound
-//        }
-
-//        let vertexFunctionName = "update_wave_vertex"
-//        guard let vertexFunction = library.makeFunction(name: vertexFunctionName) else {
-//            throw Error.functionNotFound(name: vertexFunctionName)
-//        }
-//        let vertexPipeline = try device.makeComputePipelineState(function: vertexFunction)
-//        computePipelines.insert(vertexPipeline, at: PipelineIndex.waveVertexUpdate.rawValue)
-//
-//        let indexFunctionName = "update_grid_indices"
-//        guard let indexFunction = library.makeFunction(name: indexFunctionName) else {
-//            throw Error.functionNotFound(name: indexFunctionName)
-//        }
-//        let indexPipeline = try device.makeComputePipelineState(function: indexFunction)
-//        computePipelines.insert(indexPipeline, at: PipelineIndex.gridIndexUpdate.rawValue)
-//    }
+private func next_multiple_of(value: Int, multiple: Int) -> Int {
+    return multiple * Int(ceil(Double(value)/Double(multiple)))
 }

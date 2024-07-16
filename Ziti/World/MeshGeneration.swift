@@ -590,6 +590,25 @@ private func determine_low_level_format(attribute: GeomAttrib) -> MTLVertexForma
     return nil
 }
 
+func bounding_box<T: Collection>(of points: T, position_extractor: (T.Element) -> SIMD3<Float>) -> BoundingBox? {
+    guard let first_point = points.first else {
+        return nil
+    }
+    
+    let extract_first_point = position_extractor(first_point)
+    
+    var min_point = extract_first_point
+    var max_point = extract_first_point
+    
+    for element in points {
+        let point = position_extractor(element)
+        min_point = min(min_point, point)
+        max_point = max(max_point, point)
+    }
+    
+    return BoundingBox(min: min_point, max: max_point)
+}
+
 func determine_bounding_box(attribute: GeomAttrib,
                             vertex_count: Int,
                             world: NoodlesWorld) -> BoundingBox {
@@ -630,15 +649,15 @@ func determine_bounding_box(attribute: GeomAttrib,
                 z: ptr.loadUnaligned(fromByteOffset: delta + 8, as: Float32.self)
             )
             
-            min_bb = pointwiseMin(min_bb, l_bb)
-            max_bb = pointwiseMax(max_bb, l_bb)
+            min_bb = min(min_bb, l_bb)
+            max_bb = max(max_bb, l_bb)
         }
     }
     
     return BoundingBox(min: min_bb, max: max_bb)
 }
 
-func determine_index_type(patch: GeomPatch) -> MTLPrimitiveType? {
+private func determine_index_type(patch: GeomPatch) -> MTLPrimitiveType? {
     switch patch.type {
     case "POINTS":
         return .point
@@ -655,7 +674,7 @@ func determine_index_type(patch: GeomPatch) -> MTLPrimitiveType? {
     }
 }
 
-func format_to_stride(format_str: String) -> Int64 {
+private func format_to_stride(format_str: String) -> Int64 {
     switch format_str {
     case "U8": return 1
     case "U16": return 2
