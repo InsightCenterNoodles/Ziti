@@ -19,16 +19,19 @@ using namespace metal;
 // rx ry rz rw
 // sx sy sz t1
 
+/// Rotate a point around the origin by a quaternion
 float3 rotate_point(float3 p, float4 quat) {
     return p + 2.0 * cross(quat.xyz, cross(quat.xyz, p) + quat.w * p);
 }
 
+
+/// Compute a transformed vertex given an instance matrix pack
 void transform_glyph_vertex(device ParticleVertex const* in_verts,
                             device ParticleVertex* out_verts,
                             float4x4 instance,
                             uint vertex_count) {
     float3 inst_position = instance[0].xyz;
-    //float4 inst_color    = instance[1];
+    //float4 inst_color    = instance[1]; // color not used. pending removal?
     float4 inst_rotation = instance[2];
     float3 inst_scale    = instance[3].xyz;
     float2 inst_uv       = float2(instance[0].w, instance[3].w);
@@ -38,12 +41,12 @@ void transform_glyph_vertex(device ParticleVertex const* in_verts,
         device auto& out_v = out_verts[i];
         
         out_v.position = rotate_point(in_v.position*inst_scale, inst_rotation) + inst_position;
-        //out_v.position = inst_position;
         out_v.normal   = rotate_point(in_v.normal, inst_rotation);
         out_v.uv       = ushort2( (float2(in_v.uv) / 255.0 + inst_uv) * 255.0 );
     }
 }
 
+/// Compute instances of a glyph, transforming and copying instances to a new buffer (vertex version)
 kernel void construct_from_inst_array(constant InstanceDescriptor& description [[buffer(0)]],
                                       device float4x4*             instance_buffer [[buffer(1)]],
                                       device ParticleVertex const* input_vertex_list [[buffer(2)]],
@@ -67,6 +70,7 @@ kernel void construct_from_inst_array(constant InstanceDescriptor& description [
     transform_glyph_vertex(input_vertex_list, destination, this_instance, vertex_count);
 }
 
+/// Compute instances of a glyph, transforming and copying instances to a new buffer (index version)
 kernel void construct_inst_index(constant InstanceDescriptor& description [[buffer(0)]],
                                  device ushort const* input_index_list [[buffer(1)]],
                                  device uint*         new_index_list [[buffer(2)]],

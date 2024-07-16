@@ -1184,7 +1184,7 @@ class NoodlesWorld {
         self.scene = scene
         self.visible_method_list = doc_method_list
         
-        root_entity = MeshGeneration.build_sphere()
+        root_entity = make_model_entity(scale: 0.05, shape_sphere)
         
         let bb = root_entity.visualBounds(relativeTo: root_entity.parent)
         let gesture = GestureComponent(canDrag: true, pivotOnDrag: false, canScale: true, canRotate: true)
@@ -1202,73 +1202,7 @@ class NoodlesWorld {
         print("Creating root entity:")
         //dump(root_entity)
         
-        let verts : [ParticleVertex] = [
-            .init(position: .init(x: -1.0, y: -1.0, z: 1.0),
-                  normal: .init(x: -0.5774, y: -0.5774, z: 0.5774),
-                  uv: .init(x: 0, y: 0)
-                ),
-            .init(
-                position: .init(x: 1.0, y: -1.0, z: 1.0),
-                normal: .init(x: 0.5774, y: -0.5774, z: 0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-            .init(
-                position: .init(x: 1.0, y: 1.0, z: 1.0),
-                normal: .init(x: 0.5774, y: 0.5774, z: 0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-                    .init(
-                        position: .init(x: -1.0, y: 1.0, z: 1.0),
-                        normal: .init(x: -0.5774, y: 0.5774, z: 0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-                    .init(
-                        position: .init(x: -1.0, y: -1.0, z: -1.0),
-                        normal: .init(x: -0.5774, y: -0.5774, z: -0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-                    .init(
-                        position: .init(x: 1.0, y: -1.0, z: -1.0),
-                        normal: .init(x: 0.5774, y: -0.5774, z: -0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-                    .init(
-                        position: .init(x: 1.0, y: 1.0, z: -1.0),
-                        normal: .init(x: 0.5774, y: 0.5774, z: -0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-                    .init(
-                        position: .init(x: -1.0, y: 1.0, z: -1.0),
-                        normal: .init(x: -0.5774, y: 0.5774, z: -0.5774),
-                    uv: .init(x: 0, y: 0)
-                ),
-            ];
-
-        let index_list : [UInt16] = [
-                // front
-                0, 1, 2,
-                2, 3, 0,
-                // right
-                1, 5, 6,
-                6, 2, 1,
-                // back
-                7, 6, 5,
-                5, 4, 7,
-                // left
-                4, 0, 3,
-                3, 7, 4,
-                // bottom
-                4, 5, 1,
-                1, 0, 4,
-                // top
-                3, 2, 6,
-                6, 7, 3,
-            ];
-        
-        let gdesc = GlyphDescription(
-            vertex: verts,
-            index: index_list,
-            bounding_box: BoundingBox(min: SIMD3<Float>(-1.0, -1.0, -1.0), max: SIMD3<Float>(1.0, 1.0, 1.0)))
+        let gdesc = make_glyph(shape_cube)
         
         instance_test = GlyphInstances(instance_count: 10, description: gdesc)
         

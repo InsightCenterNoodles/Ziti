@@ -9,20 +9,17 @@ import Foundation
 import Metal
 
 class ComputeContext {
-
     static let shared = ComputeContext()
-
+    
     let device: MTLDevice
     let command_queue: MTLCommandQueue
     let library: MTLLibrary
-
-    //var compute_pipelines: [MTLComputePipelineState] = []
     
     let direct_upload_function: MTLFunction
     
-    let construct_from_inst_array: MTLFunction
-    let construct_inst_index: MTLFunction
-
+    let pseudo_inst_vertex: ComputeFunction
+    let pseudo_inst_index: ComputeFunction
+    
     init(device: MTLDevice? = nil, commandQueue: MTLCommandQueue? = nil) {
         guard let device = device ?? MTLCreateSystemDefaultDevice() else {
             fatalError("Unable to build Metal device.")
@@ -39,30 +36,38 @@ class ComputeContext {
         
         self.direct_upload_function = library.makeFunction(name: "direct_upload_vertex")!
         
-        self.construct_from_inst_array = library.makeFunction(name: "construct_from_inst_array")!
-        self.construct_inst_index = library.makeFunction(name: "construct_inst_index")!
+        self.pseudo_inst_vertex = .init(name: "construct_from_inst_array", library, device)
+        self.pseudo_inst_index = .init(name: "construct_inst_index", library, device)
         
         let max_threadgroup_size = device.maxThreadsPerThreadgroup
         print("Max Threadgroup Size: \(max_threadgroup_size)")
     }
     
-    func get_threadgroups(_ compute_threads: MTLSize, threads_per_threadgroup: MTLSize) -> MTLSize {
+    
+    /// Computed rounded threadgroups for platforms that cannot do dynamically tiled groups. Use with `dispatchThreadgroups`
+    /// - Parameters:
+    ///   - compute_threads: Threads you are wishing to launch
+    ///   - threadgroup_size: Threadgroup setup (i.e. [32, 1, 1], etc)
+    /// - Returns: Threads per threadgroup
+    func get_threadgroups(_ compute_threads: MTLSize, threadgroup_size: MTLSize) -> MTLSize {
         return MTLSize(
-            width: next_multiple_of(value: compute_threads.width, multiple: threads_per_threadgroup.width),
-            height: next_multiple_of(value: compute_threads.height, multiple: threads_per_threadgroup.height),
-            depth: next_multiple_of(value: compute_threads.depth, multiple: threads_per_threadgroup.depth)
+            width: next_multiple_of(value: compute_threads.width, multiple: threadgroup_size.width),
+            height: next_multiple_of(value: compute_threads.height, multiple: threadgroup_size.height),
+            depth: next_multiple_of(value: compute_threads.depth, multiple: threadgroup_size.depth)
         )
-    }
-    
-    func make_construct_from_inst_array_state() -> MTLComputePipelineState {
-        return try! device.makeComputePipelineState(function: construct_from_inst_array)
-    }
-    
-    func make_construct_from_inst_index_state() -> MTLComputePipelineState {
-        return try! device.makeComputePipelineState(function: construct_inst_index)
     }
 }
 
 private func next_multiple_of(value: Int, multiple: Int) -> Int {
     return multiple * Int(ceil(Double(value)/Double(multiple)))
+}
+
+class ComputeFunction {
+    let mtl_func: MTLFunction
+    let pipeline_state: MTLComputePipelineState
+    
+    init(name: String, _ library: MTLLibrary, _ device: MTLDevice) {
+        mtl_func = library.makeFunction(name: name)!
+        pipeline_state = try! device.makeComputePipelineState(function: mtl_func)
+    }
 }
