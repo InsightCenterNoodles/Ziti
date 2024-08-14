@@ -9,123 +9,196 @@ import Foundation
 import SwiftUI
 import RealityKit
 
+// MARK: Advection Component
+
 /// Advection information for an entity.
-struct AdvectionComponent: Component {
-    var state : NooAdvectorState
-    var line_id : Int
+struct ParticleAdvectionComponent: Component {
+    // compute state
+    let compute_state: MTLComputePipelineState
     
-    var last_start_index = 0
-    var particle_time: Float32
+    // 3d grid of velocity info
+    let velocity_vector_field : MTLBuffer
+    
+    // mat4s of particle info
+    let glyph_info: MTLBuffer
+    
+    // vec of AParticle
+    let particle_info: MTLBuffer
+    
+    // context
+    var particle_context: ParticleContext
+    
+    // glyph
+    var glyph_system: GlyphInstances
+    
+    // busy flag. are we still computing?
+    var busy_flag: MTLSharedEvent
+    var busy_counter: UInt64
+    
+    var capture_bounds: MTLCaptureScope
 }
 
-func find_end_time(list: [Float32], starting_point: Int, value: Float32) -> Int? {
-    //print("Finding end time starting \(starting_point) value \(value)")
-    let search_range = list[starting_point...]
-    return search_range.firstIndex(where: { $0 > value })
+func make_advection_component(context: ParticleContext) -> ParticleAdvectionComponent {
+    // should be a packed list of 3 floats, 4 bytes each
+    let vel_fld_len = context.vfield_dim.x * context.vfield_dim.y * context.vfield_dim.z * 3 * 4
+    
+    let mat4len = Int(context.number_particles) * MemoryLayout<float4x4>.stride
+    
+    let part_len = Int(context.number_particles) * MemoryLayout<AParticle>.stride
+    
+    let glyph_info = make_glyph(shape_cube)
+    
+    print("Making advection component for \(context.number_particles)")
+    print("Glyph info \(MemoryLayout<float4x4>.stride)")
+    
+    let cap = MTLCaptureManager.shared().makeCaptureScope(device: ComputeContext.shared.device)
+    
+    cap.label = "AdvectionCheck"
+    MTLCaptureManager.shared().defaultCaptureScope = cap
+    
+    return ParticleAdvectionComponent(
+        compute_state: ComputeContext.shared.advect_particles.new_pipeline_state(),
+        velocity_vector_field: ComputeContext.shared.device.makeBuffer(length: Int(vel_fld_len), options: .storageModeShared)!,
+        glyph_info: ComputeContext.shared.device.makeBuffer(length: mat4len, options: .storageModeShared)!,
+        particle_info: ComputeContext.shared.device.makeBuffer(length: part_len, options: .storageModeShared)!,
+        particle_context: context,
+        glyph_system: GlyphInstances(
+            instance_count: context.number_particles,
+            description: glyph_info
+        ),
+        busy_flag: ComputeContext.shared.device.makeSharedEvent()!,
+        busy_counter: 0,
+        capture_bounds: cap
+    )
+    
 }
 
-func lerp(_ x: Float32, _ x0: Float32, _ x1: Float32, _ y0: SIMD3<Float>, _ y1: SIMD3<Float>) -> SIMD3<Float> {
-    return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
-}
+//
+//func find_end_time(list: [Float32], starting_point: Int, value: Float32) -> Int? {
+//    //print("Finding end time starting \(starting_point) value \(value)")
+//    let search_range = list[starting_point...]
+//    return search_range.firstIndex(where: { $0 > value })
+//}
+
+//func lerp(_ x: Float32, _ x0: Float32, _ x1: Float32, _ y0: SIMD3<Float>, _ y1: SIMD3<Float>) -> SIMD3<Float> {
+//    return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+//}
 
 class GlobalAdvectionSettings {
     static var shared = GlobalAdvectionSettings()
     
-    var advection_speed = 0.0001;
+    // this should be in meters per second
+    var advection_speed = 0.1;
 }
 
-/// A system that advects particles
+func packed_to_float(_ packed: packed_float3) -> SIMD3<Float> {
+    return SIMD3<Float>(packed.x, packed.y, packed.z)
+}
+
+func float_to_packed(_ v: SIMD3<Float>) -> packed_float3 {
+    return packed_float3(x: v.x, y: v.y, z: v.z)
+}
+
+func pack_cast(_ int: simd_uint3) -> packed_int3 {
+    return packed_int3(x: Int32(int.x), y: Int32(int.y), z: Int32(int.z))
+}
+
+/// A system that advects particles. Scans for all ParticleAdvectionComponents and runs compute shaders
 struct AdvectionSystem: System {
-    static let query = EntityQuery(where: .has(AdvectionComponent.self))
+    static let query = EntityQuery(where: .has(ParticleAdvectionComponent.self))
 
     init(scene: RealityKit.Scene) {}
     
-    static func schedule_delete(_ e: Entity, _ component: AdvectionComponent?) {
-        //print("Schedule delete for \(e)")
-        e.removeFromParent()
-        component?.state.current_particles -= 1
-    }
-    
-    static func handle_entity(e: Entity, context: SceneUpdateContext) {
-        let delta = GlobalAdvectionSettings.shared.advection_speed * context.deltaTime;
-        
-        advect_entity(e: e, delta: delta)
-    }
-    
-    static func advect_entity(e: Entity, delta: Double) {
-        guard var component: AdvectionComponent = e.components[AdvectionComponent.self] else {
-            schedule_delete(e, nil);
+    static func handle_entity(e: Entity, scene_context: SceneUpdateContext) {
+        guard var component: ParticleAdvectionComponent = e.components[ParticleAdvectionComponent.self] else {
             return
         }
         
-        // increase time
-        let new_time = Float(Double(component.particle_time) + delta);
+        print("Advecting for \(e.hashValue)")
         
-        // find the indicies that bracket the time (OPTIMIZE LATER)
+        // we can skip checks at the start
+        if component.busy_counter != 0 {
+            // only wait a bit to see if the counter is good
+            let is_ready = component.busy_flag.wait(untilSignaledValue: component.busy_counter, timeoutMS: 0)
+            
+            print("Advecting \(is_ready)")
+            
+            if !is_ready {
+                default_log.warning("Skipping advection for this frame")
+                return
+            }
+        }
         
-        // line (will this copy?)
-        let line = component.state.lines[component.line_id]
+        component.busy_counter += 1
         
-        guard let time_array = line.attribs.first else {
-            //print("No time array")
-            schedule_delete(e, component)
+        print("Advecting \(component.busy_counter)")
+        
+        let time_delta = GlobalAdvectionSettings.shared.advection_speed * scene_context.deltaTime;
+        
+        component.particle_context.time_delta = Float(time_delta)
+        
+        // start compute
+        
+        component.capture_bounds.begin()
+        
+        // Build a new session
+        guard let compute_session = ComputeSession() else {
+            default_log.critical("Skipping instance update.")
             return
         }
         
-        guard let end_index = find_end_time(list: time_array.data, starting_point: component.last_start_index, value: new_time) else {
-            //print("No end index")
-            schedule_delete(e, component)
-            return
+        
+        compute_session.scope = component.capture_bounds
+        
+        compute_session.with_encoder {
+            // run advection
+            
+            $0.setComputePipelineState(component.compute_state)
+            $0.setBytes(&component.particle_context, length: MemoryLayout.size(ofValue: component.particle_context), index: 0)
+            $0.setBuffer(component.glyph_info, offset: 0, index: 1)
+            $0.setBuffer(component.particle_info, offset: 0, index: 2)
+            $0.setBuffer(component.velocity_vector_field, offset: 0, index: 3)
+            
+            compute_dispatch_1D(enc: $0, num_threads: Int(component.particle_context.number_particles), groups: 32)
         }
         
-        let start_index = end_index - 1
+        let bb = BoundingBox(
+            min: packed_to_float(component.particle_context.bb_min),
+            max: packed_to_float(component.particle_context.bb_max)
+        )
         
-        if start_index < 0 {
-            //print("No start index")
-            schedule_delete(e, component)
-            return
-        }
+        component.glyph_system.update(instance_buffer: component.glyph_info, bounds: bb, session: compute_session)
         
-        component.last_start_index = start_index
+        // when we are done, update flag
+        compute_session.command_buffer.encodeSignalEvent(component.busy_flag, value: component.busy_counter)
         
-        // sample positions
-        let start_p = line.positions[start_index]
-        let end_p   = line.positions[end_index]
-        
-        // sample times
-        let start_t = time_array.data[start_index]
-        let end_t   = time_array.data[end_index]
-        
-        // set position
-        let pos = lerp(new_time, start_t, end_t, start_p, end_p)
-        
-        e.position = pos
-        
-        // record time
-        
-        component.particle_time = new_time
         
         e.components.set(component)
         
-        //print("PUSH \(new_time) \(pos) \(start_p) \(end_p) \(start_t) \(end_t)")
+        print("Completing buffer for \(e.hashValue)")
     }
 
     func update(context: SceneUpdateContext) {
         for entity in context.entities(matching: Self.query, updatingSystemWhen: .rendering) {
-            Self.handle_entity(e: entity, context: context)
+            Self.handle_entity(e: entity, scene_context: context)
         }
     }
 }
 
+// MARK: Advection Spawn
 
 struct AdvectionSpawnComponent : Component {
-    var state : NooAdvectorState
-    var last_position = simd_float3(repeating: -10000000.0)
-    var closest_lines = [(AdvectionID, simd_float3)]()
+    var spawn_count = 10
+    var spawn_radius = 0.25
 }
 
 struct AdvectionSpawnSystem: System {
+    static var dependencies: [SystemDependency] {
+        [.before(AdvectionSystem.self)]
+    }
+    
     static let query = EntityQuery(where: .has(AdvectionSpawnComponent.self))
+    static let dest_query = EntityQuery(where: .has(ParticleAdvectionComponent.self))
     
     static let mesh_resource : MeshResource = .generateBox(size: 0.1)
 
@@ -136,82 +209,37 @@ struct AdvectionSpawnSystem: System {
     }
     
     func handle_entity(e: Entity, context: SceneUpdateContext) {
-        guard var component: AdvectionSpawnComponent = e.components[AdvectionSpawnComponent.self] else {
+        print("Spawner running for \(e.hashValue)")
+        // ONLY WORKS WITH A SINGLE SPAWNER FOR NOW
+        guard let component = e.components[AdvectionSpawnComponent.self] else {
             schedule_delete(e);
             return
         }
         
-        if e.position != component.last_position {
-            print("Recompute available lines")
+        for de in context.entities(matching: Self.dest_query, updatingSystemWhen: .rendering) {
+            guard var particle_component = de.components[ParticleAdvectionComponent.self] else {
+                continue
+            }
             
-            component.last_position = e.position
+            let de_position = e.convert(position: .zero, to: de)
+            let de_radius = (e.convert(position: .init(Float(component.spawn_radius),0,0), to: de) - de_position).x
             
-            component.closest_lines.removeAll(keepingCapacity: true)
+            var ctx = particle_component.particle_context
             
-            // run query to find "closest"
+            ctx.spawn_at = packed_float3(x: de_position.x, y: de_position.y, z: de_position.z)
+            ctx.spawn_at_radius = de_radius
             
-            let sphere_size : Float = 1.0
+            let new_head = (ctx.spawn_range_start + ctx.spawn_range_count) % ctx.number_particles
             
-            let extent = simd_float3(repeating: sphere_size)
+            ctx.spawn_range_start = new_head
+            ctx.spawn_range_count = UInt32(component.spawn_count)
             
-            let q_min = e.position - extent
-            let q_max = e.position + extent
+            print("Adding \(component.spawn_count) to \(de.hashValue) ( \(ctx.spawn_range_start) )")
             
-            component.state.query_tool.search(a: q_min, b: q_max, {
-                component.closest_lines.append(($0.item, $0.point))
-            })
-            
-            e.components.set(component)
-            
-            print("Recompute done, found \(component.closest_lines.count)")
+            // save
+            particle_component.particle_context = ctx
+            de.components.set(particle_component)
         }
-        
-        // spawn one per frame till the max
-        
-        let st = component.state
-        
-        //print("Particles \(st.current_particles)")
-        
-        if st.current_particles >= st.max_particles {
-            return
-        }
-        
-        // spawn one
-        
-        // pick a line and point
-        
-        guard let (spawn_id, _) = component.closest_lines.randomElement() else {
-            // no point?
-            
-            // ok, but dont delete
-            print("no spawn point")
-            return
-        }
-        
-        var tri_mat = PhysicallyBasedMaterial()
-        
-        tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: .white)
-        
-        let new_entity = ModelEntity(mesh: Self.mesh_resource, materials: [tri_mat])
-        
-        // get line for timing info
-        
-        let offset_time = st.lines[Int(spawn_id.line_id)].attribs.first?.data[Int(spawn_id.offset)]
-        
-        new_entity.components.set(AdvectionComponent(
-            state: st,
-            line_id: Int(spawn_id.line_id),
-            particle_time: offset_time ?? 0.0
-        ))
-        
-        // initial
-        AdvectionSystem.advect_entity(e: new_entity, delta: 0.0)
-        
-        e.addChild(new_entity)
-        
-        st.current_particles += 1
-        
-        //print("SPAWN")
         
     }
 

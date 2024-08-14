@@ -67,88 +67,64 @@ class GlyphInstances {
     /// Enable metal capture for this instancing system
     /// - Parameter name: capture name
     func enable_metal_capture(name: String) {
-        capture_bounds.label = "pseudo_particle"
+        capture_bounds.label = name
         MTLCaptureManager.shared().defaultCaptureScope = capture_bounds
     }
     
-    func update(instance_buffer: MTLBuffer, bounds: BoundingBox) {
+    func update(instance_buffer: MTLBuffer, bounds: BoundingBox, session: ComputeSession) {
         
-        assert(instance_buffer.length >= (Int(instance_count) * MemoryLayout<float4x4>.stride));
-        
-        capture_bounds.begin()
-        
-        // Build description of instance system with basic information
-        var descriptor = InstanceDescriptor(instance_count: self.instance_count, in_vertex_count: uint(glyph.vertex.count), in_index_count: uint(glyph.index.count))
-        
-        // Build a new command buffer
-        guard let command_buffer = ComputeContext.shared.command_queue.makeCommandBuffer() else {
-            default_log.critical("Unable to obtain command buffer. Skipping instance update.")
-            return
+        session.with_encoder {
+            
+            assert(instance_buffer.length >= (Int(instance_count) * MemoryLayout<float4x4>.stride));
+            
+            capture_bounds.begin()
+            
+            // Build description of instance system with basic information
+            var descriptor = InstanceDescriptor(instance_count: self.instance_count, in_vertex_count: uint(glyph.vertex.count), in_index_count: uint(glyph.index.count))
+            
+            // Ask the LLM to give us a new buffer for the vertex info
+            // This triggers a ding on the compute recommendation system as it is building and clearing a new buffer, but I'm not sure how to fix that yet.
+            let vertex_buffer = low_level_mesh.replace(bufferIndex: 0, using: session.command_buffer)
+            
+            // Set the vertex pipeline state
+            $0.setComputePipelineState(vertex_pipeline_state)
+            
+            // Load up our buffer table
+            $0.setBytes(&descriptor, length: MemoryLayout.size(ofValue: descriptor), index: 0)
+            $0.setBuffer(instance_buffer, offset: 0, index: 1)
+            $0.setBytes(glyph.vertex, length: MemoryLayout<ParticleVertex>.stride * glyph.vertex.count, index: 2)
+            $0.setBuffer(vertex_buffer, offset: 0, index: 3)
+            
+            // Launch job
+            compute_dispatch_1D(enc: $0, num_threads: Int(self.instance_count), groups: 32)
+            
+            // Ask the LLM for a new buffer for the index side of things. Again, we get a new cleared buffer. Not sure how to mitigate
+            let new_index_buffer = low_level_mesh.replaceIndices(using: session.command_buffer)
+            
+            // Set the index function
+            $0.setComputePipelineState(index_pipeline_state)
+            
+            // Set up the buffer table
+            // redundant load below
+            //encoder.setBytes(&descriptor, length: MemoryLayout.size(ofValue: descriptor), index: 0)
+            $0.setBytes(glyph.index, length: MemoryLayout<ushort>.stride * glyph.index.count, index: 1)
+            $0.setBuffer(new_index_buffer, offset: 0, index: 2)
+            
+            // Launch job
+            compute_dispatch_1D(enc: $0, num_threads: Int(self.instance_count), groups: 32)
+            
+            // Tell the LLM to update the index patch
+            low_level_mesh.parts.replaceAll([
+                LowLevelMesh.Part(indexOffset: 0,
+                                  indexCount: Int(descriptor.instance_count * descriptor.in_index_count),
+                                  topology: .triangle,
+                                  materialIndex: 0,
+                                  bounds: bounds)
+            ])
+            
+            capture_bounds.end()
+            
         }
-        
-        // And we need an encoder as well
-        guard let encoder = command_buffer.makeComputeCommandEncoder() else {
-            default_log.critical("Unable to obtain command buffer encoder. Skipping instance update.")
-            return
-        }
-        
-        // Ask the LLM to give us a new buffer for the vertex info
-        // This triggers a ding on the compute recommendation system as it is building and clearing a new buffer, but I'm not sure how to fix that yet.
-        let vertex_buffer = low_level_mesh.replace(bufferIndex: 0, using: command_buffer)
-        
-        // Set the vertex pipeline state
-        encoder.setComputePipelineState(vertex_pipeline_state)
-        
-        // Load up our buffer table
-        encoder.setBytes(&descriptor, length: MemoryLayout.size(ofValue: descriptor), index: 0)
-        encoder.setBuffer(instance_buffer, offset: 0, index: 1)
-        encoder.setBytes(glyph.vertex, length: MemoryLayout<ParticleVertex>.stride * glyph.vertex.count, index: 2)
-        encoder.setBuffer(vertex_buffer, offset: 0, index: 3)
-        
-        // Setup threadgroups. Note that the VP cannot do dynamic tiling, so we have to round up ourselves
-        let vertex_threads = MTLSize(width: Int(self.instance_count), height: 1, depth: 1)
-        let threads_per_threadgroup = MTLSize(width: 32, height: 1, depth: 1)
-        let dispatch_threads = ComputeContext.shared.get_threadgroups(vertex_threads, threadgroup_size: threads_per_threadgroup)
-        
-        print("DISPATCH \(dispatch_threads)")
-        
-        // Launch job
-        encoder.dispatchThreadgroups(dispatch_threads, threadsPerThreadgroup: threads_per_threadgroup)
-        
-        print("THREADS DISPATCH")
-        
-        // Ask the LLM for a new buffer for the index side of things. Again, we get a new cleared buffer. Not sure how to mitigate
-        let new_index_buffer = low_level_mesh.replaceIndices(using: command_buffer)
-        
-        // Set the index function
-        encoder.setComputePipelineState(index_pipeline_state)
-        
-        // Set up the buffer table
-        // redundant load below
-        //encoder.setBytes(&descriptor, length: MemoryLayout.size(ofValue: descriptor), index: 0)
-        encoder.setBytes(glyph.index, length: MemoryLayout<ushort>.stride * glyph.index.count, index: 1)
-        encoder.setBuffer(new_index_buffer, offset: 0, index: 2)
-        
-        // Launch job
-        encoder.dispatchThreadgroups(dispatch_threads, threadsPerThreadgroup: threads_per_threadgroup)
-        
-        // Tell the LLM to update the index patch
-        low_level_mesh.parts.replaceAll([
-            LowLevelMesh.Part(indexOffset: 0,
-                              indexCount: Int(descriptor.instance_count * descriptor.in_index_count),
-                              topology: .triangle,
-                              materialIndex: 0,
-                              bounds: bounds)
-        ])
-        
-        // Clean up
-        encoder.endEncoding()
-        
-        command_buffer.commit()
-        
-        command_buffer.waitUntilCompleted()
-        print("DONE")
-        capture_bounds.end()
     }
 }
 

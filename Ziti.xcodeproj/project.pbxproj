@@ -20,7 +20,7 @@
 		2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */; };
 		2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */; };
 		2DE787C42C38C5830050B905 /* ComputeContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE787C32C38C5830050B905 /* ComputeContext.swift */; };
-		2DE787FF2C46FB090050B905 /* Cube.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE787FE2C46FB090050B905 /* Cube.swift */; };
+		2DE788062C52A8F70050B905 /* SpatialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE788052C52A8F70050B905 /* SpatialTest.swift */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
 /* End PBXBuildFile section */
 
@@ -49,7 +49,7 @@
 		2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GestureExtensions.swift; sourceTree = "<group>"; };
 		2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GestureComponent.swift; sourceTree = "<group>"; };
 		2DE787C32C38C5830050B905 /* ComputeContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputeContext.swift; sourceTree = "<group>"; };
-		2DE787FE2C46FB090050B905 /* Cube.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Cube.swift; path = Ziti/Shapes/Cube.swift; sourceTree = "<group>"; };
+		2DE788052C52A8F70050B905 /* SpatialTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialTest.swift; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -69,6 +69,7 @@
 			membershipExceptions = (
 				AdvectionSystem.swift,
 				PseudoInstance.swift,
+				Spatial.swift,
 				VoxelQuery.swift,
 			);
 			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;
@@ -84,9 +85,17 @@
 		2DE787FC2C46F1780050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Cube.swift,
 				Sphere.swift,
 			);
 			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;
+		};
+		2DE788082C52B0000050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Spatial.swift,
+			);
+			target = 2D40E6142B7A6E15003D618A /* ZitiTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -94,7 +103,7 @@
 		2DE787C72C3C7E590050B905 /* World */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787C82C3C7E590050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = World; sourceTree = "<group>"; };
 		2DE787CF2C3C7F940050B905 /* Shaders */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shaders; sourceTree = "<group>"; };
 		2DE787D42C3C7F9A0050B905 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
-		2DE787D82C3C7FDD0050B905 /* Physics */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787D92C3C7FE20050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Physics; sourceTree = "<group>"; };
+		2DE787D82C3C7FDD0050B905 /* Physics */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787D92C3C7FE20050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 2DE788082C52B0000050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Physics; sourceTree = "<group>"; };
 		2DE787DA2C3C7FFF0050B905 /* NoodlesSpec */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787DB2C3C7FFF0050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = NoodlesSpec; sourceTree = "<group>"; };
 		2DE787F82C46F14A0050B905 /* Shapes */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DE787FC2C46F1780050B905 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Shapes; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -123,7 +132,6 @@
 		2D40E5F52B7A6E13003D618A = {
 			isa = PBXGroup;
 			children = (
-				2DE787FE2C46FB090050B905 /* Cube.swift */,
 				2DF315172B89357A006DCD1D /* TODO.md */,
 				2D40E6002B7A6E14003D618A /* Ziti */,
 				2D40E6012B7A6E14003D618A /* Packages */,
@@ -182,6 +190,7 @@
 			isa = PBXGroup;
 			children = (
 				2D40E6192B7A6E15003D618A /* ZitiTests.swift */,
+				2DE788052C52A8F70050B905 /* SpatialTest.swift */,
 			);
 			path = ZitiTests;
 			sourceTree = "<group>";
@@ -312,7 +321,6 @@
 			files = (
 				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
-				2DE787FF2C46FB090050B905 /* Cube.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
 				2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */,
 				2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */,
@@ -326,6 +334,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DE788062C52A8F70050B905 /* SpatialTest.swift in Sources */,
 				2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -529,7 +538,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ziti.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ziti";
-				XROS_DEPLOYMENT_TARGET = 1.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
@@ -548,7 +557,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ziti.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ziti";
-				XROS_DEPLOYMENT_TARGET = 1.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};

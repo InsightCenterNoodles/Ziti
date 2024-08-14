@@ -127,15 +127,15 @@ struct ContentView: View {
     func debug() {
         //instance_test.update()
         
-        let buff = CPUInstanceBuffer(instance_count: 10)
-        
-        buff.test_fill()
-        
-        buff.update()
-        
-        let bounds = BoundingBox(min: SIMD3<Float>(-4.0, -4.0, -4.0), max: SIMD3<Float>(4.0, 4.0, 4.0))
-        
-        noodles_world?.instance_test.update(instance_buffer: buff.instance_buffer, bounds: bounds)
+//        let buff = CPUInstanceBuffer(instance_count: 10)
+//        
+//        buff.test_fill()
+//        
+//        buff.update()
+//        
+//        let bounds = BoundingBox(min: SIMD3<Float>(-4.0, -4.0, -4.0), max: SIMD3<Float>(4.0, 4.0, 4.0))
+//        
+//        noodles_world?.instance_test.update(instance_buffer: buff.instance_buffer, bounds: bounds)
     }
 }
 

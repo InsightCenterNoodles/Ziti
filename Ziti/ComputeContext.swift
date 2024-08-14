@@ -20,6 +20,8 @@ class ComputeContext {
     let pseudo_inst_vertex: ComputeFunction
     let pseudo_inst_index: ComputeFunction
     
+    let advect_particles: ComputeFunction
+    
     init(device: MTLDevice? = nil, commandQueue: MTLCommandQueue? = nil) {
         guard let device = device ?? MTLCreateSystemDefaultDevice() else {
             fatalError("Unable to build Metal device.")
@@ -38,6 +40,7 @@ class ComputeContext {
         
         self.pseudo_inst_vertex = .init(name: "construct_from_inst_array", library, device)
         self.pseudo_inst_index = .init(name: "construct_inst_index", library, device)
+        self.advect_particles = .init(name: "advect_particles", library, device)
         
         let max_threadgroup_size = device.maxThreadsPerThreadgroup
         print("Max Threadgroup Size: \(max_threadgroup_size)")
@@ -70,4 +73,53 @@ class ComputeFunction {
         mtl_func = library.makeFunction(name: name)!
         pipeline_state = try! device.makeComputePipelineState(function: mtl_func)
     }
+    
+    func new_pipeline_state() -> MTLComputePipelineState{
+        try! pipeline_state.device.makeComputePipelineState(function: mtl_func)
+    }
+}
+
+
+class ComputeSession {
+    var command_buffer: MTLCommandBuffer
+    var scope : MTLCaptureScope?
+    
+    init?() {
+        // Build a new command buffer
+        guard let cb = ComputeContext.shared.command_queue.makeCommandBuffer() else {
+            default_log.critical("Unable to obtain command buffer.")
+            return nil
+        }
+        
+        self.command_buffer = cb
+    }
+    
+    func with_encoder(_ function: (MTLComputeCommandEncoder) -> Void) {
+        guard let enc = command_buffer.makeComputeCommandEncoder() else {
+            default_log.critical("Unable to obtain command buffer encoder.")
+            return
+        }
+        
+        function(enc)
+        
+        enc.endEncoding()
+    }
+    
+    deinit {
+        command_buffer.commit()
+        command_buffer.waitUntilCompleted()
+        
+        if let s = scope {
+            s.end()
+        }
+    }
+    
+}
+
+func compute_dispatch_1D(enc: MTLComputeCommandEncoder, num_threads: Int, groups: Int) {
+    //Note that the VP cannot do dynamic tiling, so we have to round up ourselves
+    let dispatch_size = MTLSize(width: num_threads, height: 1, depth: 1)
+    let threads_per_threadgroup = MTLSize(width: 32, height: 1, depth: 1)
+    let dispatch_threads = ComputeContext.shared.get_threadgroups(dispatch_size, threadgroup_size: threads_per_threadgroup)
+    enc.dispatchThreadgroups(dispatch_threads, threadsPerThreadgroup: threads_per_threadgroup)
 }

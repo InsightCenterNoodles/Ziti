@@ -658,31 +658,46 @@ class NooEntity : NoodlesComponent {
             
             let fp = p.first!
             
-            let physics_data = world.physics_list.get(fp)!
+            let physics = world.physics_list.get(fp)!
+            
+            let advector_state = physics.advector_state!
 
-            // create nightmare line system
+            let physics_context = ParticleContext(
+                advect_multiplier: 1.0,
+                time_delta: 1/60.0,
+                max_lifetime: 10.0,
+                bb_min: float_to_packed(advector_state.bb.min),
+                bb_max: float_to_packed(advector_state.bb.max),
+                vfield_dim: pack_cast(advector_state.velocity.dims),
+                number_particles: UInt32(advector_state.num_particles),
+                spawn_range_start: 0,
+                spawn_range_count: 0,
+                spawn_at: packed_float3(x: 0.0, y: 0.0, z: 0.0),
+                spawn_at_radius: 0.25
+            )
             
-            /*
-            for line in physics_data.advector_state!.lines {
-                for i in 0 ..< line.positions.count - 1 {
-                    let start = line.positions[i]
-                    let end   = line.positions[i+1]
-                    let len   = length(end - start)
-                    //let new_ent = ModelEntity(mesh: .generateBox(width: 0.05, height: 0.05, depth: len), materials: [SimpleMaterial(color: .white, isMetallic: false)])
-                    
-                    //new_ent.position = start + (end - start) / 2
-                    //new_ent.orientation = simd_quatf(from: SIMD3<Float>(0, 0, 1), to: normalize(end - start))
-                                
-                    //world.scene.add(new_ent)
-                    //entity.addChild(new_ent)
-                }
-            }*/
+            let component = make_advection_component(context: physics_context)
             
-            print("Adding advector physics")
+            component.velocity_vector_field.contents().copyMemory(
+                from: advector_state.velocity.array,
+                byteCount: component.velocity_vector_field.length
+            )
+            
+            entity.components.set(component)
+            
+            print("Adding Hack advector physics")
             
             let advector_ent = Entity()
             
-            advector_ent.components.set(AdvectionSpawnComponent(state: physics_data.advector_state!))
+            let resource = try! MeshResource(from: component.glyph_system.low_level_mesh)
+
+            let model_component = ModelComponent(mesh: resource, materials: [PhysicallyBasedMaterial()])
+
+            advector_ent.components.set(model_component)
+            
+            advector_ent.position = advector_state.bb.center
+            
+            advector_ent.components.set(AdvectionSpawnComponent())
             
             entity.addChild(advector_ent)
         }
@@ -958,10 +973,11 @@ struct AdvectionID : Equatable {
 class NooAdvectorState {
     var lines: [NooFlowLine]
     
-    var current_particles = 0
-    let max_particles = 500
+    var bb = BoundingBox()
     
-    var query_tool : VoxelQuery<AdvectionID>!
+    var num_particles = 1000
+    
+    var velocity : Grid3D<simd_float3>
     
     init(sf: StreamFlowInfo, world: NoodlesWorld) {
         print("Creating debug flow geom")
@@ -969,6 +985,7 @@ class NooAdvectorState {
         guard let buffer_view = world.buffer_view_list.get(sf.data) else {
             print("Missing buffer view")
             lines = []
+            velocity = Grid3D(1, 1, 1, .zero)
             return
         }
         
@@ -976,6 +993,32 @@ class NooAdvectorState {
         let data = buffer_view.get_slice(offset: Int64(sf.offset))
         
         var cursor = 0
+        
+        // extract topology
+        let tetra_count = data.withUnsafeBytes {
+            (pointer: UnsafeRawBufferPointer) -> UInt32 in
+            return pointer.loadUnaligned(fromByteOffset: cursor, as: UInt32.self)
+        } / 4
+        
+        print("Tetra count is \(tetra_count)")
+        
+        cursor += 4
+        
+        let tetra_indicies = data.withUnsafeBytes {
+            var ret = [TetrahedraIndex]()
+            ret.reserveCapacity(Int(tetra_count))
+            
+            for _ in 0 ..< tetra_count {
+                ret.append(TetrahedraIndex(indicies: .init(
+                    x: $0.loadUnaligned(fromByteOffset: cursor + 0, as: UInt32.self),
+                    y: $0.loadUnaligned(fromByteOffset: cursor + 4, as: UInt32.self),
+                    z: $0.loadUnaligned(fromByteOffset: cursor + 8, as: UInt32.self),
+                    w: $0.loadUnaligned(fromByteOffset: cursor + 12, as: UInt32.self))))
+                cursor += 16
+            }
+            
+            return ret
+        }
         
         print("Looking for \(sf.header.line_count) lines")
         
@@ -986,9 +1029,22 @@ class NooAdvectorState {
         var min_b = simd_float3(repeating: 100000000.0) // ha ha
         var max_b = simd_float3(repeating: -100000000.0) // ha ha haaaa
         
+        var all_positions = [simd_float3]()
+        var all_vectors = [simd_float3]()
         
         for _ in 0 ..< sf.header.line_count {
             let (new_line, new_cursor) = extract_line(data, base_offset: cursor, acount: sf.header.attributes.count)
+            
+            all_positions.append(contentsOf: new_line.positions)
+            
+            for pos_i in 0 ..< new_line.positions.count - 1 {
+                let a = new_line.positions[pos_i]
+                let b = new_line.positions[pos_i + 1]
+                
+                all_vectors.append(b-a);
+            }
+            // and we do the last one here as a duplicate as there is no next vector to steal
+            all_vectors.append(all_vectors.last!);
             
             for p in new_line.positions {
                 min_b = simd_min(min_b, p)
@@ -999,25 +1055,22 @@ class NooAdvectorState {
             cursor = new_cursor
         }
         
+        self.bb = BoundingBox(min: min_b, max: max_b)
+        
+        assert(all_vectors.count == all_positions.count)
+        
         print("Added \(lines.count) lines")
         
-        query_tool = VoxelQuery(min: min_b, max: max_b, max_bin_count: 50)
+        // we have bounds, and we have tetra, and we have lines.
         
-        for (line_i, line) in lines.enumerated() {
-            for (point_i, point) in line.positions.enumerated() {
-                let _ = query_tool.install(
-                    Record(
-                        point: point,
-                        item: AdvectionID(
-                            line_id: UInt32(line_i),
-                            offset: UInt32(point_i)
-                        )
-                    )
-                )
-            }
-        }
+        // raster the tetra?
         
-        print("Set up query structure")
+        let raster = TetraGridRasterizer(grid_bounds: BoundingBox(min: min_b, max: max_b), resolution: 4, positions: all_positions, indicies: tetra_indicies)
+        
+        
+        self.velocity = raster.interpolate_data(indicies: tetra_indicies, positions: all_positions, data: all_vectors, repeating: .zero)
+        
+        print("Rasterized \(self.velocity.dims)")
     }
 }
 

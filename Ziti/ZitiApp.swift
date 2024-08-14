@@ -12,7 +12,7 @@ struct ZitiApp: App {
     @State private var current_style: ImmersionStyle = .mixed
     
     init() {
-        AdvectionComponent.registerComponent()
+        ParticleAdvectionComponent.registerComponent()
         AdvectionSpawnComponent.registerComponent()
         AdvectionSystem.registerSystem()
         AdvectionSpawnSystem.registerSystem()
