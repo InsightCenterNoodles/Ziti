@@ -15,7 +15,7 @@ extension ParticleVertex {
     static var attributes : [LowLevelMesh.Attribute] = [
         .init(semantic: .position, format: .float3, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.position)!),
         .init(semantic: .normal, format: .float3, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.normal)!),
-        .init(semantic: .uv0, format: .ushort2, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.uv)!)
+        .init(semantic: .uv0, format: .ushort2Normalized, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.uv)!)
     ]
     
     /// Layout for this vertex type for the low level mesh system
@@ -25,16 +25,39 @@ extension ParticleVertex {
 }
 
 /// Description of a glyph, or mesh that should be copied and transformed for instancing
-struct GlyphDescription {
+struct CPUGlyphDescription {
     var vertex: [ParticleVertex]
     var index : [ushort]
     var bounding_box: BoundingBox
 }
 
+/// GPU representation of a glyph
+///
+/// TODO: Merge into a single allocation
+struct GPUGlyphDescription {
+    var vertex_buffer: MTLBuffer
+    var index_buffer: MTLBuffer
+    var bounding_box: BoundingBox
+    var vertex_count: Int
+    var index_count: Int
+    
+    init(from: CPUGlyphDescription) {
+        vertex_buffer = ComputeContext.shared.device.makeBuffer(bytes: from.vertex, length: from.vertex.count * MemoryLayout<ParticleVertex>.stride)!
+        
+        index_buffer = ComputeContext.shared.device.makeBuffer(bytes: from.index, length: from.index.count * 2)!
+        
+        bounding_box = from.bounding_box
+        
+        vertex_count = from.vertex.count
+        index_count = from.index.count
+    }
+}
+
+
 /// State for the pseudo-instancing system. We take a glyph and use compute shaders to 'splat' the glyph with transformations
 class GlyphInstances {
     // The glyph to use
-    var glyph: GlyphDescription
+    var glyph: GPUGlyphDescription
     
     let instance_count: UInt32
     
@@ -48,12 +71,13 @@ class GlyphInstances {
     // Debugging capture boundaries
     var capture_bounds: MTLCaptureScope
     
-    init(instance_count: UInt32, description: GlyphDescription) {
+    @MainActor
+    init(instance_count: UInt32, description: GPUGlyphDescription) {
         print("Creating instance system")
-        let md = LowLevelMesh.Descriptor(vertexCapacity: Int(instance_count) * description.vertex.count,
+        let md = LowLevelMesh.Descriptor(vertexCapacity: Int(instance_count) * description.vertex_count,
                                          vertexAttributes: ParticleVertex.attributes,
                                          vertexLayouts: ParticleVertex.layouts,
-                                         indexCapacity: Int(instance_count) * description.index.count,
+                                         indexCapacity: Int(instance_count) * description.index_count,
                                          indexType: .uint32)
         glyph = description
         low_level_mesh = try! LowLevelMesh(descriptor: md)
@@ -71,6 +95,7 @@ class GlyphInstances {
         MTLCaptureManager.shared().defaultCaptureScope = capture_bounds
     }
     
+    @MainActor
     func update(instance_buffer: MTLBuffer, bounds: BoundingBox, session: ComputeSession) {
         
         session.with_encoder {
@@ -80,7 +105,7 @@ class GlyphInstances {
             capture_bounds.begin()
             
             // Build description of instance system with basic information
-            var descriptor = InstanceDescriptor(instance_count: self.instance_count, in_vertex_count: uint(glyph.vertex.count), in_index_count: uint(glyph.index.count))
+            var descriptor = InstanceDescriptor(instance_count: self.instance_count, in_vertex_count: uint(glyph.vertex_count), in_index_count: uint(glyph.index_count))
             
             // Ask the LLM to give us a new buffer for the vertex info
             // This triggers a ding on the compute recommendation system as it is building and clearing a new buffer, but I'm not sure how to fix that yet.
@@ -92,7 +117,7 @@ class GlyphInstances {
             // Load up our buffer table
             $0.setBytes(&descriptor, length: MemoryLayout.size(ofValue: descriptor), index: 0)
             $0.setBuffer(instance_buffer, offset: 0, index: 1)
-            $0.setBytes(glyph.vertex, length: MemoryLayout<ParticleVertex>.stride * glyph.vertex.count, index: 2)
+            $0.setBuffer(glyph.vertex_buffer, offset: 0, index: 2)
             $0.setBuffer(vertex_buffer, offset: 0, index: 3)
             
             // Launch job
@@ -107,7 +132,7 @@ class GlyphInstances {
             // Set up the buffer table
             // redundant load below
             //encoder.setBytes(&descriptor, length: MemoryLayout.size(ofValue: descriptor), index: 0)
-            $0.setBytes(glyph.index, length: MemoryLayout<ushort>.stride * glyph.index.count, index: 1)
+            $0.setBuffer(glyph.index_buffer, offset: 0, index: 1)
             $0.setBuffer(new_index_buffer, offset: 0, index: 2)
             
             // Launch job

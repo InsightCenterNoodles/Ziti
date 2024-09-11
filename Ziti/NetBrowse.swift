@@ -137,8 +137,10 @@ class NooServerListener: NSObject, NetServiceBrowserDelegate, NetServiceDelegate
         if let id = rservices[service] {
             services.removeValue(forKey: id)
             
-            let item = self.dest.firstIndex(where: { desc in desc.id == id } )!
-            self.dest.remove(at: item)
+            if let item = self.dest.firstIndex(where: { desc in desc.id == id } ) {
+                self.dest.remove(at: item)
+            }
+            
         }
         rservices.removeValue(forKey: service)
     }

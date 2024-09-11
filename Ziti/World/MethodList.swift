@@ -28,15 +28,18 @@ struct MethodListView : View {
     }
     
     var body: some View {
-        NavigationStack {
-            List(filtered_list) { item in
-                NavigationLink(item.method.info.name, value: item)
-            }
-            .navigationDestination(for: AvailableMethod.self) { item in
-                InvokeMethodView(method: item)
-            }
-        }
+        TextField("Search", text: $search_text)
     }
+        
+    
+//        NavigationStack {
+//            List(filtered_list) { item in
+//                NavigationLink(item.method.info.name, value: item)
+//            }
+//            .navigationDestination(for: AvailableMethod.self) { item in
+//                InvokeMethodView(method: item)
+//            }
+//        }
 }
 
 struct InvokeMethodView : View {
@@ -69,7 +72,7 @@ struct CompactMethodView : View {
                 Button() {
                     start_invoke("noo::animate_time", CBOR(0), .Document)
                 } label: {
-                    Label("Play", systemImage: "stop.fill")
+                    Label("Stop", systemImage: "stop.fill").labelStyle(.iconOnly)
                 }
             }
             
@@ -77,7 +80,7 @@ struct CompactMethodView : View {
                 Button() {
                     start_invoke("noo::animate_time", CBOR(1), .Document)
                 } label: {
-                    Label("Play", systemImage: "playpause.fill")
+                    Label("Play", systemImage: "play.fill").labelStyle(.iconOnly)
                 }
             }
             
@@ -109,7 +112,8 @@ struct CompactMethodView : View {
     }
 }
 
-struct AvailableMethod: Identifiable, Hashable {
+
+struct AvailableMethod: Identifiable {
     var id = UUID()
     var method: NooMethod
     var context: NooID?

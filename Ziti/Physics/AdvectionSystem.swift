@@ -31,13 +31,13 @@ struct ParticleAdvectionComponent: Component {
     // glyph
     var glyph_system: GlyphInstances
     
-    // busy flag. are we still computing?
-    var busy_flag: MTLSharedEvent
-    var busy_counter: UInt64
+    // last compute buffer
+    var command_buffer: MTLCommandBuffer?
     
     var capture_bounds: MTLCaptureScope
 }
 
+@MainActor
 func make_advection_component(context: ParticleContext) -> ParticleAdvectionComponent {
     // should be a packed list of 3 floats, 4 bytes each
     let vel_fld_len = context.vfield_dim.x * context.vfield_dim.y * context.vfield_dim.z * 3 * 4
@@ -48,13 +48,13 @@ func make_advection_component(context: ParticleContext) -> ParticleAdvectionComp
     
     let glyph_info = make_glyph(shape_cube)
     
-    print("Making advection component for \(context.number_particles)")
-    print("Glyph info \(MemoryLayout<float4x4>.stride)")
+    //print("Making advection component for \(context.number_particles)")
+    //print("Glyph info \(MemoryLayout<float4x4>.stride)")
     
     let cap = MTLCaptureManager.shared().makeCaptureScope(device: ComputeContext.shared.device)
     
     cap.label = "AdvectionCheck"
-    MTLCaptureManager.shared().defaultCaptureScope = cap
+    //MTLCaptureManager.shared().defaultCaptureScope = cap
     
     return ParticleAdvectionComponent(
         compute_state: ComputeContext.shared.advect_particles.new_pipeline_state(),
@@ -64,31 +64,18 @@ func make_advection_component(context: ParticleContext) -> ParticleAdvectionComp
         particle_context: context,
         glyph_system: GlyphInstances(
             instance_count: context.number_particles,
-            description: glyph_info
+            description: GPUGlyphDescription(from: glyph_info)
         ),
-        busy_flag: ComputeContext.shared.device.makeSharedEvent()!,
-        busy_counter: 0,
         capture_bounds: cap
     )
     
 }
 
-//
-//func find_end_time(list: [Float32], starting_point: Int, value: Float32) -> Int? {
-//    //print("Finding end time starting \(starting_point) value \(value)")
-//    let search_range = list[starting_point...]
-//    return search_range.firstIndex(where: { $0 > value })
-//}
-
-//func lerp(_ x: Float32, _ x0: Float32, _ x1: Float32, _ y0: SIMD3<Float>, _ y1: SIMD3<Float>) -> SIMD3<Float> {
-//    return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
-//}
-
 class GlobalAdvectionSettings {
     static var shared = GlobalAdvectionSettings()
     
     // this should be in meters per second
-    var advection_speed = 0.1;
+    var advection_speed = 1.0;
 }
 
 func packed_to_float(_ packed: packed_float3) -> SIMD3<Float> {
@@ -109,29 +96,23 @@ struct AdvectionSystem: System {
 
     init(scene: RealityKit.Scene) {}
     
+    @MainActor
     static func handle_entity(e: Entity, scene_context: SceneUpdateContext) {
         guard var component: ParticleAdvectionComponent = e.components[ParticleAdvectionComponent.self] else {
             return
         }
         
-        print("Advecting for \(e.hashValue)")
+        //print("Advecting for \(e.hashValue)")
         
         // we can skip checks at the start
-        if component.busy_counter != 0 {
-            // only wait a bit to see if the counter is good
-            let is_ready = component.busy_flag.wait(untilSignaledValue: component.busy_counter, timeoutMS: 0)
+        if let buff = component.command_buffer {
             
-            print("Advecting \(is_ready)")
-            
-            if !is_ready {
+            if buff.status != .completed {
                 default_log.warning("Skipping advection for this frame")
                 return
             }
+            
         }
-        
-        component.busy_counter += 1
-        
-        print("Advecting \(component.busy_counter)")
         
         let time_delta = GlobalAdvectionSettings.shared.advection_speed * scene_context.deltaTime;
         
@@ -147,6 +128,7 @@ struct AdvectionSystem: System {
             return
         }
         
+        component.command_buffer = compute_session.command_buffer
         
         compute_session.scope = component.capture_bounds
         
@@ -170,12 +152,11 @@ struct AdvectionSystem: System {
         component.glyph_system.update(instance_buffer: component.glyph_info, bounds: bb, session: compute_session)
         
         // when we are done, update flag
-        compute_session.command_buffer.encodeSignalEvent(component.busy_flag, value: component.busy_counter)
-        
+        //compute_session.command_buffer.encodeSignalEvent(component.busy_flag, value: component.busy_counter)
         
         e.components.set(component)
         
-        print("Completing buffer for \(e.hashValue)")
+        //print("Completing buffer for \(e.hashValue)")
     }
 
     func update(context: SceneUpdateContext) {
@@ -189,7 +170,7 @@ struct AdvectionSystem: System {
 
 struct AdvectionSpawnComponent : Component {
     var spawn_count = 10
-    var spawn_radius = 0.25
+    var spawn_radius = 0.5
 }
 
 struct AdvectionSpawnSystem: System {
@@ -209,7 +190,7 @@ struct AdvectionSpawnSystem: System {
     }
     
     func handle_entity(e: Entity, context: SceneUpdateContext) {
-        print("Spawner running for \(e.hashValue)")
+        //print("Spawner running for \(e.hashValue)")
         // ONLY WORKS WITH A SINGLE SPAWNER FOR NOW
         guard let component = e.components[AdvectionSpawnComponent.self] else {
             schedule_delete(e);
@@ -234,7 +215,7 @@ struct AdvectionSpawnSystem: System {
             ctx.spawn_range_start = new_head
             ctx.spawn_range_count = UInt32(component.spawn_count)
             
-            print("Adding \(component.spawn_count) to \(de.hashValue) ( \(ctx.spawn_range_start) )")
+            //print("Adding \(component.spawn_count) to \(de.hashValue) ( \(ctx.spawn_range_start) )")
             
             // save
             particle_component.particle_context = ctx

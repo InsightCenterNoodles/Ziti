@@ -41,8 +41,9 @@ void transform_glyph_vertex(device ParticleVertex const* in_verts,
         device auto& out_v = out_verts[i];
         
         out_v.position = rotate_point(in_v.position*inst_scale, inst_rotation) + inst_position;
-        out_v.normal   = rotate_point(in_v.normal, inst_rotation);
-        out_v.uv       = ushort2( (float2(in_v.uv) / 255.0 + inst_uv) * 255.0 );
+        out_v.normal   = normalize(rotate_point(in_v.normal, inst_rotation));
+        out_v.uv       = ushort2( (float2(in_v.uv) / 65535 + inst_uv) * 65535 );
+        //out_v.uv       = ushort2(32767, 32767);
     }
 }
 

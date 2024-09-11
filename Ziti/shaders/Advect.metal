@@ -159,6 +159,8 @@ kernel void advect_particles(constant ParticleContext& description   [[buffer(0)
     // Advect
     current_position += velocity_sample;
     
+    //current_position += float3(1,0,0) * .01;
+    
     // update particle information
     this_particle.position = current_position;
     
@@ -166,7 +168,7 @@ kernel void advect_particles(constant ParticleContext& description   [[buffer(0)
     float4 col0(current_position, 0.0);
     float4 col1(1);
     float4 col2(0,0,0,1);
-    float4 col3(float3(1), 0.0);
+    float4 col3(float3(.5), 0.0);
     
     instance_info[id] = float4x4(col0, col1, col2, col3);
     

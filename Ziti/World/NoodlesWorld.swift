@@ -21,6 +21,7 @@ final class NInstallGesture : Event {
     }
 }
 
+@MainActor
 protocol NoodlesComponent {
     func create(world: NoodlesWorld);
     func destroy(world: NoodlesWorld);
@@ -28,7 +29,7 @@ protocol NoodlesComponent {
 
 // MARK: Method
 
-class NooMethod : NoodlesComponent, Hashable {
+class NooMethod : NoodlesComponent {
     var info: MsgMethodCreate
     
     init(msg: MsgMethodCreate) {
@@ -41,10 +42,6 @@ class NooMethod : NoodlesComponent, Hashable {
     
     func destroy(world: NoodlesWorld) { 
         world.method_list_lookup.removeValue(forKey: info.name)
-    }
-    
-    static func == (lhs: NooMethod, rhs: NooMethod) -> Bool {
-        return lhs.info == rhs.info
     }
     
     func hash(into hasher: inout Hasher) {
@@ -140,6 +137,8 @@ class NooTexture : NoodlesComponent {
     
     func destroy(world: NoodlesWorld) { }
 }
+
+// MARK: Sampler
 
 class NooSampler : NoodlesComponent {
     var info : MsgSamplerCreate
@@ -240,6 +239,9 @@ private func resolve_texwrap(_ wrap_string: String) -> MTLSamplerMinMagFilter {
     return .linear
 }
 
+// MARK: Material
+
+@MainActor
 private func resolve_texture(world: NoodlesWorld, semantic: TextureResource.Semantic, ref: TexRef) -> MaterialParameters.Texture? {
     guard let tex_info = world.texture_list.get(ref.texture) else {
         return nil
@@ -285,10 +287,14 @@ class NooMaterial : NoodlesComponent {
         var tri_mat = PhysicallyBasedMaterial()
         
         tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: info.pbr_info.base_color)
+    
+        var alpha : CGFloat = 1.0
+        
+        info.pbr_info.base_color.getRed(nil, green: nil, blue: nil, alpha: &alpha)
         
         if let x = info.pbr_info.base_color_texture {
             if let tex_info = resolve_texture(world: world, semantic: .color, ref: x) {
-                tri_mat.baseColor.texture = tex_info;
+                tri_mat.baseColor.texture = tex_info
                 
             } else {
                 print("Missing texture!")
@@ -307,6 +313,10 @@ class NooMaterial : NoodlesComponent {
         tri_mat.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: info.pbr_info.roughness)
         tri_mat.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: info.pbr_info.metallic)
         
+        if info.use_alpha {
+            tri_mat.blending = .transparent(opacity: .init(floatLiteral: Float(alpha)))
+        }
+        
         mat = tri_mat
         
         print("Created material")
@@ -317,6 +327,7 @@ class NooMaterial : NoodlesComponent {
 
 // MARK: Geometry
 
+@MainActor
 class NooGeometry : NoodlesComponent {
     var info: MsgGeometryCreate
     
@@ -350,7 +361,7 @@ class NooGeometry : NoodlesComponent {
         return pending_mesh_resources
     }
     
-    func get_bounding_box() async -> BoundingBox {
+    func get_bounding_box() -> BoundingBox {
         //print("get bounding box")
         
         if let bb = self.pending_bounding_box {
@@ -360,7 +371,7 @@ class NooGeometry : NoodlesComponent {
         var bounding_box = BoundingBox()
         let resources = get_mesh_resources()
         for res in resources {
-            bounding_box = await res.bounds.union(bounding_box)
+            bounding_box = res.bounds.union(bounding_box)
         }
         
         pending_bounding_box = bounding_box
@@ -393,152 +404,6 @@ class NooGeometry : NoodlesComponent {
     }
     
     func destroy(world: NoodlesWorld) { }
-    
-    func generate_emulated_instances(src: InstanceSource, _ prep: NooEntityRenderPrep) async -> [MeshDescriptor]  {
-        /*
-        assert(src.stride < (4*4*4));
-        
-        guard let v = prep.instance_view else {
-            print("Warning: missing instance view")
-            return []
-        }
-        
-        let slice = v.get_slice(offset: 0)
-        
-        let instance_list = realize_mat4(slice)
-        
-        print("Building \(instance_list.count) instances")
-        
-        /*
-         | p~x~ | c~r~ | r~x~ | s~x~
-         | p~y~ | c~g~ | r~y~ | s~y~
-         | p~z~ | c~b~ | r~z~ | s~z~
-         | tx   | c~a~ | r~w~ | ty
-         */
-        
-        var emulated_descriptors : [MeshDescriptor] = []
-        
-        let instance_count = instance_list.count
-        
-        // nonoptimal looping, but this is all non-optimal anyway
-        for patch in descriptors {
-            
-            let v_count = patch.positions.count
-            var f_count = 0;
-            
-            if let prims = patch.primitives {
-                if case let MeshDescriptor.Primitives.triangles(x) = prims {
-                    f_count = x.count
-                }
-            }
-            
-            print("Realizing patch with \(v_count) verts and \(f_count) indicies")
-            
-            assert(f_count * instance_list.count < UInt32.max);
-            
-            var position_cache : [SIMD3<Float>] = []
-            position_cache.reserveCapacity(v_count * instance_count)
-            var normal_cache : [SIMD3<Float>] = []
-            if let _ = patch.normals {
-                normal_cache.reserveCapacity(v_count * instance_count)
-            }
-            var tangent_cache : [SIMD3<Float>] = []
-            if let _ = patch.tangents {
-                tangent_cache.reserveCapacity(v_count * instance_count)
-            }
-            var bitangent_cache : [SIMD3<Float>] = []
-            if let _ = patch.bitangents {
-                bitangent_cache.reserveCapacity(v_count * instance_count)
-            }
-            var tex_cache : [SIMD2<Float>] = []
-            if let _ = patch.textureCoordinates {
-                tex_cache.reserveCapacity(v_count * instance_count)
-            }
-            
-            var index_cache : [UInt32] = []
-            index_cache.reserveCapacity(f_count * instance_count)
-            
-            for imat in instance_list {
-                let (ipos,_,irot,iscale) = imat.columns
-                
-                let irot_quat = simd_quaternion(irot.x, irot.y, irot.z, irot.w)
-                let scale     = vec4_to_vec3(iscale)
-                let texture   = simd_float2(ipos.w, iscale.w)
-                
-                if let prims = patch.primitives {
-                    if case let MeshDescriptor.Primitives.triangles(x) = prims {
-                        let offset = UInt32(position_cache.count);
-                        for pi in x {
-                            index_cache.append(pi + offset)
-                        }
-                        
-                    }
-                }
-                
-                for mesh_pos in patch.positions {
-                    let pos = irot_quat.act(mesh_pos * scale) + vec4_to_vec3(ipos)
-                    position_cache.append(pos)
-                }
-                
-                if let mesh_normals = patch.normals {
-                    for mesh_normal in mesh_normals {
-                        normal_cache.append(irot_quat.act(mesh_normal))
-                    }
-                }
-                
-                if let mesh_tangents = patch.tangents {
-                    for vector in mesh_tangents {
-                        tangent_cache.append(irot_quat.act(vector))
-                    }
-                }
-                
-                if let mesh_bitangents = patch.bitangents {
-                    for vector in mesh_bitangents {
-                        bitangent_cache.append(irot_quat.act(vector))
-                    }
-                }
-                
-                if let mesh_texs = patch.textureCoordinates {
-                    for mesh_tex in mesh_texs {
-                        tex_cache.append(mesh_tex + texture)
-                    }
-                }
-                
-            }
-            
-            for o in index_cache {
-                assert(o < position_cache.count)
-            }
-            
-            var new_desc = MeshDescriptor()
-            
-            new_desc.positions = MeshBuffers.Positions(position_cache)
-            
-            if !normal_cache.isEmpty {
-                new_desc.normals = MeshBuffers.Normals(normal_cache)
-            }
-            
-            if !tangent_cache.isEmpty {
-                new_desc.tangents = MeshBuffers.Tangents(tangent_cache)
-            }
-            
-            if !bitangent_cache.isEmpty {
-                new_desc.bitangents = MeshBuffers.Tangents(bitangent_cache)
-            }
-            
-            if !tex_cache.isEmpty {
-                new_desc.textureCoordinates = MeshBuffers.TextureCoordinates(tex_cache)
-            }
-            
-            new_desc.primitives = .triangles(index_cache)
-            
-            emulated_descriptors.append(new_desc)
-        }
-        
-        return emulated_descriptors
-         */
-        return []
-    }
 }
 
 // MARK: Entity
@@ -547,6 +412,7 @@ class NEntity : Entity, HasCollision {
     
 }
 
+@MainActor
 struct SpecialAbilities {
     var can_move = false
     var can_scale = false
@@ -592,6 +458,8 @@ class NooEntity : NoodlesComponent {
     var methods: [NooMethod] = []
     var abilities = SpecialAbilities()
     
+    var instance: GlyphInstances?
+    
     var physics: [NooPhysics] = []
     var physics_debug: Entity?
     
@@ -600,6 +468,7 @@ class NooEntity : NoodlesComponent {
         entity = NEntity()
     }
     
+    @MainActor
     func common(world: NoodlesWorld, msg: MsgEntityCreate) {
         //dump(msg)
         
@@ -633,20 +502,14 @@ class NooEntity : NoodlesComponent {
                 instance_view: g.instances.map { world.buffer_view_list.get($0.view)! }
             )
             
-            Task {
-                let new_subs = await self.build_sub_render_representation(g, prep);
-                
-                DispatchQueue.main.async {
-                    self.unset_representation(world);
-                    
-                    for sub in new_subs {
-                        self.add_sub(world, sub)
-                    }
-                    
-                    //print("adding mesh rep done")
-                }
-
+            let new_subs = self.build_sub_render_representation(g, prep, world);
+            
+            self.unset_representation(world);
+            
+            for sub in new_subs {
+                self.add_sub(sub)
             }
+            
         }
         
         if let p = msg.physics {
@@ -663,7 +526,7 @@ class NooEntity : NoodlesComponent {
             let advector_state = physics.advector_state!
 
             let physics_context = ParticleContext(
-                advect_multiplier: 1.0,
+                advect_multiplier: 10.0,
                 time_delta: 1/60.0,
                 max_lifetime: 10.0,
                 bb_min: float_to_packed(advector_state.bb.min),
@@ -695,7 +558,8 @@ class NooEntity : NoodlesComponent {
 
             advector_ent.components.set(model_component)
             
-            advector_ent.position = advector_state.bb.center
+            //advector_ent.position = advector_state.bb.center
+            advector_ent.position = .zero
             
             advector_ent.components.set(AdvectionSpawnComponent())
             
@@ -761,6 +625,7 @@ class NooEntity : NoodlesComponent {
         entity.components.set(support)
     }
     
+    @MainActor
     func create(world: NoodlesWorld) {
         world.scene.add(entity)
         world.root_entity.addChild(entity)
@@ -774,15 +639,92 @@ class NooEntity : NoodlesComponent {
         clear_subs(world)
     }
     
-    func add_sub(_ world: NoodlesWorld, _ ent: Entity) {
-        world.scene.add(ent)
-        
+    func add_sub(_ ent: Entity) {
         sub_entities.append(ent)
         
         entity.addChild(ent)
     }
     
-    func build_sub_render_representation(_ rep: RenderRep, _ prep: NooEntityRenderPrep) async -> [Entity] {
+    @MainActor
+    func build_instance_representation(_ src: InstanceSource,
+                                       _ prep: NooEntityRenderPrep,
+                                       _ world: NoodlesWorld
+    ) -> ([Entity], BoundingBox)? {
+        
+        guard let v = prep.instance_view else {
+            print("Warning: missing instance view")
+            return nil
+        }
+        
+        let instance_data = v.get_slice(offset: 0)
+        let instance_count = instance_data.count / MemoryLayout<float4x4>.stride
+        // just in case things arent quite rounded off
+        let instances_byte_count = Int(instance_count) * MemoryLayout<float4x4>.stride
+        
+        print("Building \(instance_count) instances")
+        
+        guard instance_count > 0 else {
+            return nil
+        }
+        
+        let instance_buffer = ComputeContext.shared.device.makeBuffer(length: instances_byte_count, options: .storageModeShared)!
+        
+        instance_data.withUnsafeBytes {
+            (pointer: UnsafeRawBufferPointer) -> () in
+            instance_buffer.contents().copyMemory(from: pointer.baseAddress!, byteCount: instances_byte_count)
+        }
+        
+        guard let glyph = patch_to_glyph(prep.geometry.info.patches.first, world: world) else {
+            return nil
+        }
+        
+        let instances = GlyphInstances(instance_count: UInt32(instance_count), description: GPUGlyphDescription(from: glyph))
+        
+        var bounding_box : BoundingBox
+        
+        if let bb = src.bb {
+            bounding_box = BoundingBox(min: bb.min, max: bb.max)
+        } else {
+            default_log.warning("Unknown bounding box, having to compute by hand...")
+            
+            bounding_box = instance_data.withUnsafeBytes {
+                (pointer: UnsafeRawBufferPointer) -> BoundingBox in
+                let bind = pointer.bindMemory(to: simd_float4x4.self)
+                
+                var new_bb = BoundingBox();
+                
+                for i in bind {
+                    new_bb.formUnion(SIMD3<Float>(i[0].x, i[0].y, i[0].z))
+                }
+                
+                return new_bb
+            }
+            
+            print("Computed to \(bounding_box)")
+        }
+        
+        {
+            let sesson = ComputeSession()!
+            
+            instances.update(instance_buffer: instance_buffer, bounds: bounding_box, session: sesson)
+        }()
+        
+        let mat = prep.geometry.mesh_materials[0]
+        
+        let res = try! MeshResource(from: instances.low_level_mesh)
+        let model = ModelComponent(mesh: res, materials: [mat])
+        
+        let ent = Entity()
+        ent.name = "Instances"
+        ent.components.set(model)
+        
+        print("Done with instances")
+        
+        return ([ent], bounding_box)
+    }
+    
+    @MainActor
+    func build_sub_render_representation(_ rep: RenderRep, _ prep: NooEntityRenderPrep, _ world: NoodlesWorld) -> [Entity] {
         var subs = [Entity]();
         
         let geom = prep.geometry
@@ -790,38 +732,32 @@ class NooEntity : NoodlesComponent {
         var bb = BoundingBox()
         
         if let instances = rep.instances {
+            print("Noodles ent has instances, building")
             
-            let mat = geom.mesh_materials[0]
-            
-            let generated = await geom.generate_emulated_instances(src: instances, prep)
-            
-            do  {
-                let resource = try await MeshResource.generate(from: generated)
-                
-                let new_entity = await ModelEntity(mesh: resource, materials: [mat])
-                
-                subs.append(new_entity)
-            } catch {
-                fatalError("Uh oh \(error)");
+            guard let (new_subs, new_bb) = build_instance_representation(instances, prep, world) else {
+                return []
             }
+            
+            subs = new_subs
+            bb = new_bb
             
         } else {
             for (mat, mesh) in zip(geom.mesh_materials, geom.get_mesh_resources()) {
-                let new_entity = await ModelEntity(mesh: mesh, materials: [mat])
-                
+                let new_entity = ModelEntity(mesh: mesh, materials: [mat])
                 subs.append(new_entity)
             }
             
-            bb = await geom.get_bounding_box()
+            bb = geom.get_bounding_box()
         }
 
-        let cc = await CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
+        let cc = CollisionComponent(shapes: [ShapeResource.generateBox(size: bb.extents).offsetBy(translation: bb.center)]);
         
-        await entity.components.set(cc);
+        entity.components.set(cc);
         
         return subs
     }
     
+    @MainActor
     func update(world: NoodlesWorld, _ update: MsgEntityCreate) {
         common(world: world, msg: update)
         last_info = update
@@ -970,6 +906,7 @@ struct AdvectionID : Equatable {
     let offset : UInt32
 }
 
+@MainActor
 class NooAdvectorState {
     var lines: [NooFlowLine]
     
@@ -1065,7 +1002,7 @@ class NooAdvectorState {
         
         // raster the tetra?
         
-        let raster = TetraGridRasterizer(grid_bounds: BoundingBox(min: min_b, max: max_b), resolution: 4, positions: all_positions, indicies: tetra_indicies)
+        let raster = TetraGridRasterizer(grid_bounds: BoundingBox(min: min_b, max: max_b), resolution: 10, positions: all_positions, indicies: tetra_indicies)
         
         
         self.velocity = raster.interpolate_data(indicies: tetra_indicies, positions: all_positions, data: all_vectors, repeating: .zero)
@@ -1171,6 +1108,7 @@ func extract_line(_ data: Data, base_offset: Int, acount: Int) -> (NooFlowLine, 
     return (new_line, cursor)
 }
 
+@MainActor
 class ComponentList<T: NoodlesComponent> {
     var list : Dictionary<UInt32, T> = [:]
     
@@ -1192,7 +1130,7 @@ class ComponentList<T: NoodlesComponent> {
 }
 
 // MARK: World
-
+@MainActor
 class NoodlesWorld {
     var scene : RealityViewContent
     
@@ -1233,6 +1171,7 @@ class NoodlesWorld {
     
     var instance_test: GlyphInstances
     
+    @MainActor
     init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable, initial_offset: simd_float3 = .zero) {
         self.scene = scene
         self.visible_method_list = doc_method_list
@@ -1255,9 +1194,9 @@ class NoodlesWorld {
         print("Creating root entity:")
         //dump(root_entity)
         
-        let gdesc = make_glyph(shape_cube)
+        let gdesc = make_glyph(shape_sphere)
         
-        instance_test = GlyphInstances(instance_count: 10, description: gdesc)
+        instance_test = GlyphInstances(instance_count: 10, description: GPUGlyphDescription(from: gdesc))
         
         let test_entity = ModelEntity(mesh: try! MeshResource.init(from: instance_test.low_level_mesh),
                                       materials: [ PhysicallyBasedMaterial() ])
@@ -1265,6 +1204,7 @@ class NoodlesWorld {
         root_entity.addChild(test_entity)
     }
     
+    @MainActor
     func handle_message(_ msg: FromServerMessage) {
         //dump(msg)
         switch (msg) {

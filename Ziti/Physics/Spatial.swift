@@ -134,62 +134,89 @@ class TetraGridRasterizer {
         dump(self.resolutions)
         dump(self.deltas)
         
+        //var op_q = OperationQueue()
+        //op_q.maxConcurrentOperationCount = 1
+        
+        assert(simd_reduce_min(self.lower_grid.dims) > UInt32(0))
+        
+        let upper_max = self.lower_grid.dims &- 1
         
         for (i,ti) in indicies.enumerated() {
-            let ta = ti.to_tetrahedra(positions: positions)
-            let tb = TetrahedraBarycentric(ta)
             
-            // min max of tetra
-            let min_bb = min(ta.a, min(ta.b, min(ta.c, ta.d)))
-            let max_bb = max(ta.a, max(ta.b, max(ta.c, ta.d)))
+//            if i % 500 == 0 {
+//                // we want to make sure we dont overload the process system here
+//                op_q.waitUntilAllOperationsAreFinished()
+//                op_q = OperationQueue()
+//            }
             
-            // now we need to find which grid points we cover
-            let start = simd_uint(floor(((min_bb - grid_bounds.min) / bb_range) * resolutions_as_float))
-            let end   = simd_uint(ceil(((max_bb - grid_bounds.min) / bb_range) * resolutions_as_float))
+//            op_q.addOperation {
+                let ta = ti.to_tetrahedra(positions: positions)
+                let tb = TetrahedraBarycentric(ta)
+                
+                // min max of tetra
+                let min_bb = min(ta.a, min(ta.b, min(ta.c, ta.d)))
+                let max_bb = max(ta.a, max(ta.b, max(ta.c, ta.d)))
+                
+                // now we need to find which grid points we cover
+                var start = simd_uint(floor(((min_bb - grid_bounds.min) / bb_range) * self.resolutions_as_float))
+                var end   = simd_uint(ceil(((max_bb - grid_bounds.min) / bb_range) * self.resolutions_as_float))
             
-            for x in start.x ... end.x {
-                for y in start.y ... end.y {
-                    for z in start.z ... end.z {
-                        
-                        let int_point = simd_uint3(x: x, y: y, z: z)
-                        let point = simd_float3(int_point) * deltas + grid_bounds.min
-                        
-                        if !tb.contains(point) {
-                            continue
+            start = min(start, upper_max)
+            end = min(end, upper_max)
+                
+                if i == 2381178 {
+                    print("HERE")
+                }
+                
+                for x in start.x ... end.x {
+                    for y in start.y ... end.y {
+                        for z in start.z ... end.z {
+                            
+                            let int_point = simd_uint3(x: x, y: y, z: z)
+                            let point = simd_float3(int_point) * self.deltas + grid_bounds.min
+                            
+                            if !tb.contains(point) {
+                                continue
+                            }
+                            
+                            if i == 2381178 {
+                                print("Tetra \(i) \(ta)")
+                                print("Bounds \(min_bb) \(max_bb)")
+                                print("Disc \(start) \(end)")
+                                print(" check \(int_point) \(point)")
+                            }
+                            
+                            if self.lower_grid[x,y,z] >= 0 {
+                                print("Warning! Tetra overlap on \(int_point)")
+                                print("this tetra:")
+                                dump(ta)
+                                dump(min_bb)
+                                dump(max_bb)
+                                dump(start)
+                                dump(end)
+                                
+                                print("Other tetra:")
+                                let other = Int(self.lower_grid[x,y,z])
+                                dump(indicies[other])
+                                dump(indicies[other].to_tetrahedra(positions: positions))
+                                
+                                print("Point in question: \(point)")
+                                
+                                fatalError("BADNESS")
+                            }
+                            
+                            if i == 2381178 {
+                                print("Save \(i) to \( (x,y,z) )")
+                            }
+                            
+                            self.lower_grid[x,y,z] = Int32(i)
                         }
-                        
-                        print("Tetra \(i) \(ta)")
-                        print("Bounds \(min_bb) \(max_bb)")
-                        print("Disc \(start) \(end)")
-                        print(" check \(int_point) \(point)")
-                        
-                        if lower_grid[x,y,z] >= 0 {
-                            print("Warning! Tetra overlap on \(int_point)")
-                            print("this tetra:")
-                            dump(ta)
-                            dump(min_bb)
-                            dump(max_bb)
-                            dump(start)
-                            dump(end)
-                            
-                            print("Other tetra:")
-                            let other = Int(lower_grid[x,y,z])
-                            dump(indicies[other])
-                            dump(indicies[other].to_tetrahedra(positions: positions))
-                            
-                            print("Point in question: \(point)")
-                            
-                            fatalError("BADNESS")
-                        }
-                        
-                        print("Save \(i) to \( (x,y,z) )")
-                        
-                        lower_grid[x,y,z] = Int32(i)
                     }
                 }
             }
-        }
         
+        
+        //op_q.waitUntilAllOperationsAreFinished()
     }
     
     

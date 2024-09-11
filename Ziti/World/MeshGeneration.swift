@@ -10,7 +10,7 @@ import RealityKit
 import Metal
 
 
-func make_glyph(_ f : ()-> ([SIMD3<Float>], [SIMD3<Float>], [UInt16], BoundingBox)) -> GlyphDescription {
+func make_glyph(_ f : ()-> ([SIMD3<Float>], [SIMD3<Float>], [UInt16], BoundingBox)) -> CPUGlyphDescription {
     
     let (pos, nors, index, bb) = f();
     
@@ -18,7 +18,108 @@ func make_glyph(_ f : ()-> ([SIMD3<Float>], [SIMD3<Float>], [UInt16], BoundingBo
         ParticleVertex(position: .init(x: p.x, y: p.y, z: p.z), normal: .init(x: n.x, y: n.y, z: n.z), uv: .init(x: 0, y: 0))
     }
     
-    return GlyphDescription(vertex: verts, index: index, bounding_box: bb)
+    return CPUGlyphDescription(vertex: verts, index: index, bounding_box: bb)
+}
+
+
+@MainActor
+func patch_to_glyph(_ p : GeomPatch?,
+                    world: NoodlesWorld) -> CPUGlyphDescription? {
+    
+    guard let patch = p else {
+        return nil
+    }
+    
+    let blank_vertex : ParticleVertex = .init(
+        position: .init(x: 0, y: 0, z: 0),
+        normal: .init(x: 0, y: 0, z: 1),
+        uv: .init(x: 0, y: 0)
+    )
+    
+    var verts: [ParticleVertex] = .init(repeating: blank_vertex, count: Int(patch.vertex_count))
+    
+    var bounding = BoundingBox()
+    
+    for attribute in patch.attributes {
+        let buffer_view = world.buffer_view_list.get(attribute.view)!
+        let actual_stride = max(attribute.stride, format_to_stride(format_str: attribute.format))
+        
+        let slice = buffer_view.get_slice(offset: attribute.offset)
+        
+        switch attribute.semantic {
+        case "POSITION":
+            let pos = realize_vec3(slice, .V3, vcount: Int(patch.vertex_count), stride: Int(actual_stride))
+            for p_i in 0 ..< pos.count {
+                let p = pos[p_i]
+                verts[p_i].position = packed_float3(x: p.x, y: p.y, z: p.z)
+                bounding = bounding.union(p)
+            }
+        case "NORMAL":
+            let nors = realize_vec3(slice, .V3, vcount: Int(patch.vertex_count), stride: Int(actual_stride))
+            for p_i in 0 ..< nors.count {
+                let n = nors[p_i]
+                verts[p_i].normal = packed_float3(x: n.x, y: n.y, z: n.z)
+            }
+        case "TEXTURE":
+            switch attribute.format {
+            case "VEC2":
+                let ts = realize_tex_vec2(slice, vcount: Int(patch.vertex_count), stride: Int(actual_stride))
+                for p_i in 0 ..< ts.count {
+                    let n = ts[p_i] * Float(UInt16.max)
+                    verts[p_i].uv = packed_ushort2(UInt16(n.x), UInt16(n.y))
+                }
+            case "U16VEC2":
+                let ts = realize_tex_u16vec2(slice, vcount: Int(patch.vertex_count), stride: Int(actual_stride))
+                for p_i in 0 ..< ts.count {
+                    let n = ts[p_i]
+                    verts[p_i].uv = packed_ushort2(n)
+                }
+            default:
+                continue
+            }
+        default:
+            continue
+        }
+    }
+
+    
+    guard let index_info = patch.indices else {
+        return nil
+    }
+    
+    let index_buff_view = world.buffer_view_list.get(index_info.view)!
+    let index_bytes = index_buff_view.get_slice(offset: index_info.offset)
+    
+    let index = realize_index_u16(index_bytes, index_info)
+    
+    return CPUGlyphDescription(vertex: verts, index: index, bounding_box: bounding)
+}
+
+func realize_index_u16(_ bytes: Data, _ idx: GeomIndex) -> [UInt16] {
+    if idx.stride != 0 {
+        fatalError("Unable to handle strided index buffers")
+    }
+    
+    
+    return bytes.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) -> [UInt16] in
+        
+        switch idx.format {
+        case "U8":
+            let arr = pointer.bindMemory(to: UInt8.self)
+            return Array<UInt8>(arr).map { UInt16($0) }
+            
+        case "U16":
+            let arr = pointer.bindMemory(to: UInt16.self)
+            return Array<UInt16>(arr)
+
+        case "U32":
+            let arr = pointer.bindMemory(to: UInt32.self)
+            return Array<UInt32>(arr).map { UInt16($0) }
+            
+        default:
+            fatalError("unknown index format")
+        }
+    }
 }
 
 func make_model_entity(scale : Float = 1.0, _ f : ()-> ([SIMD3<Float>], [SIMD3<Float>], [UInt16], BoundingBox)) -> ModelEntity {
@@ -29,22 +130,22 @@ func make_model_entity(scale : Float = 1.0, _ f : ()-> ([SIMD3<Float>], [SIMD3<F
         p in
         p * scale
     }
-
+    
     let indicies = index.map { p in
         UInt32(p)
     };
-
+    
     var description = MeshDescriptor()
     description.positions = MeshBuffers.Positions(positions)
     description.normals = MeshBuffers.Normals(nors)
     description.primitives = .triangles(indicies)
-
+    
     var tri_mat = PhysicallyBasedMaterial()
     tri_mat.baseColor = PhysicallyBasedMaterial.BaseColor.init(tint: .opaqueSeparator)
     tri_mat.clearcoat = PhysicallyBasedMaterial.Clearcoat(floatLiteral: 1.0)
     tri_mat.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: 0.0)
     tri_mat.metallic  = PhysicallyBasedMaterial.Metallic(floatLiteral: 1.0)
-
+    
     return ModelEntity(mesh: try! .generate(from: [description]), materials: [tri_mat])
 }
 
@@ -113,10 +214,11 @@ func bounding_box<T: Collection>(of points: T, position_extractor: (T.Element) -
     return BoundingBox(min: min_point, max: max_point)
 }
 
+@MainActor
 func determine_bounding_box(attribute: GeomAttrib,
                             vertex_count: Int,
                             world: NoodlesWorld) -> BoundingBox {
-     
+    
     if attribute.maximum_value.count > 2 && attribute.minimum_value.count > 2 {
         let min_bb = SIMD3<Float>(
             x: attribute.minimum_value[0],
@@ -199,6 +301,7 @@ private func format_to_stride(format_str: String) -> Int64 {
     }
 }
 
+@MainActor
 func patch_to_low_level_mesh(patch: GeomPatch,
                              world: NoodlesWorld) -> LowLevelMesh? {
     dump(patch)
@@ -338,15 +441,6 @@ func patch_to_low_level_mesh(patch: GeomPatch,
             .init(indexOffset: 0, indexCount: Int(index_info.count), topology: index_type, materialIndex: 0, bounds: resolved_bb)
         ])
     }
-    
-    
-    
-//    var context = ComputeContext.shared
-//    var pipe_state = try? context.device.makeComputePipelineState(function: context.direct_upload_function)
-//    
-//    var cbuffer = context.command_queue.makeCommandBuffer()!
-//    var cencoder = cbuffer.makeComputeCommandEncoder()!
-//
     
     return lowLevelMesh
 }

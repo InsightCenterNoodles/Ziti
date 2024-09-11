@@ -107,7 +107,7 @@ class ComputeSession {
     
     deinit {
         command_buffer.commit()
-        command_buffer.waitUntilCompleted()
+        //command_buffer.waitUntilCompleted()
         
         if let s = scope {
             s.end()

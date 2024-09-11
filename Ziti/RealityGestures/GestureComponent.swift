@@ -55,6 +55,7 @@ public class EntityGestureState {
 // MARK: -
 
 /// A component that handles gesture logic for an entity.
+@MainActor
 public struct GestureComponent: Component, Codable {
     
     /// Instead of changing the transform of the entity this component is attached to, delegate to the parent instead (MODIFICATION)
@@ -270,7 +271,6 @@ public struct GestureComponent: Component, Codable {
 }
 
 // MARK: Customizations for Ziti
-
 struct GestureSupportComponent : Component {
     weak var world: NoodlesWorld?
     var noo_id: NooID
@@ -279,6 +279,7 @@ struct GestureSupportComponent : Component {
     var last_r: simd_quatf = simd_quatf(ix: 0.0, iy: 0.0, iz: 0.0, r: 1.0)
     var last_s: SIMD3<Float> = .one
     
+    @MainActor
     mutating func fire(e: Entity) {
         print("Updating remote transforms for entity")
         guard let world else { return }

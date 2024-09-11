@@ -868,6 +868,7 @@ struct MsgMaterialCreate : NoodlesServerMessage {
     var id : NooID
     var pbr_info : PBRInfo
     var normal_texture : TexRef?
+    var use_alpha : Bool = false
     
     static func from_cbor(c: CBOR, info: DecodeInfo) -> Self {
         
@@ -875,7 +876,12 @@ struct MsgMaterialCreate : NoodlesServerMessage {
         let pbr_info = PBRInfo(c["pbr_info"]) ?? PBRInfo()
         let normal_texture = TexRef(c["normal_texture"])
         
-        return MsgMaterialCreate(id: id, pbr_info: pbr_info, normal_texture: normal_texture)
+        let use_alpha = to_bool(c["use_alpha"]) ?? false
+        
+        return MsgMaterialCreate(id: id,
+                                 pbr_info: pbr_info,
+                                 normal_texture: normal_texture,
+                                 use_alpha: use_alpha)
     }
 }
 
