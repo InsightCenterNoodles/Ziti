@@ -60,33 +60,33 @@ struct CompactMethodView : View {
     
     var body: some View {
         HStack {
-            if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::step_time" }) {
+            if current_doc_method_list.list.contains(where: { $0.method.info.name == CommonStrings.step_time }) {
                 Button() {
-                    start_invoke("noo::step_time", CBOR(-1), .Document)
+                    start_invoke(CommonStrings.step_time, CBOR(-1), .Document)
                 } label: {
                     Label("Backward", systemImage: "backward.fill").labelStyle(.iconOnly)
                 }
             }
             
-            if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::animate_time" }) {
+            if current_doc_method_list.list.contains(where: { $0.method.info.name == CommonStrings.animate_time }) {
                 Button() {
-                    start_invoke("noo::animate_time", CBOR(0), .Document)
+                    start_invoke(CommonStrings.animate_time, CBOR(0), .Document)
                 } label: {
                     Label("Stop", systemImage: "stop.fill").labelStyle(.iconOnly)
                 }
             }
             
-            if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::animate_time" }) {
+            if current_doc_method_list.list.contains(where: { $0.method.info.name == CommonStrings.animate_time }) {
                 Button() {
-                    start_invoke("noo::animate_time", CBOR(1), .Document)
+                    start_invoke(CommonStrings.animate_time, CBOR(1), .Document)
                 } label: {
                     Label("Play", systemImage: "play.fill").labelStyle(.iconOnly)
                 }
             }
             
-            if current_doc_method_list.list.contains(where: { $0.method.info.name == "noo::step_time" }) {
+            if current_doc_method_list.list.contains(where: { $0.method.info.name == CommonStrings.step_time }) {
                 Button() {
-                    start_invoke("noo::step_time", CBOR(1), .Document)
+                    start_invoke(CommonStrings.step_time, CBOR(1), .Document)
                 } label: {
                     Label("Forward", systemImage: "forward.fill").labelStyle(.iconOnly)
                 }

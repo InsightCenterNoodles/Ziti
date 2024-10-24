@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CommandView: View {
+struct BrowserView: View {
     @State private var hostname = ""
     @State private var is_bad_host = false
     @State var user_name = "Unknown"
@@ -103,6 +103,6 @@ struct CommandView: View {
 
 struct CommandView_Previews: PreviewProvider {
     static var previews: some View {
-        CommandView()
+        BrowserView()
     }
 }

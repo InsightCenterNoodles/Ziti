@@ -15,7 +15,7 @@ extension ParticleVertex {
     static var attributes : [LowLevelMesh.Attribute] = [
         .init(semantic: .position, format: .float3, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.position)!),
         .init(semantic: .normal, format: .float3, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.normal)!),
-        .init(semantic: .uv0, format: .ushort2Normalized, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.uv)!)
+        .init(semantic: .uv0, format: .float2, offset: MemoryLayout<ParticleVertex>.offset(of: \ParticleVertex.uv)!)
     ]
     
     /// Layout for this vertex type for the low level mesh system

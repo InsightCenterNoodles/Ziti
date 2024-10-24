@@ -11,19 +11,24 @@ using namespace metal;
 #include "InstanceTypes.h"
 
 // Matrix layout
-// p is translate, r is rotate, c is color override, s is scale override
-// t is texcoordinate translate
 //
-// px py pz t0
-// cr cg cb ca
-// rx ry rz rw
-// sx sy sz t1
+// px py pz ?   // translate
+// tx ty su sv  // texture translate + scale
+// rx ry rz rw  // rotation
+// sx sy sz ?   // scale
 
 /// Rotate a point around the origin by a quaternion
 float3 rotate_point(float3 p, float4 quat) {
     return p + 2.0 * cross(quat.xyz, cross(quat.xyz, p) + quat.w * p);
 }
 
+float2 texcoord_offset(float2 tex_coords, float2 normalized_offset, float2 normalized_scale) {
+    
+    tex_coords *= normalized_scale;
+    tex_coords += normalized_offset;
+    
+    return tex_coords;
+}
 
 /// Compute a transformed vertex given an instance matrix pack
 void transform_glyph_vertex(device ParticleVertex const* in_verts,
@@ -31,10 +36,10 @@ void transform_glyph_vertex(device ParticleVertex const* in_verts,
                             float4x4 instance,
                             uint vertex_count) {
     float3 inst_position = instance[0].xyz;
-    //float4 inst_color    = instance[1]; // color not used. pending removal?
+    float4 inst_texture  = instance[1]; // color not used. pending removal?
     float4 inst_rotation = instance[2];
     float3 inst_scale    = instance[3].xyz;
-    float2 inst_uv       = float2(instance[0].w, instance[3].w);
+    //float2 inst_uv       = inst_texture.xy;
     
     for (uint i = 0; i < vertex_count; i++) {
         device auto& in_v = in_verts[i];
@@ -42,8 +47,8 @@ void transform_glyph_vertex(device ParticleVertex const* in_verts,
         
         out_v.position = rotate_point(in_v.position*inst_scale, inst_rotation) + inst_position;
         out_v.normal   = normalize(rotate_point(in_v.normal, inst_rotation));
-        out_v.uv       = ushort2( (float2(in_v.uv) / 65535 + inst_uv) * 65535 );
-        //out_v.uv       = ushort2(32767, 32767);
+        out_v.uv       = texcoord_offset(in_v.uv, inst_texture.xy, inst_texture.zw);
+        //out_v.uv       = in_v.uv;
     }
 }
 

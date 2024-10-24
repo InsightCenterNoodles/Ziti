@@ -65,14 +65,14 @@ func patch_to_glyph(_ p : GeomPatch?,
             case "VEC2":
                 let ts = realize_tex_vec2(slice, vcount: Int(patch.vertex_count), stride: Int(actual_stride))
                 for p_i in 0 ..< ts.count {
-                    let n = ts[p_i] * Float(UInt16.max)
-                    verts[p_i].uv = packed_ushort2(UInt16(n.x), UInt16(n.y))
+                    let n = ts[p_i]
+                    verts[p_i].uv = n
                 }
             case "U16VEC2":
                 let ts = realize_tex_u16vec2(slice, vcount: Int(patch.vertex_count), stride: Int(actual_stride))
                 for p_i in 0 ..< ts.count {
-                    let n = ts[p_i]
-                    verts[p_i].uv = packed_ushort2(n)
+                    let n = SIMD2<Float>(ts[p_i]) / Float(UInt16.max)
+                    verts[p_i].uv = n
                 }
             default:
                 continue

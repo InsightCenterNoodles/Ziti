@@ -60,6 +60,7 @@
 			membershipExceptions = (
 				MeshGeneration.swift,
 				MethodList.swift,
+				NoodlesComponent.swift,
 				NoodlesWorld.swift,
 			);
 			target = 2D40E5FD2B7A6E13003D618A /* Ziti */;

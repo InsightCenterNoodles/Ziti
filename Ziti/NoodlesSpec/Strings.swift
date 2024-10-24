@@ -18,4 +18,7 @@ enum CommonStrings {
     static let select_region = "noo::select_region"
     
     static let probe_at = "noo::probe_at"
+    
+    static let step_time = "noo::step_time"
+    static let animate_time = "noo::animate_time"
 }

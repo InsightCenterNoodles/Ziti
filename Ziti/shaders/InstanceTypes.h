@@ -17,9 +17,9 @@ typedef unsigned uint;
 
 // A vertex to be used in the pseudo instance/particle system
 struct ParticleVertex {
-    packed_float3  position;
-    packed_float3  normal;
-    packed_ushort2 uv;
+    packed_float3 position;
+    packed_float3 normal;
+    packed_float2 uv; // we had short here, but that breaks when we do scaling
 };
 
 // Core instance information to be used in the pseudo instance/particle system

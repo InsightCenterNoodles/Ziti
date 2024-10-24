@@ -13,22 +13,7 @@ import RealityKitContent
 import SwiftCBOR
 import Combine
 
-final class NInstallGesture : Event {
-    let entity : NEntity
-    
-    init(entity: NEntity) {
-        self.entity = entity
-    }
-}
-
-@MainActor
-protocol NoodlesComponent {
-    func create(world: NoodlesWorld);
-    func destroy(world: NoodlesWorld);
-}
-
 // MARK: Method
-
 class NooMethod : NoodlesComponent {
     var info: MsgMethodCreate
     
@@ -678,6 +663,10 @@ class NooEntity : NoodlesComponent {
             return nil
         }
         
+        //        if instance_count == 1 {
+        //            dump(glyph);
+        //        }
+        
         let instances = GlyphInstances(instance_count: UInt32(instance_count), description: GPUGlyphDescription(from: glyph))
         
         var bounding_box : BoundingBox
@@ -795,22 +784,21 @@ extension VAttribFormat {
     }
 }
 
-func realize_tex_u16vec2(_ data: Data, vcount: Int, stride: Int) -> [SIMD2<Float>] {
+func realize_tex_u16vec2(_ data: Data, vcount: Int, stride: Int) -> [SIMD2<UInt16>] {
     let true_stride = max(stride, 2*2);
     
     return data.withUnsafeBytes {
-        (pointer: UnsafeRawBufferPointer) -> [SIMD2<Float>] in
+        (pointer: UnsafeRawBufferPointer) -> [SIMD2<UInt16>] in
         
-        var ret : [SIMD2<Float>] = []
+        var ret : [SIMD2<UInt16>] = []
         
         ret.reserveCapacity(vcount)
         
         for vertex_i in 0 ..< vcount {
             let place = vertex_i * true_stride
-            let item = pointer.loadUnaligned(fromByteOffset: place, as: SIMD2<UInt16>.self)
-            var p = SIMD2<Float>(item) / Float(UInt16.max)
-            p.y = 1.0 - p.y;
-            ret.append( p )
+            var item = pointer.loadUnaligned(fromByteOffset: place, as: SIMD2<UInt16>.self)
+            item.y = 65535 - item.y;
+            ret.append( item )
         }
         
         return ret
@@ -1127,6 +1115,13 @@ class ComponentList<T: NoodlesComponent> {
             v.destroy(world: world)
         }
     }
+    
+    func clear(_ world: NoodlesWorld) {
+        for v in list.values {
+            v.destroy(world: world)
+        }
+        list.removeAll()
+    }
 }
 
 // MARK: World
@@ -1168,40 +1163,47 @@ class NoodlesWorld {
     public var invoke_mapper = [String:(MsgMethodReply) -> ()]()
     
     var root_entity : Entity
+    var root_controller: Entity
     
-    var instance_test: GlyphInstances
+    //var instance_test: GlyphInstances
     
     @MainActor
     init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable, initial_offset: simd_float3 = .zero) {
         self.scene = scene
         self.visible_method_list = doc_method_list
         
-        root_entity = make_model_entity(scale: 0.05, shape_sphere)
+        root_controller = make_model_entity(scale: 0.05, shape_sphere)
         
-        let bb = root_entity.visualBounds(relativeTo: root_entity.parent)
-        let gesture = GestureComponent(canDrag: true, pivotOnDrag: false, canScale: true, canRotate: true)
+        let bb = root_controller.visualBounds(relativeTo: root_controller.parent)
+        var gesture = GestureComponent(canDrag: true, pivotOnDrag: false, canScale: true, canRotate: true)
+        gesture.delegateToParent = true
         let input = InputTargetComponent()
         let coll  = CollisionComponent(shapes: [ShapeResource.generateSphere(radius: bb.boundingRadius)])
-        root_entity.components.set(gesture)
-        root_entity.components.set(input)
-        root_entity.components.set(coll)
+        root_controller.components.set(gesture)
+        root_controller.components.set(input)
+        root_controller.components.set(coll)
+        root_controller.name = "Root Controller"
+        root_controller.isEnabled = false
+        
+        root_entity = Entity()
         root_entity.name = "Root Entity"
+        root_entity.transform.translation = initial_offset
+        root_entity.addChild(root_controller)
         
         scene.add(root_entity)
         
-        root_entity.transform.translation = initial_offset
         
-        print("Creating root entity:")
+        //print("Creating root entity:")
         //dump(root_entity)
         
-        let gdesc = make_glyph(shape_sphere)
-        
-        instance_test = GlyphInstances(instance_count: 10, description: GPUGlyphDescription(from: gdesc))
-        
-        let test_entity = ModelEntity(mesh: try! MeshResource.init(from: instance_test.low_level_mesh),
-                                      materials: [ PhysicallyBasedMaterial() ])
-        
-        root_entity.addChild(test_entity)
+//        let gdesc = make_glyph(shape_sphere)
+//        
+//        instance_test = GlyphInstances(instance_count: 10, description: GPUGlyphDescription(from: gdesc))
+//        
+//        let test_entity = ModelEntity(mesh: try! MeshResource.init(from: instance_test.low_level_mesh),
+//                                      materials: [ PhysicallyBasedMaterial() ])
+//        
+//        root_entity.addChild(test_entity)
     }
     
     @MainActor
@@ -1328,6 +1330,14 @@ class NoodlesWorld {
         case .physics_delete(let x):
             physics_list.erase(x.id, self)
         }
+    }
+    
+    func clear() {
+        entity_list.clear(self)
+        material_list.clear(self)
+        geometry_list.clear(self)
+        texture_list.clear(self)
+        image_list.clear(self)
     }
     
     func frame_all(target_volume : SIMD3<Float>) {
