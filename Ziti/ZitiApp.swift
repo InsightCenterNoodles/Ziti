@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct ZitiApp: App {
-    @State private var current_style: ImmersionStyle = .progressive
+    @State private var current_style: ImmersionStyle = .mixed
     
     init() {
         ParticleAdvectionComponent.registerComponent()

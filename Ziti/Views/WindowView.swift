@@ -30,6 +30,7 @@ struct WindowView: View {
     @StateObject private var info_model = ControlInfoModel()
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
@@ -97,6 +98,11 @@ struct WindowView: View {
                     dismiss()
                 }) {
                     Label("Immersive Mode", systemImage: "sharedwithyou.circle.fill").labelStyle(.iconOnly)
+                }
+                Button(action: {
+                    openWindow(id: "noodles_browser")
+                }) {
+                    Label("New Connection", systemImage: "note.text.badge.plus").labelStyle(.iconOnly)
                 }
                 Divider()
                 Button( action: {

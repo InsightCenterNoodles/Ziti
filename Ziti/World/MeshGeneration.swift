@@ -304,6 +304,7 @@ private func format_to_stride(format_str: String) -> Int64 {
 @MainActor
 func patch_to_low_level_mesh(patch: GeomPatch,
                              world: NoodlesWorld) -> LowLevelMesh? {
+    print("Patch to low-level mesh")
     dump(patch)
     // these have format, layout index, offset from start of vertex data, and semantic
     var ll_attribs = [LowLevelMesh.Attribute]()
@@ -326,6 +327,10 @@ func patch_to_low_level_mesh(patch: GeomPatch,
     for attribute in patch.attributes {
         let buffer_view = world.buffer_view_list.get(attribute.view)!
         let actual_stride = max(attribute.stride, format_to_stride(format_str: attribute.format))
+        print("attribute");
+        dump(attribute)
+        dump(actual_stride)
+        dump(buffer_view)
         //let buffer = info.buffer_cache[buffer_view.source_buffer.slot]!
         
         // - attribute.view    this is essentially which buffer we are using
@@ -334,7 +339,7 @@ func patch_to_low_level_mesh(patch: GeomPatch,
         
         //
         let key = LayoutPack(view_id: attribute.view,
-                             buffer_offset: buffer_view.info.offset,
+                             buffer_offset: attribute.offset,
                              buffer_stride: actual_stride);
         
         guard let ll_semantic = determine_low_level_semantic(attribute: attribute) else {
@@ -404,6 +409,7 @@ func patch_to_low_level_mesh(patch: GeomPatch,
         return nil
     }
     
+    dump(lowLevelMesh)
     
     // now execute uploads
     
