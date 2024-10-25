@@ -8,14 +8,8 @@
 import SwiftUI
 import RealityKit
 import RealityKitContent
-import ARKit
+//import ARKit
 
-class HandInfo {
-    var skeleton: HandSkeleton?
-    var tf : simd_float4x4 = matrix_identity_float4x4
-    var entity : Entity = Entity()
-    var enabled = false
-}
 
 struct NooImmersiveView: View {
     var new_noodles_config : NewNoodles!
@@ -30,9 +24,7 @@ struct NooImmersiveView: View {
     @State private var current_scene : RealityViewContent!
     @State private var current_doc_method_list = MethodListObservable()
     
-    @State var ar_session = ARKitSession()
-    
-    @State var hands : [HandInfo] = [HandInfo(), HandInfo()]
+    //@State var ar_session = ARKitSession()
     
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
@@ -53,95 +45,29 @@ struct NooImmersiveView: View {
             
             noodles_world?.comm = noodles_state
             
-            for h in hands {
-                content.add(h.entity)
-            }
+            let anchor = AnchorEntity(.hand(.left, location: .aboveHand), trackingMode: .predicted)
+            anchor.name = "hand_anchor"
             
-            if let hand_attachment = attachments.entity(for: "hand_label") {
-                hand_attachment.position = [0, 0.02, 0]
-                hands[0].entity.addChild(hand_attachment)
-            }
+            content.add(anchor)
             
-        } update: { content, attachments in
-            
-//            if !auto_extent{
-//                var fv = 1.0
-//                if global_scale > 0 {
-//                    fv = global_scale
-//                } else if global_scale < 0 {
-//                    fv = 1.0 / (-global_scale)
-//                }
-//                let scalar = Float(fv)
-//                let root = noodles_state!.world.root_entity
-//                var current_tf = root.transform
-//                current_tf.scale = [scalar, scalar, scalar]
-//                root.move(to: current_tf, relativeTo: root.parent, duration: 1)
-//            }
-            
-            if let hand_attachment = attachments.entity(for: "hand_label") {
-                var tf = hands[0].tf;
-                
-                if let hand_info = hands[0].skeleton {
-                    tf *= hand_info.joint(.wrist).anchorFromJointTransform
-                }
-                
-                hands[0].entity.move(to: tf, relativeTo: hand_attachment.parent)
+            if let att = attachments.entity(for: "hand_label") {
+                att.components[BillboardComponent.self] = .init()
+                anchor.addChild(att)
             }
             
         } attachments: {
             Attachment(id: "hand_label") {
-//                Button("Stop Immersive") {
-//                    Task {
-//                        print("Close window for \(new_noodles_config.hostname)")
-//                        await dismissImmersiveSpace()
-//                    }
-//                }
-            }
-        } .installGestures().task {
-            let plane_data = PlaneDetectionProvider(alignments: [.horizontal])
-            let hand_data = HandTrackingProvider()
-            
-            var provider : [DataProvider] = []
-            
-            if PlaneDetectionProvider.isSupported {
-                provider.append(plane_data)
-            }
-            if HandTrackingProvider.isSupported {
-                provider.append(hand_data)
-            }
-            
-            do {
-                try await ar_session.run(provider)
-                
-                Task {
-                    for await _ in plane_data.anchorUpdates {
-                        //update.anchor.
-                    }
-                }
-                
-                Task {
-                    for await update in hand_data.anchorUpdates {
-                        switch update.anchor.chirality {
-                        case .left:
-                            if let h = update.anchor.handSkeleton {
-                                //print("update left")
-                                self.hands[0].skeleton = h
-                            }
-                            self.hands[0].tf = update.anchor.originFromAnchorTransform
-                        case .right:
-                            if let h = update.anchor.handSkeleton {
-                                self.hands[1].skeleton = h
-                            }
-                            self.hands[1].tf = update.anchor.originFromAnchorTransform
+                VStack {
+                    Button("Stop Immersive") {
+                        Task {
+                            print("Close window for \(new_noodles_config.hostname)")
+                            await dismissImmersiveSpace()
                         }
                     }
-                }
+                }.frame(minWidth: 100, maxWidth: 450, minHeight: 100, maxHeight: 450).padding().glassBackgroundEffect()
                 
-                
-            } catch {
-                print("Unable to use ARKit trackers: \(error)")
             }
-        }
+        } .installGestures().environment(current_doc_method_list)
     }
     
     func frame_all() {
