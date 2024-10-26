@@ -45,7 +45,7 @@ struct WindowView: View {
             
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = NoodlesWorld(content, current_doc_method_list)
+            noodles_world = await NoodlesWorld(content, current_doc_method_list)
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             

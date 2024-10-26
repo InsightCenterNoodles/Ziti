@@ -8,7 +8,6 @@
 import SwiftUI
 import RealityKit
 import RealityKitContent
-//import ARKit
 
 
 struct NooImmersiveView: View {
@@ -24,8 +23,6 @@ struct NooImmersiveView: View {
     @State private var current_scene : RealityViewContent!
     @State private var current_doc_method_list = MethodListObservable()
     
-    //@State var ar_session = ARKitSession()
-    
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
@@ -39,7 +36,7 @@ struct NooImmersiveView: View {
             
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = NoodlesWorld(content, current_doc_method_list, initial_offset: simd_float3([0, 1, 0]))
+            noodles_world = await NoodlesWorld(content, current_doc_method_list, initial_offset: simd_float3([0, 1, 0]))
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             
@@ -58,16 +55,16 @@ struct NooImmersiveView: View {
         } attachments: {
             Attachment(id: "hand_label") {
                 VStack {
-                    Button("Stop Immersive") {
+                    Button("Close") {
                         Task {
                             print("Close window for \(new_noodles_config.hostname)")
                             await dismissImmersiveSpace()
                         }
                     }
-                }.frame(minWidth: 100, maxWidth: 450, minHeight: 100, maxHeight: 450).padding().glassBackgroundEffect()
+                }.environment(current_doc_method_list).frame(minWidth: 100, maxWidth: 300, minHeight: 100, maxHeight: 300).padding().glassBackgroundEffect()
                 
             }
-        } .installGestures().environment(current_doc_method_list)
+        } .installGestures()
     }
     
     func frame_all() {

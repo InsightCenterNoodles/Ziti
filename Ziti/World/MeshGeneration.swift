@@ -10,6 +10,27 @@ import RealityKit
 import Metal
 
 
+func make_root_handle() async  -> ModelEntity{
+    var descriptor = UnlitMaterial.Program.Descriptor()
+    
+    descriptor.blendMode = .add
+    
+    let program = await UnlitMaterial.Program(descriptor: descriptor)
+    
+    let material = UnlitMaterial(program: program)
+    
+    let handle_entity = await ModelEntity(mesh: .generateSphere(radius: 0.01), materials: [material])
+    
+    await handle_entity.components.set(HoverEffectComponent(
+        .highlight(.init(
+            color: .systemBlue,
+            strength: 5.0
+        ))
+    ))
+    
+    return handle_entity
+}
+
 func make_glyph(_ f : ()-> ([SIMD3<Float>], [SIMD3<Float>], [UInt16], BoundingBox)) -> CPUGlyphDescription {
     
     let (pos, nors, index, bb) = f();
@@ -326,7 +347,7 @@ func patch_to_low_level_mesh(patch: GeomPatch,
     for attribute in patch.attributes {
         //let buffer_view = world.buffer_view_list.get(attribute.view)!
         let actual_stride = max(attribute.stride, format_to_stride(format_str: attribute.format))
-        print("attribute");
+        //print("attribute");
         //dump(attribute)
         //dump(actual_stride)
         //dump(buffer_view)
@@ -412,7 +433,7 @@ func patch_to_low_level_mesh(patch: GeomPatch,
     // now execute uploads
     
     for (k,v) in layout_mapping {
-        dump((k,v))
+        //dump((k,v))
         let buffer_view = world.buffer_view_list.get(k.view_id)!
         //let buffer = buffer_view.buffer!
         

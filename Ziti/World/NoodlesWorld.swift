@@ -1168,11 +1168,11 @@ class NoodlesWorld {
     //var instance_test: GlyphInstances
     
     @MainActor
-    init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable, initial_offset: simd_float3 = .zero) {
+    init(_ scene: RealityViewContent, _ doc_method_list: MethodListObservable, initial_offset: simd_float3 = .zero) async {
         self.scene = scene
         self.visible_method_list = doc_method_list
         
-        root_controller = make_model_entity(scale: 0.05, shape_sphere)
+        root_controller = await make_root_handle();
         
         let bb = root_controller.visualBounds(relativeTo: root_controller.parent)
         var gesture = GestureComponent(canDrag: true, pivotOnDrag: false, canScale: true, canRotate: true)
