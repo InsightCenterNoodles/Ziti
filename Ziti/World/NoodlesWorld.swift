@@ -586,7 +586,7 @@ class NooEntity : NoodlesComponent {
             }
         }
         
-        entity.move(to: transform, relativeTo: entity.parent, duration: 1)
+        entity.move(to: transform, relativeTo: entity.parent, duration: 0.1)
     }
     
     func install_gesture_control(_ world: NoodlesWorld) {
@@ -600,20 +600,25 @@ class NooEntity : NoodlesComponent {
                                        canScale: abilities.can_scale,
                                        canRotate: abilities.can_rotate
         )
-        var input = InputTargetComponent()
-        input.isEnabled = false
+        
         let support = GestureSupportComponent(
             world: world, noo_id: last_info.id
         )
         entity.components.set(gesture)
-        entity.components.set(input)
         entity.components.set(support)
+        entity.components.set(HoverEffectComponent(
+            .highlight(.init(color: .systemBlue, strength: 5.0))
+        ))
     }
     
     @MainActor
     func create(world: NoodlesWorld) {
-        world.scene.add(entity)
+        //world.scene.add(entity)
         world.root_entity.addChild(entity)
+        
+        var input = InputTargetComponent()
+        input.isEnabled = false
+        entity.components.set(input)
         
         common(world: world, msg: last_info)
         
@@ -1420,6 +1425,7 @@ class NoodlesWorld {
         for (_,v) in entity_list.list {
             if var c = v.entity.components[InputTargetComponent.self] {
                 c.isEnabled = enabled
+                v.entity.components[InputTargetComponent.self] = c
             }
         }
     }

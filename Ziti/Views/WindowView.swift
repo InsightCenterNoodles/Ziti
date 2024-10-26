@@ -122,9 +122,15 @@ struct WindowView: View {
                 reset()
             }.onChange(of: info_model.interaction) {
                 var root_visible = false
-                if case .none = info_model.interaction {
-                } else if case .root = info_model.interaction {
+                
+                switch info_model.interaction {
+                case .none:
+                    noodles_world?.set_all_entity_input(enabled: false)
+                case .root:
+                    noodles_world?.set_all_entity_input(enabled: false)
                     root_visible = true
+                case .item:
+                    noodles_world?.set_all_entity_input(enabled: true)
                 }
                 
                 noodles_world?.root_controller.isEnabled = root_visible
