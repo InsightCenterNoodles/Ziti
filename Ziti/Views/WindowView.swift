@@ -63,9 +63,6 @@ struct WindowView: View {
                         Label(info_model.text_for_current_option(), systemImage: info_model.icon_for_current_option() )
                     }
                     
-                    
-                    Divider()
-                    
                     CompactMethodView(communicator: $noodles_state)
                 }
                 

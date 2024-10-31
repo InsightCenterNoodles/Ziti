@@ -556,13 +556,15 @@ class NooEntity : NoodlesComponent {
                 world.methods_list.get($0)
             }
             
-            //print("Adding entity methods")
-            //dump(methods)
             
             abilities = SpecialAbilities(methods)
             
             if abilities.can_move || abilities.can_rotate || abilities.can_scale {
                 install_gesture_control(world)
+            } else {
+                if entity.components.has(GestureComponent.self) {
+                    entity.components.remove(GestureComponent.self);
+                }
             }
         }
         
@@ -1306,11 +1308,11 @@ class NoodlesWorld {
             print("updating document methods and signals")
             self.attached_method_list = x.methods_list?.compactMap({f in methods_list.get(f)}) ?? []
             
-            self.visible_method_list.list.removeAll();
             
-            for m in self.attached_method_list {
-                self.visible_method_list.list.append(AvailableMethod(method: m, context_type: String()))
-            }
+            self.visible_method_list.reset_list( self.attached_method_list.map {
+                method in
+                AvailableMethod(method: method, context_type: String())
+            })
 
         case .document_reset(_):
             break
@@ -1390,8 +1392,6 @@ class NoodlesWorld {
                        args: [CBOR],
                        on_done: ((MsgMethodReply) -> Void)? = nil
     ) {
-        print("Launch")
-        
         // generate id
         
         var message = InvokeMethodMessage(method: method, context: context, args: args)

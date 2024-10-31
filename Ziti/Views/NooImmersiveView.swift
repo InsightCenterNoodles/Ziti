@@ -55,6 +55,8 @@ struct NooImmersiveView: View {
         } attachments: {
             Attachment(id: "hand_label") {
                 VStack {
+                    CompactMethodView(communicator: $noodles_state)
+                    
                     Button("Close") {
                         Task {
                             print("Close window for \(new_noodles_config.hostname)")
