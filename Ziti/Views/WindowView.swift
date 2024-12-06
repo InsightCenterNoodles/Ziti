@@ -61,7 +61,7 @@ struct WindowView: View {
                         }
                     }) {
                         Label(info_model.text_for_current_option(), systemImage: info_model.icon_for_current_option() )
-                    }
+                    }.buttonStyle(.borderless)
                     
                     CompactMethodView(communicator: $noodles_state)
                 }
@@ -69,10 +69,10 @@ struct WindowView: View {
             }.padding().glassBackgroundEffect()
         }).ornament(attachmentAnchor: .scene(.back), ornament: {
             if show_info_window {
-                ControlView(info_model: info_model)
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
+                HStack {
+                    ControlView(info_model: info_model,communicator: $noodles_state).padding()
+                }.frame(minWidth: 400, minHeight: 400)
+                    .glassBackgroundEffect().environment(current_doc_method_list)
                     .transition(.opacity)
             }
         }).ornament(attachmentAnchor: .scene(.trailingFront), ornament: {

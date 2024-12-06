@@ -45,17 +45,10 @@ class ControlInfoModel: ObservableObject {
 struct ControlView: View {
     @ObservedObject var info_model: ControlInfoModel
     
+    @Binding var communicator: NoodlesCommunicator?
+    
     var body: some View {
-        VStack{
-            Text(info_model.title_text).font(.headline)
-            Form {
-                Section(header: Text("View")) {
-                    Button(action: frame_all) {
-                        Label("Frame All", systemImage: "arrow.up.backward.and.arrow.down.forward.square.fill")
-                    }
-                }
-            }
-        }
+        MethodListView(communicator: $communicator)
     }
     
     func frame_all() {
@@ -79,7 +72,3 @@ struct ControlView: View {
 //                        }
 //                    }
 //                }
-
-#Preview {
-    ControlView(info_model: .init())
-}

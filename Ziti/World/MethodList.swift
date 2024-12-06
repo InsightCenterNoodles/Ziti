@@ -12,23 +12,52 @@ import SwiftCBOR
 struct MethodListView : View {
     @Environment(MethodListObservable.self) var current_doc_method_list
     
-    @State var search_text = ""
+    @Binding var communicator: NoodlesCommunicator?
     
-    @State private var preferred_column =
-    NavigationSplitViewColumn.sidebar
+    @State var search_text = ""
     
     var filtered_list : [AvailableMethod] {
         if search_text.isEmpty {
-            return current_doc_method_list.available_methods
+            return current_doc_method_list.available_methods.filter {
+                !$0.name.contains("noo::")
+            }
         } else {
             return current_doc_method_list.available_methods.filter {
-                $0.method.info.name.lowercased().contains(search_text.lowercased())
+                $0.name.localizedCaseInsensitiveContains(search_text)
             }
         }
     }
     
     var body: some View {
-        TextField("Search", text: $search_text)
+        NavigationStack {
+            List(filtered_list, id: \.self) { item in
+                Button(action: {
+                    start_invoke(item.name, [], .Document)
+                }) {
+                    Text(item.name)
+                }
+                
+            }
+            .navigationTitle("Actions")
+            .searchable(text: $search_text)
+        }
+    }
+    
+    func start_invoke(_ target_name: String, _ arg: [CBOR], _ target: InvokeMessageOn) {
+        guard let comm = communicator else {
+            return
+        }
+        
+        let maybe_m = current_doc_method_list.find_by_name(target_name);
+        
+        guard let m = maybe_m else {
+            return
+        }
+        
+        comm.invoke_method(method: m.noo_id, context: target, args: arg) {
+            reply in
+            print("Message reply: ", reply);
+        }
     }
 }
 
@@ -38,7 +67,7 @@ struct InvokeMethodView : View {
     var body: some View {
         VStack {
             Text("Invoke Method").font(.headline).padding()
-            Text("Name: \(method?.method.info.name ?? "None" )")
+            Text("Name: \(method?.name ?? "None" )")
         }
     }
 }
@@ -56,7 +85,7 @@ struct CompactMethodView : View {
                         start_invoke(CommonStrings.step_time, CBOR(-1), .Document)
                     } label: {
                         Label("Backward", systemImage: "backward.fill").labelStyle(.iconOnly)
-                    }
+                    }.buttonStyle(.borderless)
                 }
                 
                 if current_doc_method_list.has_time_animate {
@@ -64,7 +93,7 @@ struct CompactMethodView : View {
                         start_invoke(CommonStrings.animate_time, CBOR(0), .Document)
                     } label: {
                         Label("Stop", systemImage: "stop.fill").labelStyle(.iconOnly)
-                    }
+                    }.buttonStyle(.borderless)
                 }
                 
                 if current_doc_method_list.has_time_animate {
@@ -72,7 +101,7 @@ struct CompactMethodView : View {
                         start_invoke(CommonStrings.animate_time, CBOR(1), .Document)
                     } label: {
                         Label("Play", systemImage: "play.fill").labelStyle(.iconOnly)
-                    }
+                    }.buttonStyle(.borderless)
                 }
                 
                 if current_doc_method_list.has_step_time {
@@ -80,10 +109,9 @@ struct CompactMethodView : View {
                         start_invoke(CommonStrings.step_time, CBOR(1), .Document)
                     } label: {
                         Label("Forward", systemImage: "forward.fill").labelStyle(.iconOnly)
-                    }
+                    }.buttonStyle(.borderless)
                 }
-            }.padding()
-                .background(RoundedRectangle(cornerRadius: 15).fill(Color.gray.opacity(0.2)))
+            }
         }
     }
     
@@ -98,7 +126,7 @@ struct CompactMethodView : View {
             return
         }
         
-        comm.invoke_method(method: m.method.info.id, context: target, args: [arg]) {
+        comm.invoke_method(method: m.noo_id, context: target, args: [arg]) {
             reply in
             print("Message reply: ", reply);
         }
@@ -106,9 +134,11 @@ struct CompactMethodView : View {
 }
 
 
-struct AvailableMethod: Identifiable {
+struct AvailableMethod: Identifiable, Hashable {
     var id = UUID()
-    var method: NooMethod
+    var noo_id : NooID
+    var name : String
+    var doc : String?
     var context: NooID?
     var context_type: String
 }
@@ -123,8 +153,10 @@ struct AvailableMethod: Identifiable {
         available_methods.removeAll()
         available_methods = l
         
-        has_step_time = available_methods.contains(where: { $0.method.info.name == CommonStrings.step_time })
-        has_time_animate = available_methods.contains(where: { $0.method.info.name == CommonStrings.step_time })
+        has_step_time = available_methods.contains(where: { $0.name == CommonStrings.step_time })
+        has_time_animate = available_methods.contains(where: { $0.name == CommonStrings.step_time })
+        
+        dump(available_methods)
     }
     
     func has_any_time_methods() -> Bool {
@@ -133,6 +165,6 @@ struct AvailableMethod: Identifiable {
     
     @MainActor
     func find_by_name(_ name: String) -> AvailableMethod? {
-        return available_methods.first(where: { $0.method.info.name == name })
+        return available_methods.first(where: { $0.name == name })
     }
 }

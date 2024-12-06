@@ -507,7 +507,7 @@ struct MethodArg : Hashable {
     }
 }
 
-struct MsgMethodCreate : NoodlesServerMessage, Hashable {
+struct MsgMethodCreate : NoodlesServerMessage {
     var id : NooID
     var name : String
     var doc : String?

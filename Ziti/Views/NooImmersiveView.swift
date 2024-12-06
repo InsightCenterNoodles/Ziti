@@ -42,13 +42,21 @@ struct NooImmersiveView: View {
             
             noodles_world?.comm = noodles_state
             
-            let anchor = AnchorEntity(.hand(.left, location: .aboveHand), trackingMode: .predicted)
+            let anchor = AnchorEntity(.hand(.left, location: .wrist), trackingMode: .continuous)
             anchor.name = "hand_anchor"
             
             content.add(anchor)
             
             if let att = attachments.entity(for: "hand_label") {
-                att.components[BillboardComponent.self] = .init()
+                //att.components[BillboardComponent.self] = .init()
+                att.position = .init([0.0, 0.0, -0.1])
+                
+                let zRotation = simd_quaternion(-Float.pi / 2, simd_float3(0, 0, 1))
+                let xRotation = simd_quaternion(Float.pi / 2, simd_float3(1, 0, 0))
+                
+                att.transform.rotation = xRotation * zRotation
+                //att.transform.rotation = zRotation
+
                 anchor.addChild(att)
             }
             
@@ -63,7 +71,7 @@ struct NooImmersiveView: View {
                             await dismissImmersiveSpace()
                         }
                     }
-                }.environment(current_doc_method_list).frame(minWidth: 100, maxWidth: 300, minHeight: 100, maxHeight: 300).padding().glassBackgroundEffect()
+                }.environment(current_doc_method_list).frame(minWidth: 100, maxWidth: 150, minHeight: 100, maxHeight: 300).padding().glassBackgroundEffect()
                 
             }
         } .installGestures()

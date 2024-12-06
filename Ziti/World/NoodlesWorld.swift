@@ -28,10 +28,6 @@ class NooMethod : NoodlesComponent {
     func destroy(world: NoodlesWorld) { 
         world.method_list_lookup.removeValue(forKey: info.name)
     }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(info)
-    }
 }
 
 // MARK: Buffer
@@ -575,14 +571,14 @@ class NooEntity : NoodlesComponent {
     }
     
     func handle_new_tf(_ world: NoodlesWorld, transform: simd_float4x4) {
-        // DONT update the transform if the user is currently working on it!
-        // this is a bad fix, because the update might HAVE to go through
-        // TODO: Use the last updated transform on editing end!
+        // If the user is dragging and a transform update comes in, we can delay it
+        // until they are done
         if entity.gestureComponent != nil {
             let shared = EntityGestureState.shared
             if shared.targetedEntity == entity {
                 if shared.isDragging || shared.isRotating || shared.isScaling {
-                    
+                    print("Delaying transform update for entity!")
+                    entity.components[GestureSupportComponent.self]?.pending_transform = transform
                     return;
                 }
             }
@@ -1311,7 +1307,12 @@ class NoodlesWorld {
             
             self.visible_method_list.reset_list( self.attached_method_list.map {
                 method in
-                AvailableMethod(method: method, context_type: String())
+                AvailableMethod(
+                    noo_id: method.info.id,
+                    name: method.info.name,
+                    doc: method.info.doc,
+                    context_type: String()
+                )
             })
 
         case .document_reset(_):
