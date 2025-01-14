@@ -600,6 +600,18 @@ struct NullRep {
     }
 }
 
+struct GeoLocation {
+    var latitude: Double
+    var longitude: Double
+    var altitude: Double
+}
+
+enum TransformationType {
+    case matrix(mat: simd_float4x4)
+    case qr_code(identifier: String)
+    case geo_coordinates(location: GeoLocation)
+}
+
 struct MsgEntityCreate : NoodlesServerMessage {
     /*
      id : EntityID,
@@ -628,7 +640,7 @@ struct MsgEntityCreate : NoodlesServerMessage {
     var id : NooID
     var name : String?
     var parent : NooID?
-    var tf : simd_float4x4?
+    var tf : TransformationType?
     var null_rep: NullRep?
     var rep : RenderRep?
     
@@ -650,7 +662,9 @@ struct MsgEntityCreate : NoodlesServerMessage {
 
         ret.parent = to_id(c["parent"])
                 
-        ret.tf = to_mat4(c["transform"])
+        ret.tf = to_mat4(c["transform"]).map{ f in
+            .matrix(mat: f)
+        }
         
         ret.null_rep = NullRep(c["null_rep"])
         ret.rep = RenderRep(c["render_rep"])

@@ -469,7 +469,18 @@ class NooEntity : NoodlesComponent {
         }
         
         if let tf = msg.tf {
-            handle_new_tf(world, transform: tf)
+            switch tf {
+            case .matrix(let mat):
+                handle_new_tf(world, transform: mat)
+                break;
+            case .qr_code(let identifier):
+                //
+                break;
+            case .geo_coordinates(let location):
+                //
+                break;
+            }
+            
         }
         
         if let _ = msg.null_rep {

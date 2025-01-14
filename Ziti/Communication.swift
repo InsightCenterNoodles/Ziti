@@ -12,6 +12,9 @@ import RealityKit
 import RealityKitContent
 import Starscream
 
+// REFACTOR! We are launching a task per message. this means tasks can and will be deferred
+// we need a task that just gets messages ready here
+// and another task on the main thread that reads the queue and handles them
 
 class NoodlesCommunicator {
     var url: URL
@@ -72,7 +75,7 @@ class NoodlesCommunicator {
             return ArraySlice(ptr)
         }
         let messages = decoder.decode(bytes: slice)
-        DispatchQueue.main.async {
+        DispatchQueue.main.async(group: nil, qos: DispatchQoS.userInteractive, flags: []) {
             self.handle_messages(mlist: messages)
         }
         
@@ -100,7 +103,7 @@ class NoodlesCommunicator {
         case .text(let string):
             print("Received text: \(string)")
         case .binary(let data):
-            print("Received data: \(data.count)")
+            //print("Received data: \(data.count)")
             on_message_data(data: data)
         case .ping(_):
             break
