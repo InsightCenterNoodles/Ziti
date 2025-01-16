@@ -6,16 +6,15 @@
 //
 
 import SwiftUI
+import ZitiCore
+
 
 @main
 struct ZitiApp: App {
     @State private var current_style: ImmersionStyle = .mixed
     
     init() {
-        ParticleAdvectionComponent.registerComponent()
-        AdvectionSpawnComponent.registerComponent()
-        AdvectionSystem.registerSystem()
-        AdvectionSpawnSystem.registerSystem()
+        initialize_ziti_core()
     }
     
     var body: some Scene {

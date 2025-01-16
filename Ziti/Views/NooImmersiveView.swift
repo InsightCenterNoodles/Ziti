@@ -9,6 +9,7 @@ import SwiftUI
 import RealityKit
 import RealityKitContent
 
+import ZitiCore
 
 struct NooImmersiveView: View {
     var new_noodles_config : NewNoodles!
@@ -21,6 +22,7 @@ struct NooImmersiveView: View {
     @State private var auto_extent = false
     
     @State private var current_scene : RealityViewContent!
+    @State private var current_root: Entity!
     @State private var current_doc_method_list = MethodListObservable()
     
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -34,9 +36,13 @@ struct NooImmersiveView: View {
         RealityView { content, attachments in
             self.current_scene = content
             
+            current_root = Entity()
+            
+            content.add(current_root)
+            
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = await NoodlesWorld(content, current_doc_method_list, initial_offset: simd_float3([0, 1, 0]))
+            noodles_world = await NoodlesWorld(current_root, current_doc_method_list, initial_offset: simd_float3([0, 1, 0]))
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             

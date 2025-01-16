@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+import ZitiCore
+
 enum ControlInteractionMode: CaseIterable {
     case none
     case item

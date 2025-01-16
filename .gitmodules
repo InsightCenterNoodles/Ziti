@@ -1,0 +1,3 @@
+[submodule "Frameworks/ZitiCore"]
+	path = Frameworks/ZitiCore
+	url = git@github.com:InsightCenterNoodles/ZitiCore

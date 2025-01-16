@@ -10,6 +10,8 @@ import RealityKit
 import RealityKitContent
 import ARKit
 
+import ZitiCore
+
 struct WindowView: View {
     var new_noodles_config : NewNoodles
     var initial_scale: SIMD3<Float>
@@ -21,7 +23,8 @@ struct WindowView: View {
     @State private var auto_extent = false
     @State private var show_details = false
     
-    @State private var current_scene : RealityViewContent!
+    @State private var current_scene : (any RealityViewContentProtocol)!
+    @State private var current_root: Entity!
     @State private var current_doc_method_list = MethodListObservable()
     
     @State private var particle_speed: Double = GlobalAdvectionSettings.shared.advection_speed
@@ -43,9 +46,13 @@ struct WindowView: View {
         RealityView.init(make: { content in
             self.current_scene = content
             
+            current_root = Entity()
+            
+            content.add(current_root)
+            
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = await NoodlesWorld(content, current_doc_method_list)
+            noodles_world = await NoodlesWorld(current_root, current_doc_method_list)
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             

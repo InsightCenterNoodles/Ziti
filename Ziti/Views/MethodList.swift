@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import SwiftCBOR
+import ZitiCore
 
 struct MethodListView : View {
     @Environment(MethodListObservable.self) var current_doc_method_list
@@ -43,7 +44,7 @@ struct MethodListView : View {
         }
     }
     
-    func start_invoke(_ target_name: String, _ arg: [CBOR], _ target: InvokeMessageOn) {
+    public func start_invoke(_ target_name: String, _ arg: [CBOR], _ target: InvokeMessageOn) {
         guard let comm = communicator else {
             return
         }
@@ -115,7 +116,7 @@ struct CompactMethodView : View {
         }
     }
     
-    func start_invoke(_ target_name: String, _ arg: CBOR, _ target: InvokeMessageOn) {
+    public func start_invoke(_ target_name: String, _ arg: CBOR, _ target: InvokeMessageOn) {
         guard let comm = communicator else {
             return
         }
@@ -130,41 +131,5 @@ struct CompactMethodView : View {
             reply in
             print("Message reply: ", reply);
         }
-    }
-}
-
-
-struct AvailableMethod: Identifiable, Hashable {
-    var id = UUID()
-    var noo_id : NooID
-    var name : String
-    var doc : String?
-    var context: NooID?
-    var context_type: String
-}
-
-@Observable class MethodListObservable {
-    var available_methods = [AvailableMethod]()
-    var has_step_time = false
-    var has_time_animate = false
-    
-    @MainActor
-    func reset_list(_ l: [AvailableMethod]) {
-        available_methods.removeAll()
-        available_methods = l
-        
-        has_step_time = available_methods.contains(where: { $0.name == CommonStrings.step_time })
-        has_time_animate = available_methods.contains(where: { $0.name == CommonStrings.step_time })
-        
-        dump(available_methods)
-    }
-    
-    func has_any_time_methods() -> Bool {
-        return has_step_time || has_time_animate
-    }
-    
-    @MainActor
-    func find_by_name(_ name: String) -> AvailableMethod? {
-        return available_methods.first(where: { $0.name == name })
     }
 }
