@@ -21,6 +21,7 @@ struct NetBrowseView : View {
     
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
     
     var body: some View {
         List(instance.dest, id: \.self) { service in
@@ -30,15 +31,20 @@ struct NetBrowseView : View {
                 Divider()
                 Menu() {
                     Button() {
+                        launch_small_window(target: service)
+                    } label: {
+                        Label("Small Space", systemImage: "widget.small")
+                    }
+                    Button() {
                         launch_window(target: service)
                     } label: {
-                        Label("Window", systemImage: "macwindow")
+                        Label("Large Space", systemImage: "widget.extralarge")
                     }
                     Divider()
                     Button() {
                         launch_immersive(target: service)
                     } label: {
-                        Label("Immersive", systemImage: "globe")
+                        Label("Immersive", systemImage: "sharedwithyou.circle.fill")
                     }
                 } label: {
                     Label(service.name, systemImage: "plus").labelStyle(.iconOnly)
@@ -55,10 +61,18 @@ struct NetBrowseView : View {
         instance.startDiscovery()
     }
     
+    func launch_small_window(target: DiscoveredNooService) {
+        print("Launching window")
+        let host = "ws://\(target.host_ip):\(target.port)"
+        openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: host))
+        dismissWindow(id: "noodles_browser")
+    }
+    
     func launch_window(target: DiscoveredNooService) {
         print("Launching window")
         let host = "ws://\(target.host_ip):\(target.port)"
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
+        dismissWindow(id: "noodles_browser")
     }
     
     func launch_immersive(target: DiscoveredNooService) {
@@ -72,6 +86,8 @@ struct NetBrowseView : View {
                 print("An error occurred")
             }
         }
+        
+        dismissWindow(id: "noodles_browser")
     }
 }
 
@@ -137,8 +153,10 @@ class NooServerListener: NSObject, NetServiceBrowserDelegate, NetServiceDelegate
         if let id = rservices[service] {
             services.removeValue(forKey: id)
             
-            let item = self.dest.firstIndex(where: { desc in desc.id == id } )!
-            self.dest.remove(at: item)
+            if let item = self.dest.firstIndex(where: { desc in desc.id == id } ) {
+                self.dest.remove(at: item)
+            }
+            
         }
         rservices.removeValue(forKey: service)
     }

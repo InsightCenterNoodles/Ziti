@@ -1,0 +1,105 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 2.0 (448.60.4)"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    reorder nameChildren = ["Cylinder", "GhostMat"]
+    def Cylinder "Cylinder" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        uniform token axis = "Y"
+        double height = 0.02
+        rel material:binding = </Root/GhostMat> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double radius = 0.1
+
+        def Material "DefaultMaterial"
+        {
+            prepend token outputs:surface.connect = </Root/Cylinder/DefaultMaterial/DefaultSurfaceShader.outputs:surface>
+
+            def Shader "DefaultSurfaceShader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (1, 1, 1)
+                float inputs:roughness = 0.75
+                token outputs:surface
+            }
+        }
+    }
+
+    def Material "GhostMat"
+    {
+        token outputs:mtlx:surface.connect = </Root/GhostMat/PreviewSurface.outputs:out>
+        token outputs:realitykit:vertex
+        float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (416.46094, -0.68359375)
+        int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 78
+
+        def Shader "Normal"
+        {
+            uniform token info:id = "ND_normal_vector3"
+            float3 outputs:out
+            float2 ui:nodegraph:node:pos = (-782.58984, 131.0664)
+            int ui:nodegraph:node:stackingOrder = 59
+        }
+
+        def Shader "CameraPosition"
+        {
+            uniform token info:id = "ND_realitykit_cameraposition_vector3"
+            float3 outputs:out
+            float2 ui:nodegraph:node:pos = (-729, -23.730469)
+            int ui:nodegraph:node:stackingOrder = 57
+        }
+
+        def Shader "DotProduct"
+        {
+            uniform token info:id = "ND_dotproduct_vector3"
+            float3 inputs:in1.connect = </Root/GhostMat/CameraPosition.outputs:out>
+            float3 inputs:in2.connect = </Root/GhostMat/Normal.outputs:out>
+            float outputs:out
+            float2 ui:nodegraph:node:pos = (-501.27344, 65.94141)
+            int ui:nodegraph:node:stackingOrder = 61
+        }
+
+        def Shader "Mix"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:bg = 0.75
+            float inputs:fg.connect = None
+            float inputs:mix.connect = </Root/GhostMat/DotProduct.outputs:out>
+            float outputs:out
+            float2 ui:nodegraph:node:pos = (-180.32422, -18.839844)
+            int ui:nodegraph:node:stackingOrder = 82
+            string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:bg"]
+        }
+
+        def Shader "PreviewSurface"
+        {
+            uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+            color3f inputs:diffuseColor = (0.4513868, 0.99309605, 1) (
+                colorSpace = "srgb_texture"
+            )
+            color3f inputs:emissiveColor = (0.4513868, 0.99309605, 1) (
+                colorSpace = "srgb_texture"
+            )
+            float inputs:metallic
+            float3 inputs:normal.connect = </Root/GhostMat/Normal.outputs:out>
+            float inputs:opacity.connect = </Root/GhostMat/Mix.outputs:out>
+            float inputs:roughness = 0.25
+            token outputs:out
+            float2 ui:nodegraph:node:pos = (135, 65)
+            int ui:nodegraph:node:stackingOrder = 84
+            string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["Advanced"]
+        }
+    }
+}
+

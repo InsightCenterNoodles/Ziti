@@ -3,31 +3,19 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2D0A4FF22BA394560022469B /* MethodList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0A4FF12BA394560022469B /* MethodList.swift */; };
+		2D0D77772D370817002EA8AA /* ZitiCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D0D77762D370817002EA8AA /* ZitiCore.framework */; };
+		2D0D77782D370817002EA8AA /* ZitiCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2D0D77762D370817002EA8AA /* ZitiCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6032B7A6E14003D618A /* RealityKitContent */; };
 		2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6052B7A6E14003D618A /* ZitiApp.swift */; };
-		2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6072B7A6E14003D618A /* ContentView.swift */; };
 		2D40E60C2B7A6E15003D618A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60B2B7A6E15003D618A /* Assets.xcassets */; };
 		2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */; };
 		2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6192B7A6E15003D618A /* ZitiTests.swift */; };
-		2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6232B7A7608003D618A /* MeshGeneration.swift */; };
-		2D40E6262B7BC051003D618A /* CommandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6252B7BC051003D618A /* CommandView.swift */; };
-		2D40E6292B7BCD10003D618A /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E6282B7BCD10003D618A /* Starscream */; };
-		2D40E62B2B7BD671003D618A /* Communication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62A2B7BD671003D618A /* Communication.swift */; };
-		2D40E62D2B7C0162003D618A /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E62C2B7C0162003D618A /* Messages.swift */; };
-		2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 2D40E62F2B7C02C5003D618A /* SwiftCBOR */; };
-		2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6312B80116F003D618A /* NoodlesWorld.swift */; };
-		2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */; };
-		2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */; };
-		2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */; };
-		2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */; };
-		2DD719142BBC72A500E1391E /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD719132BBC72A500E1391E /* Strings.swift */; };
+		2DE788062C52A8F70050B905 /* SpatialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE788052C52A8F70050B905 /* SpatialTest.swift */; };
 		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
-		2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,31 +28,39 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		2D0D77792D370817002EA8AA /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2D0D77782D370817002EA8AA /* ZitiCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		2D0A4FF12BA394560022469B /* MethodList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MethodList.swift; sourceTree = "<group>"; };
+		2D0D77762D370817002EA8AA /* ZitiCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ZitiCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E5FE2B7A6E14003D618A /* Ziti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ziti.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E6022B7A6E14003D618A /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2D40E6052B7A6E14003D618A /* ZitiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiApp.swift; sourceTree = "<group>"; };
-		2D40E6072B7A6E14003D618A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2D40E60B2B7A6E15003D618A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2D40E6102B7A6E15003D618A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2D40E6152B7A6E15003D618A /* ZitiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZitiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E6192B7A6E15003D618A /* ZitiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiTests.swift; sourceTree = "<group>"; };
-		2D40E6232B7A7608003D618A /* MeshGeneration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshGeneration.swift; sourceTree = "<group>"; };
-		2D40E6252B7BC051003D618A /* CommandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandView.swift; sourceTree = "<group>"; };
-		2D40E62A2B7BD671003D618A /* Communication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communication.swift; sourceTree = "<group>"; };
-		2D40E62C2B7C0162003D618A /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
-		2D40E6312B80116F003D618A /* NoodlesWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoodlesWorld.swift; sourceTree = "<group>"; };
-		2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RealityViewExtensions.swift; path = gestures/RealityViewExtensions.swift; sourceTree = "<group>"; };
-		2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EntityExtensions.swift; path = gestures/EntityExtensions.swift; sourceTree = "<group>"; };
-		2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureExtensions.swift; path = gestures/GestureExtensions.swift; sourceTree = "<group>"; };
-		2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GestureComponent.swift; path = gestures/GestureComponent.swift; sourceTree = "<group>"; };
-		2DD719132BBC72A500E1391E /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
+		2DE788052C52A8F70050B905 /* SpatialTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialTest.swift; sourceTree = "<group>"; };
 		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
-		2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NooImmersiveView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		2DE787CF2C3C7F940050B905 /* Shaders */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shaders; sourceTree = "<group>"; };
+		2DE787D42C3C7F9A0050B905 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2D40E5FB2B7A6E13003D618A /* Frameworks */ = {
@@ -72,8 +68,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D40E6042B7A6E14003D618A /* RealityKitContent in Frameworks */,
-				2D40E6292B7BCD10003D618A /* Starscream in Frameworks */,
-				2D40E6302B7C02C5003D618A /* SwiftCBOR in Frameworks */,
+				2D0D77772D370817002EA8AA /* ZitiCore.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,6 +82,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2D0D77752D370817002EA8AA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2D0D77762D370817002EA8AA /* ZitiCore.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2D40E5F52B7A6E13003D618A = {
 			isa = PBXGroup;
 			children = (
@@ -94,6 +97,7 @@
 				2D40E6002B7A6E14003D618A /* Ziti */,
 				2D40E6012B7A6E14003D618A /* Packages */,
 				2D40E6182B7A6E15003D618A /* ZitiTests */,
+				2D0D77752D370817002EA8AA /* Frameworks */,
 				2D40E5FF2B7A6E14003D618A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -110,24 +114,13 @@
 		2D40E6002B7A6E14003D618A /* Ziti */ = {
 			isa = PBXGroup;
 			children = (
-				2DD7190C2BB9D73E00E1391E /* EntityExtensions.swift */,
-				2DD7190E2BB9D73E00E1391E /* GestureComponent.swift */,
-				2DD7190D2BB9D73E00E1391E /* GestureExtensions.swift */,
-				2DD7190B2BB9D73E00E1391E /* RealityViewExtensions.swift */,
-				2D40E6312B80116F003D618A /* NoodlesWorld.swift */,
-				2DD719132BBC72A500E1391E /* Strings.swift */,
-				2D40E62C2B7C0162003D618A /* Messages.swift */,
+				2DE787CF2C3C7F940050B905 /* Shaders */,
 				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
-				2D40E6072B7A6E14003D618A /* ContentView.swift */,
-				2D40E62A2B7BD671003D618A /* Communication.swift */,
-				2D40E6252B7BC051003D618A /* CommandView.swift */,
-				2DF315182B9131E9006DCD1D /* NooImmersiveView.swift */,
-				2D0A4FF12BA394560022469B /* MethodList.swift */,
+				2DE787D42C3C7F9A0050B905 /* Views */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
 				2D40E6102B7A6E15003D618A /* Info.plist */,
 				2D40E60D2B7A6E15003D618A /* Preview Content */,
-				2D40E6232B7A7608003D618A /* MeshGeneration.swift */,
 			);
 			path = Ziti;
 			sourceTree = "<group>";
@@ -152,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				2D40E6192B7A6E15003D618A /* ZitiTests.swift */,
+				2DE788052C52A8F70050B905 /* SpatialTest.swift */,
 			);
 			path = ZitiTests;
 			sourceTree = "<group>";
@@ -166,16 +160,19 @@
 				2D40E5FA2B7A6E13003D618A /* Sources */,
 				2D40E5FB2B7A6E13003D618A /* Frameworks */,
 				2D40E5FC2B7A6E13003D618A /* Resources */,
+				2D0D77792D370817002EA8AA /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				2DE787CF2C3C7F940050B905 /* Shaders */,
+				2DE787D42C3C7F9A0050B905 /* Views */,
+			);
 			name = Ziti;
 			packageProductDependencies = (
 				2D40E6032B7A6E14003D618A /* RealityKitContent */,
-				2D40E6282B7BCD10003D618A /* Starscream */,
-				2D40E62F2B7C02C5003D618A /* SwiftCBOR */,
 			);
 			productName = Ziti;
 			productReference = 2D40E5FE2B7A6E14003D618A /* Ziti.app */;
@@ -207,7 +204,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					2D40E5FD2B7A6E13003D618A = {
 						CreatedOnToolsVersion = 15.2;
@@ -228,8 +225,6 @@
 			);
 			mainGroup = 2D40E5F52B7A6E13003D618A;
 			packageReferences = (
-				2D40E6272B7BCD10003D618A /* XCRemoteSwiftPackageReference "Starscream" */,
-				2D40E62E2B7C02C5003D618A /* XCRemoteSwiftPackageReference "SwiftCBOR" */,
 			);
 			productRefGroup = 2D40E5FF2B7A6E14003D618A /* Products */;
 			projectDirPath = "";
@@ -265,21 +260,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D40E6242B7A7608003D618A /* MeshGeneration.swift in Sources */,
-				2D40E6322B80116F003D618A /* NoodlesWorld.swift in Sources */,
-				2DF315192B9131E9006DCD1D /* NooImmersiveView.swift in Sources */,
-				2D40E6082B7A6E14003D618A /* ContentView.swift in Sources */,
 				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
-				2D40E62B2B7BD671003D618A /* Communication.swift in Sources */,
-				2D40E62D2B7C0162003D618A /* Messages.swift in Sources */,
-				2DD719142BBC72A500E1391E /* Strings.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
-				2DD7190F2BB9D73E00E1391E /* RealityViewExtensions.swift in Sources */,
-				2DD719112BB9D73E00E1391E /* GestureExtensions.swift in Sources */,
-				2D0A4FF22BA394560022469B /* MethodList.swift in Sources */,
-				2DD719122BB9D73E00E1391E /* GestureComponent.swift in Sources */,
-				2DD719102BB9D73E00E1391E /* EntityExtensions.swift in Sources */,
-				2D40E6262B7BC051003D618A /* CommandView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +269,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DE788062C52A8F70050B905 /* SpatialTest.swift in Sources */,
 				2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -336,7 +319,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -361,7 +344,7 @@
 				SDKROOT = xros;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				XROS_DEPLOYMENT_TARGET = 1.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
@@ -417,7 +400,7 @@
 				SDKROOT = xros;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
-				XROS_DEPLOYMENT_TARGET = 1.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};
@@ -442,6 +425,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Ziti/Shaders/Bridging.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
@@ -468,6 +452,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Ziti/Shaders/Bridging.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
@@ -476,7 +461,6 @@
 		2D40E6212B7A6E15003D618A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -489,14 +473,13 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ziti.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ziti";
-				XROS_DEPLOYMENT_TARGET = 1.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
 		2D40E6222B7A6E15003D618A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -509,7 +492,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ziti.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Ziti";
-				XROS_DEPLOYMENT_TARGET = 1.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};
@@ -545,39 +528,10 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		2D40E6272B7BCD10003D618A /* XCRemoteSwiftPackageReference "Starscream" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/daltoniam/Starscream";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.6;
-			};
-		};
-		2D40E62E2B7C02C5003D618A /* XCRemoteSwiftPackageReference "SwiftCBOR" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/valpackett/SwiftCBOR";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		2D40E6032B7A6E14003D618A /* RealityKitContent */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RealityKitContent;
-		};
-		2D40E6282B7BCD10003D618A /* Starscream */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2D40E6272B7BCD10003D618A /* XCRemoteSwiftPackageReference "Starscream" */;
-			productName = Starscream;
-		};
-		2D40E62F2B7C02C5003D618A /* SwiftCBOR */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2D40E62E2B7C02C5003D618A /* XCRemoteSwiftPackageReference "SwiftCBOR" */;
-			productName = SwiftCBOR;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
