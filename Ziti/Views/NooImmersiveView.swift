@@ -8,6 +8,7 @@
 import SwiftUI
 import RealityKit
 import RealityKitContent
+import ARKit
 
 import ZitiCore
 
@@ -25,6 +26,8 @@ struct NooImmersiveView: View {
     @State private var current_root: Entity!
     @State private var current_doc_method_list = MethodListObservable()
     
+    @ObservedObject var image_model: ImageTrackingViewModel = ImageTrackingViewModel()
+    
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     
@@ -37,6 +40,10 @@ struct NooImmersiveView: View {
             self.current_scene = content
             
             current_root = Entity()
+            
+            await image_model.start()
+            
+            image_model.root_entity = current_root
             
             content.add(current_root)
             
@@ -68,16 +75,7 @@ struct NooImmersiveView: View {
             
         } attachments: {
             Attachment(id: "hand_label") {
-                VStack {
-                    CompactMethodView(communicator: $noodles_state)
-                    
-                    Button("Close") {
-                        Task {
-                            print("Close window for \(new_noodles_config.hostname)")
-                            await dismissImmersiveSpace()
-                        }
-                    }
-                }.environment(current_doc_method_list).frame(minWidth: 100, maxWidth: 150, minHeight: 100, maxHeight: 300).padding().glassBackgroundEffect()
+                ImmersiveControls(communicator: $noodles_state).environment(current_doc_method_list)
                 
             }
         } .installGestures()
@@ -90,6 +88,56 @@ struct NooImmersiveView: View {
     }
 }
 
-//#Preview(windowStyle: .volumetric) {
-//    ContentView(NewNoodles(hostname: ""))
-//}
+
+
+@MainActor
+class ImageTrackingViewModel: ObservableObject {
+    private let session = ARKitSession()
+    public var root_entity : Entity?
+    private let imageInfo = ImageTrackingProvider(
+        referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: "TrackingImages")
+    )
+    
+    var entityMap: [UUID: Entity] = [:]
+    
+    func start() async {
+        do {
+            if ImageTrackingProvider.isSupported {
+                print("ARKitSession starting.")
+                Task {
+                    try await session.run([imageInfo])
+                    for await update in imageInfo.anchorUpdates {
+                        await update_image(update.anchor)
+                    }
+                }
+            }
+        }
+    }
+    
+    func update_image(_ anchor: ImageAnchor) async {
+        // at the moment, we only work with ONE. Eventually we will figure this out.
+        let description = anchor.id
+        
+        if entityMap[description] == nil {
+            // Add a new entity to represent this image.
+            print("adding new image")
+            
+            if let new_entity = try? await Entity(named: "LocationIndicator", in: realityKitContentBundle) {
+                entityMap[description] = new_entity
+                
+                if let root = self.root_entity {
+                    root.addChild(new_entity)
+                }
+            } else {
+                print("Unable to load image graphics")
+            }
+        }
+        
+        
+        if anchor.isTracked {
+            //entityMap[description]?.transform = Transform(matrix: anchor.originFromAnchorTransform)
+            print(anchor.description)
+            self.root_entity?.transform = Transform(matrix: anchor.originFromAnchorTransform)
+        }
+    }
+}

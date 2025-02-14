@@ -14,7 +14,9 @@ struct BrowserView: View {
     @State var previous_custom = [String]()
     
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
     
     var long_press_delete_all: some Gesture {
         LongPressGesture(minimumDuration: 1.0).onEnded {
@@ -41,9 +43,27 @@ struct BrowserView: View {
                     .textInputAutocapitalization(.never)
                     .textFieldStyle(.roundedBorder)
                     
-                    Button(action: do_connect){
-                        Label("Connect", systemImage: "arrow.right").labelStyle(.iconOnly)
-                    }
+                    Menu() {
+                        Button() {
+                            launch_small_window()
+                        } label: {
+                            Label("Small Space", systemImage: "widget.small")
+                        }
+                        Button() {
+                            launch_window()
+                        } label: {
+                            Label("Large Space", systemImage: "widget.extralarge")
+                        }
+                        Divider()
+                        Button() {
+                            launch_immersive()
+                        } label: {
+                            Label("Immersive", systemImage: "sharedwithyou.circle.fill")
+                        }
+                        
+                    } label: {
+                        Label("Connect", systemImage: "plus").labelStyle(.iconOnly)
+                    }.menuStyle(.borderlessButton)
                     .alert("Hostname is not valid", isPresented: $is_bad_host) {
                         Button("OK", role: .cancel) { }
                     }
@@ -98,6 +118,39 @@ struct BrowserView: View {
         if previous_custom.count > 25 {
             let _ = previous_custom.popLast()
         }
+    }
+    
+    func get_host() -> String {
+        return hostname
+    }
+    
+    func launch_small_window() {
+        print("Launching window")
+        let host = "ws://\(get_host())"
+        openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: host))
+        dismissWindow(id: "noodles_browser")
+    }
+    
+    func launch_window() {
+        print("Launching window")
+        let host = "ws://\(get_host())"
+        openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
+        dismissWindow(id: "noodles_browser")
+    }
+    
+    func launch_immersive() {
+        print("Launching immersive window")
+        let host = "ws://\(get_host())"
+        
+        Task {
+            let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: host))
+            
+            if case .error = result {
+                print("An error occurred")
+            }
+        }
+        
+        dismissWindow(id: "noodles_browser")
     }
 }
 

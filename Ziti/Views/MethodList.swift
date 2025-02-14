@@ -91,6 +91,14 @@ struct CompactMethodView : View {
                 
                 if current_doc_method_list.has_time_animate {
                     Button() {
+                        start_invoke(CommonStrings.animate_time, CBOR(-1), .Document)
+                    } label: {
+                        Label("Play Backward", systemImage: "arrowtriangle.backward.fill").labelStyle(.iconOnly)
+                    }.buttonStyle(.borderless)
+                }
+                
+                if current_doc_method_list.has_time_animate {
+                    Button() {
                         start_invoke(CommonStrings.animate_time, CBOR(0), .Document)
                     } label: {
                         Label("Stop", systemImage: "stop.fill").labelStyle(.iconOnly)
