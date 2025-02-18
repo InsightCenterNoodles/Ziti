@@ -134,20 +134,20 @@ struct LargeButton : View {
 }
 
 struct ImmersiveSettingsView : View {
-    @State private var toggle_1 = false
-    @State private var toggle_2 = true
+    @EnvironmentObject var image_model: ImageTrackingViewModel
+    
     var body: some View {
         VStack {
             Grid() {
                 GridRow {
                     LargeToggleButton(
-                        isOn: $toggle_1,
+                        isOn: $image_model.is_tracking,
                         label: "Enable Tracking",
                         onIcon: "checkmark.circle.fill",
                         offIcon: "circle"
                     )
                     LargeToggleButton(
-                        isOn: $toggle_2,
+                        isOn: $image_model.maintain_vertical,
                         label: "Vertical Lock",
                         onIcon: "lock.fill",
                         offIcon: "lock.open",

@@ -66,7 +66,7 @@ struct NooImmersiveView: View {
             
             noodles_world?.comm = noodles_state
             
-            let anchor = AnchorEntity(.hand(.left, location: .wrist), trackingMode: .continuous)
+            let anchor = AnchorEntity(.hand(.left, location: .wrist), trackingMode: .predicted)
             anchor.name = "hand_anchor"
             
             content.add(anchor)
