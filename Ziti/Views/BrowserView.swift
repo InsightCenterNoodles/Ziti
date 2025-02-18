@@ -126,21 +126,21 @@ struct BrowserView: View {
     
     func launch_small_window() {
         print("Launching window")
-        let host = "ws://\(get_host())"
+        let host = normalize_websocket_url(get_host())
         openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: host))
         dismissWindow(id: "noodles_browser")
     }
     
     func launch_window() {
         print("Launching window")
-        let host = "ws://\(get_host())"
+        let host = normalize_websocket_url(get_host())
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
         dismissWindow(id: "noodles_browser")
     }
     
     func launch_immersive() {
         print("Launching immersive window")
-        let host = "ws://\(get_host())"
+        let host = normalize_websocket_url(get_host())
         
         Task {
             let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: host))
@@ -153,6 +153,21 @@ struct BrowserView: View {
         dismissWindow(id: "noodles_browser")
     }
 }
+
+func normalize_websocket_url(_ hostname: String) -> String {
+    var normalized = hostname.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if !normalized.hasPrefix("ws://") && !normalized.hasPrefix("wss://") {
+        normalized = "ws://" + normalized
+    }
+    
+    if let urlComponents = URLComponents(string: normalized), urlComponents.port == nil {
+        normalized += ":50000"
+    }
+
+    return normalized
+}
+
 
 struct CommandView_Previews: PreviewProvider {
     static var previews: some View {

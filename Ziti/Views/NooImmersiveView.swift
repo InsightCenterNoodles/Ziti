@@ -11,6 +11,7 @@ import RealityKitContent
 import ARKit
 
 import ZitiCore
+import Combine
 
 struct NooImmersiveView: View {
     var new_noodles_config : NewNoodles!
@@ -27,6 +28,7 @@ struct NooImmersiveView: View {
     @State private var current_doc_method_list = MethodListObservable()
     
     @ObservedObject var image_model: ImageTrackingViewModel = ImageTrackingViewModel()
+    @StateObject private var info_model = ControlInfoModel()
     
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
@@ -40,8 +42,9 @@ struct NooImmersiveView: View {
             self.current_scene = content
             
             current_root = Entity()
+            current_root.name = "ImmersiveRoot"
             
-            await image_model.start()
+            image_model.start()
             
             image_model.root_entity = current_root
             
@@ -49,7 +52,15 @@ struct NooImmersiveView: View {
             
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = await NoodlesWorld(current_root, current_doc_method_list, initial_offset: simd_float3([0, 1, 0]))
+            let error_entity = try! await Entity(named: "NoConnection", in: realityKitContentBundle)
+            content.add(error_entity)
+            
+            noodles_world = await NoodlesWorld(
+                current_root,
+                error_entity,
+                current_doc_method_list,
+                initial_offset: simd_float3([0, 1, 0])
+            )
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             
@@ -61,24 +72,38 @@ struct NooImmersiveView: View {
             content.add(anchor)
             
             if let att = attachments.entity(for: "hand_label") {
-                //att.components[BillboardComponent.self] = .init()
-                att.position = .init([0.0, 0.0, -0.1])
+                att.position = .init([0.0, 0.0, -0.15])
                 
                 let zRotation = simd_quaternion(-Float.pi / 2, simd_float3(0, 0, 1))
                 let xRotation = simd_quaternion(Float.pi / 2, simd_float3(1, 0, 0))
                 
                 att.transform.rotation = xRotation * zRotation
                 //att.transform.rotation = zRotation
+                att.transform.scale = .init(repeating: 0.6)
 
                 anchor.addChild(att)
             }
             
         } attachments: {
             Attachment(id: "hand_label") {
-                ImmersiveControls(communicator: $noodles_state).environment(current_doc_method_list)
+                ImmersiveControls(communicator: $noodles_state).environment(current_doc_method_list).environmentObject(image_model).environmentObject(info_model)
                 
             }
-        } .installGestures()
+        } .installGestures().onChange(of: info_model.interaction) {
+            var root_visible = false
+            
+            switch info_model.interaction {
+            case .none:
+                noodles_world?.set_all_entity_input(enabled: false)
+            case .root:
+                noodles_world?.set_all_entity_input(enabled: false)
+                root_visible = true
+            case .item:
+                noodles_world?.set_all_entity_input(enabled: true)
+            }
+            
+            noodles_world?.root_controller.isEnabled = root_visible
+        }
     }
     
     func frame_all() {
@@ -89,41 +114,74 @@ struct NooImmersiveView: View {
 }
 
 
-
+/// Models tracked images (QR codes). When images are detected, we add an entity to it in the world, and move the root
+/// of the NOODLES scene to this entity as a child
 @MainActor
 class ImageTrackingViewModel: ObservableObject {
+    /// The AR Kit session to scan the room
     private let session = ARKitSession()
+    
+    /// This is the entity we will manage. We want to move the NOODLES root to the QR code
     public var root_entity : Entity?
-    private let imageInfo = ImageTrackingProvider(
+    
+    /// Turn tracking on and off
+    @Published public var is_tracking: Bool = false
+    
+    public var did_init: Bool = false
+    
+    /// We can squash all rotations except for the yaw of the image.
+    @Published public var maintain_vertical: Bool = false
+    
+    /// Provider of tracked images
+    private let image_info = ImageTrackingProvider(
         referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: "TrackingImages")
     )
     
-    var entityMap: [UUID: Entity] = [:]
+    /// When an image is detected we add it as an entity here
+    var entity_map: [UUID: Entity] = [:]
     
-    func start() async {
-        do {
-            if ImageTrackingProvider.isSupported {
-                print("ARKitSession starting.")
-                Task {
-                    try await session.run([imageInfo])
-                    for await update in imageInfo.anchorUpdates {
-                        await update_image(update.anchor)
-                    }
+    var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        $is_tracking.sink { new_value in
+            if new_value {
+                self.start()
+            }
+        }.store(in: &cancellables)
+    }
+    
+    func start() {
+        entity_map.removeAll()
+        if did_init { return }
+        
+        if ImageTrackingProvider.isSupported {
+            print("ARKitSession starting.")
+            Task {
+                try await session.run([image_info])
+                for await update in image_info.anchorUpdates {
+                    await update_image(update.anchor)
                 }
             }
+            did_init = true
         }
     }
     
     func update_image(_ anchor: ImageAnchor) async {
-        // at the moment, we only work with ONE. Eventually we will figure this out.
+        
+        if !is_tracking {
+            return
+        }
+        
+        // at the moment, we only work with ONE. Eventually we will remove this with NOODLES2.
         let description = anchor.id
         
-        if entityMap[description] == nil {
+        if entity_map[description] == nil {
             // Add a new entity to represent this image.
-            print("adding new image")
+            print("Adding new image")
             
             if let new_entity = try? await Entity(named: "LocationIndicator", in: realityKitContentBundle) {
-                entityMap[description] = new_entity
+                new_entity.name = "Tracked Image Reference"
+                entity_map[description] = new_entity
                 
                 if let root = self.root_entity {
                     root.addChild(new_entity)
@@ -133,11 +191,31 @@ class ImageTrackingViewModel: ObservableObject {
             }
         }
         
-        
         if anchor.isTracked {
-            //entityMap[description]?.transform = Transform(matrix: anchor.originFromAnchorTransform)
-            print(anchor.description)
-            self.root_entity?.transform = Transform(matrix: anchor.originFromAnchorTransform)
+            let matrix = maintain_vertical ? preserve_yaw_only(from: anchor.originFromAnchorTransform) : anchor.originFromAnchorTransform
+            self.root_entity?.transform = Transform(matrix: matrix)
+            
+            // since we control the root now, remove any initial offset
+            self.root_entity?.children.first?.position = .zero
         }
     }
+}
+
+private func preserve_yaw_only(from matrix: simd_float4x4) -> simd_float4x4 {
+    // Extract the forward vector (Z-axis of the QR code)
+    let forward = simd_normalize(simd_float3(matrix.columns.2.x, 0, matrix.columns.2.z))
+    
+    // Extract right vector (X-axis) perpendicular to forward
+    let right = simd_cross(simd_float3(0, 1, 0), forward)
+    
+    // Y-axis remains the world up direction (0,1,0)
+    let up = simd_float3(0, 1, 0)
+    
+    // Construct the new rotation matrix
+    var ret = matrix
+    ret.columns.0 = simd_float4(right, 0)  // X-axis
+    ret.columns.1 = simd_float4(up, 0)     // Y-axis (remains unchanged)
+    ret.columns.2 = simd_float4(forward, 0) // Z-axis (flattened to horizontal)
+    
+    return ret
 }

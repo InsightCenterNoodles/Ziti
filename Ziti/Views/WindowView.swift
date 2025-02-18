@@ -52,7 +52,14 @@ struct WindowView: View {
             
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
-            noodles_world = await NoodlesWorld(current_root, current_doc_method_list)
+            let error_entity = try! await Entity(named: "NoConnection", in: realityKitContentBundle)
+            content.add(error_entity)
+            
+            noodles_world = await NoodlesWorld(
+                current_root,
+                error_entity,
+                current_doc_method_list
+            )
             
             noodles_state = NoodlesCommunicator(url: u, world: noodles_world!)
             
