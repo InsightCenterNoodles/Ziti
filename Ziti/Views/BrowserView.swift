@@ -9,9 +9,12 @@ import SwiftUI
 
 struct BrowserView: View {
     @State private var hostname = ""
-    @State private var is_bad_host = false
     @State var user_name = "Unknown"
-    @State var previous_custom = [String]()
+    @State var is_bad_host: Bool = false
+    
+    @State var showing_delete_all_alert: Bool = false
+    
+    @StateObject private var custom_entries = CustomEntries()
     
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -21,84 +24,29 @@ struct BrowserView: View {
     var long_press_delete_all: some Gesture {
         LongPressGesture(minimumDuration: 1.0).onEnded {
             _ in
-            previous_custom.removeAll()
+            custom_entries.removeAllItems()
         }
     }
     
     var body: some View {
         TabView {
-            VStack {
-                Text("Network Servers")
-                NetBrowseView().frame(minHeight: 120)
-            }.tabItem {
+            NetworkServersView().tabItem {
                 Label("Network Servers", systemImage: "network")
             }
             
-            VStack {
-                HStack {
-                    TextField("Custom Address", text: $hostname).onSubmit {
-                        do_connect()
-                    }
-                    .disableAutocorrection(true)
-                    .textInputAutocapitalization(.never)
-                    .textFieldStyle(.roundedBorder)
-                    
-                    Menu() {
-                        Button() {
-                            launch_small_window()
-                        } label: {
-                            Label("Small Space", systemImage: "widget.small")
-                        }
-                        Button() {
-                            launch_window()
-                        } label: {
-                            Label("Large Space", systemImage: "widget.extralarge")
-                        }
-                        Divider()
-                        Button() {
-                            launch_immersive()
-                        } label: {
-                            Label("Immersive", systemImage: "sharedwithyou.circle.fill")
-                        }
-                        
-                    } label: {
-                        Label("Connect", systemImage: "plus").labelStyle(.iconOnly)
-                    }.menuStyle(.borderlessButton)
-                    .alert("Hostname is not valid", isPresented: $is_bad_host) {
-                        Button("OK", role: .cancel) { }
-                    }
-                    
-                }.padding()
-                List {
-                    ForEach(previous_custom, id: \.self) { item in
-                        Text(item).swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                if let index = previous_custom.firstIndex(of: item) {
-                                    previous_custom.remove(at: index)
-                                }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
-                }.gesture(long_press_delete_all)
+            CustomAddressView(hostname:$hostname, is_bad_host: $is_bad_host, custom_entries: custom_entries ) {
+                custom_entries.addItem(hostname)
             }
             .tabItem {
                 Label("Custom", systemImage: "rectangle.connected.to.line.below")
             }
             
-            Form {
-                Section("Identity") {
-                    TextField("Name", text: $user_name)
+            UserSettingsView(user_name: $user_name) {
+                Task {
+                    await dismissImmersiveSpace()
                 }
-                Section("Misc") {
-                    Button("Stop Immersive") {
-                        Task {
-                            await dismissImmersiveSpace()
-                        }
-                    }
-                }
-            }.tabItem {
+            }
+            .tabItem {
                 Label("User", systemImage: "person.circle.fill")
             }
         }.padding().glassBackgroundEffect()
@@ -107,16 +55,16 @@ struct BrowserView: View {
     func do_connect() {
         print("Open window for \($hostname)")
         
-        guard (URL(string: hostname)?.host()) != nil else {
+        guard let url = URL(string: normalize_websocket_url(hostname)), url.host != nil else {
             print("Invalid host")
             return
         }
         
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: hostname))
-        previous_custom.append(hostname)
+        custom_entries.addItem(hostname)
         hostname = ""
-        if previous_custom.count > 25 {
-            let _ = previous_custom.popLast()
+        if custom_entries.items.count > 25 {
+            custom_entries.items.removeFirst()
         }
     }
     
@@ -154,6 +102,33 @@ struct BrowserView: View {
     }
 }
 
+struct NetworkServersView: View {
+    var body: some View {
+        VStack {
+            Text("Network Servers")
+            NetBrowseView().frame(minHeight: 120)
+        }
+    }
+}
+
+struct UserSettingsView: View {
+    @Binding var user_name: String
+    var stopImmersiveAction: () -> Void
+    
+    var body: some View {
+        Form {
+            Section("Identity") {
+                TextField("Name", text: $user_name)
+            }
+            Section("Misc") {
+                Button("Stop Immersive") {
+                    stopImmersiveAction()
+                }
+            }
+        }
+    }
+}
+
 func normalize_websocket_url(_ hostname: String) -> String {
     var normalized = hostname.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -167,7 +142,6 @@ func normalize_websocket_url(_ hostname: String) -> String {
 
     return normalized
 }
-
 
 struct CommandView_Previews: PreviewProvider {
     static var previews: some View {
