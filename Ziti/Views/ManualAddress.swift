@@ -92,7 +92,7 @@ struct CustomEntryRowView: View {
         HStack {
             if isEditing {
                 TextField("Edit Address", text: $editedText, onCommit: {
-                    saveEdit()
+                    save_edit()
                 })
                 .textFieldStyle(.roundedBorder)
             } else {
@@ -124,7 +124,7 @@ struct CustomEntryRowView: View {
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 if let index = custom_entries.items.firstIndex(of: item) {
-                    custom_entries.removeItem(at: index)
+                    custom_entries.remove_item(at: index)
                 }
             } label: {
                 Label("Delete", systemImage: "trash")
@@ -168,10 +168,10 @@ struct CustomEntryRowView: View {
         dismissWindow(id: "noodles_browser")
     }
     
-    private func saveEdit() {
+    private func save_edit() {
         if let index = custom_entries.items.firstIndex(of: item) {
             custom_entries.items[index] = editedText
-            custom_entries.saveItems()
+            custom_entries.save_items()
         }
         isEditing.toggle()
     }
@@ -182,31 +182,31 @@ class CustomEntries: ObservableObject {
     @Published var items: [String] = []
     
     init() {
-        loadItems()
+        load_items()
     }
     
-    func addItem(_ item: String) {
+    func add_item(_ item: String) {
         items.append(item)
-        saveItems()
+        save_items()
     }
     
-    func removeItem(at index: Int) {
+    func remove_item(at index: Int) {
         items.remove(at: index)
-        saveItems()
+        save_items()
     }
     
-    func removeAllItems() {
+    func remove_all_items() {
         items.removeAll()
-        saveItems()
+        save_items()
     }
     
-    func saveItems() {
+    func save_items() {
         if let data = try? JSONEncoder().encode(items) {
             savedItems = data
         }
     }
     
-    private func loadItems() {
+    private func load_items() {
         if let decodedItems = try? JSONDecoder().decode([String].self, from: savedItems) {
             items = decodedItems
         }
@@ -221,7 +221,7 @@ struct CustomAddressTab: View {
     var body: some View {
         VStack {
             CustomAddressView(hostname:$hostname, is_bad_host: $is_bad_host, custom_entries: custom_entries ) {
-                custom_entries.addItem(hostname)
+                custom_entries.add_item(hostname)
             }
         }
     }

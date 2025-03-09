@@ -16,6 +16,8 @@ import Combine
 struct NooImmersiveView: View {
     var new_noodles_config : NewNoodles!
     
+    @State private var reconstruction_model = SceneReconstructionModel()
+    
     @State private var noodles_state : NoodlesCommunicator?
     @State private var noodles_world : NoodlesWorld?
     @State private var is_bad_host = false
@@ -45,8 +47,9 @@ struct NooImmersiveView: View {
             current_root.name = "ImmersiveRoot"
             
             image_model.start()
-            
             image_model.root_entity = current_root
+            
+            content.add(reconstruction_model.contentRoot)
             
             content.add(current_root)
             
@@ -84,12 +87,14 @@ struct NooImmersiveView: View {
                 anchor.addChild(att)
             }
             
+            
         } attachments: {
             Attachment(id: "hand_label") {
                 ImmersiveControls(communicator: $noodles_state).environment(current_doc_method_list).environmentObject(image_model).environmentObject(info_model)
                 
             }
-        } .installGestures().onChange(of: info_model.interaction) {
+        } .installGestures()
+        .onChange(of: info_model.interaction) {
             var root_visible = false
             
             switch info_model.interaction {
@@ -103,6 +108,13 @@ struct NooImmersiveView: View {
             }
             
             noodles_world?.root_controller.isEnabled = root_visible
+        } .onChange(of: info_model.lock_scene_rotation) {
+            noodles_world?.root_controller.components[GestureComponent.self]?.lockRotateUpAxis = info_model.lock_scene_rotation
+        } .task(priority: .low) {
+            reconstruction_model.start()
+            await reconstruction_model.processReconstruction()
+        } .task {
+            await reconstruction_model.monitorSessionEvents()
         }
     }
     

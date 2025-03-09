@@ -9,6 +9,9 @@
     },
     {
       "filename" : "aruco_7x7_1000-0.arreferenceimage"
+    },
+    {
+      "filename" : "NREL_AR_Target.arreferenceimage"
     }
   ]
 }

@@ -24,7 +24,7 @@ struct BrowserView: View {
     var long_press_delete_all: some Gesture {
         LongPressGesture(minimumDuration: 1.0).onEnded {
             _ in
-            custom_entries.removeAllItems()
+            custom_entries.remove_all_items()
         }
     }
     
@@ -35,7 +35,7 @@ struct BrowserView: View {
             }
             
             CustomAddressView(hostname:$hostname, is_bad_host: $is_bad_host, custom_entries: custom_entries ) {
-                custom_entries.addItem(hostname)
+                custom_entries.add_item(hostname)
             }
             .tabItem {
                 Label("Custom", systemImage: "rectangle.connected.to.line.below")
@@ -61,7 +61,7 @@ struct BrowserView: View {
         }
         
         openWindow(id: "noodles_content_window", value: NewNoodles(hostname: hostname))
-        custom_entries.addItem(hostname)
+        custom_entries.add_item(hostname)
         hostname = ""
         if custom_entries.items.count > 25 {
             custom_entries.items.removeFirst()

@@ -20,7 +20,6 @@ struct ImmersiveControls : View {
     @Binding var communicator: NoodlesCommunicator?
     
     @State private var show_image_tracking: Bool = false
-
     
     var body: some View {
         NavigationStack {
@@ -31,15 +30,26 @@ struct ImmersiveControls : View {
                     Spacer()
                 }
                 Section {
-                    Picker("Interaction", selection: $info_model.interaction) {
-                        Text("Locked").tag(ControlInteractionMode.none)
-                        Text("Items").tag(ControlInteractionMode.item)
-                        Text("Scene").tag(ControlInteractionMode.root)
-                    }.pickerStyle(.segmented)
+                    VStack {
+                        Picker("Interaction", selection: $info_model.interaction) {
+                            Text("Locked").tag(ControlInteractionMode.none)
+                            Text("Items").tag(ControlInteractionMode.item)
+                            Text("Scene").tag(ControlInteractionMode.root)
+                        }.pickerStyle(.segmented)
+                        
+                        if info_model.interaction == .root {
+                            LargeToggleButton(
+                                isOn: $info_model.lock_scene_rotation,
+                                label: "Lock Scene Rotation",
+                                onIcon: "lock.rotation",
+                                offIcon: "lock.open.rotation"
+                            )
+                        }
+                    }
                 }
                 
                 HStack {
-                    LargeButton(label: "Reset View", icon: "repeat") {
+                    LargeButton(label: "Reset Scene", icon: "repeat") {
                         communicator?.world.root_entity.transform = Transform();
                     }
                     

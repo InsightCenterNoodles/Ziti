@@ -5,7 +5,7 @@
 	<key>NSHandsTrackingUsageDescription</key>
 	<string>Hand tracking is used to add more UI and navigation options</string>
 	<key>NSWorldSensingUsageDescription</key>
-	<string>World sensing is used to find flat surfaces to aid in object placement</string>
+	<string>World sensing is used for occlusion and to aid in object placement</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationPreferredDefaultSceneSessionRole</key>
