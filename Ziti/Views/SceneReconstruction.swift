@@ -30,10 +30,12 @@ class SceneReconstructionModel {
         Task {
             if !dataProvidersSupported {
                 print("Reconstruction not supported")
+                return
             }
             
             if !ready {
                 print("Reconstruction not able to start")
+                return
             }
             
             try await session.run([sceneReconstruction])
