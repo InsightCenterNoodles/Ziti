@@ -64,16 +64,28 @@ struct ImmersiveControls : View {
                 
                 Divider()
                 
-                NavigationLink() {
-                    ImmersiveSettingsView()
-                } label: {
-                    VStack {
-                        Image(systemName: "photo.artframe.circle.fill")
-                        Text("Image Tracking")
-                    }
-                }.buttonBorderShape(.roundedRectangle(radius: 8))
+                HStack {
+                    NavigationLink() {
+                        ImmersiveSettingsView()
+                    } label: {
+                        VStack {
+                            Image(systemName: "photo.artframe.circle.fill")
+                            Text("Image Tracking")
+                        }
+                    }.buttonBorderShape(.roundedRectangle(radius: 8))
+                    
+                    LargeToggleButton(
+                        isOn: $info_model.scene_reconstruct,
+                        label: "World Occlusion",
+                        onIcon: "eye.fill",
+                        offIcon: "eye.slash.fill"
+                    )
+                }
+                
                 Spacer()
+                
                 Divider()
+                
                 Button(role: .destructive) {
                     Task {
                         print("Close immersive")

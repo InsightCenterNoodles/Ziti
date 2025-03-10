@@ -110,6 +110,8 @@ struct NooImmersiveView: View {
             noodles_world?.root_controller.isEnabled = root_visible
         } .onChange(of: info_model.lock_scene_rotation) {
             noodles_world?.root_controller.components[GestureComponent.self]?.lockRotateUpAxis = info_model.lock_scene_rotation
+        } .onChange(of: info_model.scene_reconstruct) {
+            reconstruction_model.contentRoot.isEnabled = info_model.scene_reconstruct
         } .task(priority: .low) {
             reconstruction_model.start()
             await reconstruction_model.processReconstruction()

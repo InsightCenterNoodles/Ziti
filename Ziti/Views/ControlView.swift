@@ -20,6 +20,7 @@ class ControlInfoModel: ObservableObject {
     @Published var frame_all: Bool = false
     @Published var interaction: ControlInteractionMode = .none
     @Published var lock_scene_rotation: Bool = true
+    @Published var scene_reconstruct: Bool = true
     
     func icon_for_current_option() -> String {
         switch interaction {
