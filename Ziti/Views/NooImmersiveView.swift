@@ -128,12 +128,57 @@ struct NooImmersiveView: View {
 }
 
 
+@Observable
+@MainActor
+class ARKitManager {
+    static let shared = ARKitManager()
+    
+    let session = ARKitSession()
+    let sceneReconstruction = SceneReconstructionProvider()
+    
+    var is_started = false
+    
+    /// Provider of tracked images
+    let image_info = ImageTrackingProvider(
+        referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: "TrackingImages")
+    )
+    
+    func start() {
+        guard is_started == false else { return }
+        
+        var providers : [any DataProvider] = []
+        
+        if SceneReconstructionProvider.isSupported {
+            print("Reconstruction supported")
+            
+            if sceneReconstruction.state == .initialized {
+                print("Reconstruction able to start")
+                
+                providers.append(sceneReconstruction)
+                
+            }
+        }
+        
+        if ImageTrackingProvider.isSupported {
+            print("Image tracking supported")
+            providers.append(image_info)
+        }
+        
+        is_started = true
+        
+        Task {
+            try await session.run(providers)
+        }
+    }
+}
+
+
 /// Models tracked images (QR codes). When images are detected, we add an entity to it in the world, and move the root
 /// of the NOODLES scene to this entity as a child
 @MainActor
 class ImageTrackingViewModel: ObservableObject {
     /// The AR Kit session to scan the room
-    private let session = ARKitSession()
+    private let session = ARKitManager.shared
     
     /// This is the entity we will manage. We want to move the NOODLES root to the QR code
     public var root_entity : Entity?
@@ -146,10 +191,7 @@ class ImageTrackingViewModel: ObservableObject {
     /// We can squash all rotations except for the yaw of the image.
     @Published public var maintain_vertical: Bool = false
     
-    /// Provider of tracked images
-    private let image_info = ImageTrackingProvider(
-        referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: "TrackingImages")
-    )
+    
     
     /// When an image is detected we add it as an entity here
     var entity_map: [UUID: Entity] = [:]
@@ -165,19 +207,17 @@ class ImageTrackingViewModel: ObservableObject {
     }
     
     func start() {
+        session.start()
         entity_map.removeAll()
         if did_init { return }
         
-        if ImageTrackingProvider.isSupported {
-            print("ARKitSession starting.")
-            Task {
-                try await session.run([image_info])
-                for await update in image_info.anchorUpdates {
-                    await update_image(update.anchor)
-                }
+        Task {
+            for await update in session.image_info.anchorUpdates {
+                await update_image(update.anchor)
             }
-            did_init = true
         }
+        
+        did_init = true
     }
     
     func update_image(_ anchor: ImageAnchor) async {

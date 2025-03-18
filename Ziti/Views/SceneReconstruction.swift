@@ -11,44 +11,23 @@ import RealityFoundation
 @Observable
 @MainActor
 class SceneReconstructionModel {
-    let session = ARKitSession()
-    let sceneReconstruction = SceneReconstructionProvider()
+    let session = ARKitManager.shared
     
     var contentRoot = Entity()
     
     private var meshEnities = [UUID: ModelEntity]()
     
-    var dataProvidersSupported: Bool {
-        SceneReconstructionProvider.isSupported
-    }
-    
-    var ready: Bool {
-        sceneReconstruction.state == .initialized
-    }
-    
     func start() {
-        Task {
-            if !dataProvidersSupported {
-                print("Reconstruction not supported")
-                return
-            }
-            
-            if !ready {
-                print("Reconstruction not able to start")
-                return
-            }
-            
-            try await session.run([sceneReconstruction])
-        }
+        session.start()
     }
     
     func processReconstruction() async {
-        for await update in sceneReconstruction.anchorUpdates {
+        for await update in session.sceneReconstruction.anchorUpdates {
             let meshAnchor = update.anchor
             
             guard let shape = try? await ShapeResource.generateStaticMesh(from: meshAnchor) else { continue }
             
-            print(update.event)
+            //print(update.event)
             
             switch update.event {
             case .added:
@@ -75,7 +54,7 @@ class SceneReconstructionModel {
     }
     
     func monitorSessionEvents() async {
-        for await event in session.events {
+        for await event in session.session.events {
             switch event {
             case .authorizationChanged(type: _, status: let status):
                 print("Authorization status changed: \(status)")
@@ -83,7 +62,7 @@ class SceneReconstructionModel {
                 if status == .denied {
                     // error?
                 }
-            case .dataProviderStateChanged(dataProviders: let provider, newState: let newState, error: let error):
+            case .dataProviderStateChanged(dataProviders: let provider, newState: let newState, error: _):
                 print("Data provider changed state: \(provider), \(newState)")
                 //
             @unknown default:

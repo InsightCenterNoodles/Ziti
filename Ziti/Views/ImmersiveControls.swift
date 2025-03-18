@@ -44,6 +44,12 @@ struct ImmersiveControls : View {
                                 onIcon: "lock.rotation",
                                 offIcon: "lock.open.rotation"
                             )
+                            LargeToggleButton(
+                                isOn: $info_model.lock_scene_scale,
+                                label: "Lock Scene Scale",
+                                onIcon: "scale.3d",
+                                offIcon: "scale.3d"
+                            )
                         }
                     }
                 }
