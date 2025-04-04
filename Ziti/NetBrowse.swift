@@ -8,88 +8,88 @@
 import Foundation
 import Network
 import SwiftUI
-
-struct DiscoveredNooService : Hashable {
-    var id : Int
-    var name : String = ""
-    var host_ip : String = ""
-    var port : Int = 50000
-}
-
-struct NetBrowseView : View {
-    @StateObject var instance = NooServerListener()
-    
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-    @Environment(\.dismissWindow) private var dismissWindow
-    
-    var body: some View {
-        List(instance.dest, id: \.self) { service in
-            HStack {
-                Text(service.name)
-                Spacer()
-                Divider()
-                Menu() {
-                    Button() {
-                        launch_small_window(target: service)
-                    } label: {
-                        Label("Small Space", systemImage: "widget.small")
-                    }
-                    Button() {
-                        launch_window(target: service)
-                    } label: {
-                        Label("Large Space", systemImage: "widget.extralarge")
-                    }
-                    Divider()
-                    Button() {
-                        launch_immersive(target: service)
-                    } label: {
-                        Label("Immersive", systemImage: "sharedwithyou.circle.fill")
-                    }
-                } label: {
-                    Label(service.name, systemImage: "plus").labelStyle(.iconOnly)
-                }.menuStyle(.borderlessButton)
-            }
-            
-        }
-        .onAppear() {
-            start_browsing()
-        }
-    }
-    
-    func start_browsing() {
-        instance.startDiscovery()
-    }
-    
-    func launch_small_window(target: DiscoveredNooService) {
-        print("Launching window")
-        let host = "ws://\(target.host_ip):\(target.port)"
-        openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: host))
-        dismissWindow(id: "noodles_browser")
-    }
-    
-    func launch_window(target: DiscoveredNooService) {
-        print("Launching window")
-        let host = "ws://\(target.host_ip):\(target.port)"
-        openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
-        dismissWindow(id: "noodles_browser")
-    }
-    
-    func launch_immersive(target: DiscoveredNooService) {
-        print("Launching immersive window")
-        let host = "ws://\(target.host_ip):\(target.port)"
-        
-        Task {
-            let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: host))
-            
-            if case .error = result {
-                print("An error occurred")
-            }
-        }
-        
-        dismissWindow(id: "noodles_browser")
-    }
-}
+//
+//struct DiscoveredNooService : Hashable {
+//    var id : Int
+//    var name : String = ""
+//    var host_ip : String = ""
+//    var port : Int = 50000
+//}
+//
+//struct NetBrowseView : View {
+//    @StateObject var instance = NooServerListener()
+//    
+//    @Environment(\.openWindow) private var openWindow
+//    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+//    @Environment(\.dismissWindow) private var dismissWindow
+//    
+//    var body: some View {
+//        List(instance.dest, id: \.self) { service in
+//            HStack {
+//                Text(service.name)
+//                Spacer()
+//                Divider()
+//                Menu() {
+//                    Button() {
+//                        launch_small_window(target: service)
+//                    } label: {
+//                        Label("Small Space", systemImage: "widget.small")
+//                    }
+//                    Button() {
+//                        launch_window(target: service)
+//                    } label: {
+//                        Label("Large Space", systemImage: "widget.extralarge")
+//                    }
+//                    Divider()
+//                    Button() {
+//                        launch_immersive(target: service)
+//                    } label: {
+//                        Label("Immersive", systemImage: "sharedwithyou.circle.fill")
+//                    }
+//                } label: {
+//                    Label(service.name, systemImage: "plus").labelStyle(.iconOnly)
+//                }.menuStyle(.borderlessButton)
+//            }
+//            
+//        }
+//        .onAppear() {
+//            start_browsing()
+//        }
+//    }
+//    
+//    func start_browsing() {
+//        instance.startDiscovery()
+//    }
+//    
+//    func launch_small_window(target: DiscoveredNooService) {
+//        print("Launching window")
+//        let host = "ws://\(target.host_ip):\(target.port)"
+//        openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: host))
+//        dismissWindow(id: "noodles_browser")
+//    }
+//    
+//    func launch_window(target: DiscoveredNooService) {
+//        print("Launching window")
+//        let host = "ws://\(target.host_ip):\(target.port)"
+//        openWindow(id: "noodles_content_window", value: NewNoodles(hostname: host))
+//        dismissWindow(id: "noodles_browser")
+//    }
+//    
+//    func launch_immersive(target: DiscoveredNooService) {
+//        print("Launching immersive window")
+//        let host = "ws://\(target.host_ip):\(target.port)"
+//        
+//        Task {
+//            let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: host))
+//            
+//            if case .error = result {
+//                print("An error occurred")
+//            }
+//        }
+//        
+//        dismissWindow(id: "noodles_browser")
+//    }
+//}
 
 // stolen from github
 func service_to_ip_string(_ sender: NetService) -> String {
@@ -112,11 +112,10 @@ class NooServerListener: NSObject, NetServiceBrowserDelegate, NetServiceDelegate
     var browser: NetServiceBrowser
     var is_active = false
     
-    var services: [Int : NetService]
-    var rservices : [NetService : Int]
+    var services: [UUID : NetService]
+    var rservices : [NetService : UUID]
     
-    @Published var dest : [DiscoveredNooService] = []
-    var next_service_id = 0
+    @Published var dest : [Server] = []
 
     override init() {
         browser = NetServiceBrowser()
@@ -139,9 +138,9 @@ class NooServerListener: NSObject, NetServiceBrowserDelegate, NetServiceDelegate
     func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
         print ("Found: \(service.name), resolving")
         
-        self.services[self.next_service_id] = service
-        self.rservices[service] = self.next_service_id
-        self.next_service_id += 1
+        let id = UUID();
+        self.services[id] = service
+        self.rservices[service] = id
         
         service.delegate = self
         service.resolve(withTimeout: 10)
@@ -165,13 +164,13 @@ class NooServerListener: NSObject, NetServiceBrowserDelegate, NetServiceDelegate
         print("service resolved \(sender.name)")
         
         let hname = "\(sender.name) @ \(sender.hostName ?? "Unknown")"
-        let host_ip = service_to_ip_string(sender)
+        let host_ip = service_to_ip_string(sender) + ":\(sender.port)"
         
-        self.dest.append(DiscoveredNooService(
+        self.dest.append(Server(
             id: rservices[sender]!,
             name: hname,
-            host_ip: host_ip,
-            port: sender.port
+            ipAddress: host_ip,
+            discovered: true
         ))
     }
         

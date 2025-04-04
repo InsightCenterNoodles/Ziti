@@ -60,10 +60,10 @@ struct CustomEntriesListView: View {
     
     var body: some View {
         List {
-            ForEach(custom_entries.items, id: \.self) { item in
-                CustomEntryRowView(item: item, custom_entries: custom_entries)
-            }
-            .onMove(perform: move)
+//            ForEach(custom_entries.items, id: \.self) { item in
+//                CustomEntryRowView(item: item, custom_entries: custom_entries)
+//            }
+//            .onMove(perform: move)
         }
         .environment(\.editMode, $editMode)
         .toolbar {
@@ -123,9 +123,9 @@ struct CustomEntryRowView: View {
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
-                if let index = custom_entries.items.firstIndex(of: item) {
-                    custom_entries.remove_item(at: index)
-                }
+//                if let index = custom_entries.items.firstIndex(of: item) {
+//                    custom_entries.remove_item(at: index)
+//                }
             } label: {
                 Label("Delete", systemImage: "trash")
             }
@@ -169,23 +169,23 @@ struct CustomEntryRowView: View {
     }
     
     private func save_edit() {
-        if let index = custom_entries.items.firstIndex(of: item) {
-            custom_entries.items[index] = editedText
-            custom_entries.save_items()
-        }
-        isEditing.toggle()
+//        if let index = custom_entries.items.firstIndex(of: item) {
+//            custom_entries.items[index] = editedText
+//            custom_entries.save_items()
+//        }
+//        isEditing.toggle()
     }
 }
 
 class CustomEntries: ObservableObject {
     @AppStorage("previous_custom_items") private var savedItems: Data = Data()
-    @Published var items: [String] = []
+    @Published var items: [Server] = []
     
     init() {
         load_items()
     }
     
-    func add_item(_ item: String) {
+    func add_item(_ item: Server) {
         items.append(item)
         save_items()
     }
@@ -207,26 +207,26 @@ class CustomEntries: ObservableObject {
     }
     
     private func load_items() {
-        if let decodedItems = try? JSONDecoder().decode([String].self, from: savedItems) {
+        if let decodedItems = try? JSONDecoder().decode([Server].self, from: savedItems) {
             items = decodedItems
         }
     }
 }
 
-struct CustomAddressTab: View {
-    @State var hostname: String = ""
-    @State var is_bad_host: Bool = false
-    @ObservedObject var custom_entries = CustomEntries()
-    
-    var body: some View {
-        VStack {
-            CustomAddressView(hostname:$hostname, is_bad_host: $is_bad_host, custom_entries: custom_entries ) {
-                custom_entries.add_item(hostname)
-            }
-        }
-    }
-}
-
-#Preview {
-    CustomAddressTab().glassBackgroundEffect()
-}
+//struct CustomAddressTab: View {
+//    @State var hostname: String = ""
+//    @State var is_bad_host: Bool = false
+//    @ObservedObject var custom_entries = CustomEntries()
+//    
+//    var body: some View {
+//        VStack {
+//            CustomAddressView(hostname:$hostname, is_bad_host: $is_bad_host, custom_entries: custom_entries ) {
+//                custom_entries.add_item(hostname)
+//            }
+//        }
+//    }
+//}
+//
+//#Preview {
+//    CustomAddressTab().glassBackgroundEffect()
+//}

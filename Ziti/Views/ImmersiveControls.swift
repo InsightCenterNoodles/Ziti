@@ -154,9 +154,11 @@ struct LargeButton : View {
     var body: some View {
         Button(action: self.action) {
             VStack {
-                Image(systemName: icon)
-                Text(label)
-            }
+                Spacer(minLength: 0)
+                Image(systemName: icon).padding()
+                Text(label).frame(maxWidth: .infinity)
+                Spacer(minLength: 0)
+            }.multilineTextAlignment(.center)
         }.buttonBorderShape(.roundedRectangle(radius: 8))
     }
 }

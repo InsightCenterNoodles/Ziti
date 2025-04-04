@@ -116,7 +116,7 @@ struct NooImmersiveView: View {
             reconstruction_model.start()
             await reconstruction_model.processReconstruction()
         } .task {
-            await reconstruction_model.monitorSessionEvents()
+            await ARKitManager.shared.monitorSessionEvents()
         }
     }
     
@@ -166,8 +166,28 @@ class ARKitManager {
         
         is_started = true
         
-        Task {
+        Task { @MainActor in
             try await session.run(providers)
+        }
+    }
+    
+    func monitorSessionEvents() async {
+        for await event in session.events {
+            switch event {
+            case .authorizationChanged(type: _, status: let status):
+                print("Authorization status changed: \(status)")
+                
+                if status == .denied {
+                    // error?
+                }
+            case .dataProviderStateChanged(dataProviders: let provider, newState: let newState, error: let err):
+                print("Data provider changed state: \(provider), \(newState)")
+                if let err = err {
+                    print("Associated error \(err)")
+                }
+            @unknown default:
+                print("Unknown event \(event)")
+            }
         }
     }
 }
@@ -215,6 +235,7 @@ class ImageTrackingViewModel: ObservableObject {
             for await update in session.image_info.anchorUpdates {
                 await update_image(update.anchor)
             }
+            print("Ending image updates")
         }
         
         did_init = true

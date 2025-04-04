@@ -52,22 +52,4 @@ class SceneReconstructionModel {
         }
         
     }
-    
-    func monitorSessionEvents() async {
-        for await event in session.session.events {
-            switch event {
-            case .authorizationChanged(type: _, status: let status):
-                print("Authorization status changed: \(status)")
-                
-                if status == .denied {
-                    // error?
-                }
-            case .dataProviderStateChanged(dataProviders: let provider, newState: let newState, error: _):
-                print("Data provider changed state: \(provider), \(newState)")
-                //
-            @unknown default:
-                print("Unknown event \(event)")
-            }
-        }
-    }
 }
