@@ -146,7 +146,7 @@ func normalize_websocket_url(_ hostname: String) -> String {
 }
 
 
-struct Server: Identifiable, Encodable, Decodable {
+struct Server: Identifiable, Encodable, Decodable, Hashable {
     let id: UUID
     var name: String
     var ipAddress: String
@@ -157,6 +157,7 @@ struct BrowserView: View {
     @ObservedObject var custom_entries = CustomEntries()
     @ObservedObject var network_browser = NooServerListener()
     
+    @State private var path = NavigationPath()
     
     @State var hostname: String = ""
     @State var is_bad_host = false
@@ -185,7 +186,7 @@ struct BrowserView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
                 Section {
                     HStack {
@@ -212,26 +213,23 @@ struct BrowserView: View {
                 }
                 
                 List(filter_custom) { server in
-                    NavigationLink {
-                        ServerActionView(server: server, custom_entries: custom_entries) {
-                            dismiss()
-                        }
-                    } label: {
+                    NavigationLink(value: server) {
                         ServerEntry(server: server)
                     }
                 }
                 
                 List(filter_discovered) { server in
-                    NavigationLink {
-                        ServerActionView(server: server, custom_entries: custom_entries) {
-                            dismiss()
-                        }
-                    } label: {
+                    NavigationLink(value: server) {
                         ServerEntry(server: server)
                     }
                 }
             }
             .navigationTitle("Server List")
+            .navigationDestination(for: Server.self) { server in
+                ServerActionView(server: server, custom_entries: custom_entries) {
+                    path.removeLast()
+                }
+            }
         }
         .listStyle(.grouped)
         .navigationSplitViewStyle(.prominentDetail)
@@ -240,6 +238,8 @@ struct BrowserView: View {
             network_browser.startDiscovery()
         }.onDisappear() {
             network_browser.stopDiscovery()
+        }.onChange(of: path) {
+            dump(path)
         }
     }
     
@@ -298,20 +298,18 @@ struct ServerActionView: View {
             Divider()
             
             if !is_editing {
-                Text("Choose how you want to view the content:")
+                Text("Choose a content view:")
                             .foregroundColor(.secondary)
                 
                 Grid {
                     GridRow {
                         LargeButton(label: "Small Window", icon: "widget.small") {
                             openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: server.ipAddress))
-                            //dismissWindow(id: "noodles_browser")
                             onDismiss()
                         }.frame(width: 140, height: 140)
                         
                         LargeButton(label: "Large Window", icon: "widget.large") {
                             openWindow(id: "noodles_content_window", value: NewNoodles(hostname: server.ipAddress))
-                            //dismissWindow(id: "noodles_browser")
                             onDismiss()
                         }.frame(width: 140, height: 140)
                         
