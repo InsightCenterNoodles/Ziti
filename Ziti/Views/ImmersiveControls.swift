@@ -19,89 +19,53 @@ struct ImmersiveControls : View {
     
     @Binding var communicator: NoodlesCommunicator?
     
-    @State private var show_image_tracking: Bool = false
+    
     
     var body: some View {
         NavigationStack {
+            // cant get this to work yet
+            //Text(tex info_model.title_text)
+            
             Form {
                 HStack {
                     Spacer()
                     CompactMethodView(communicator: $communicator)
                     Spacer()
                 }
-                Section {
-                    VStack {
-                        Picker("Interaction", selection: $info_model.interaction) {
-                            Text("Locked").tag(ControlInteractionMode.none)
-                            Text("Items").tag(ControlInteractionMode.item)
-                            Text("Scene").tag(ControlInteractionMode.root)
-                        }.pickerStyle(.segmented)
-                        
-                        if info_model.interaction == .root {
-                            LargeToggleButton(
-                                isOn: $info_model.lock_scene_rotation,
-                                label: "Lock Scene Rotation",
-                                onIcon: "lock.rotation",
-                                offIcon: "lock.open.rotation"
-                            )
-                            LargeToggleButton(
-                                isOn: $info_model.lock_scene_scale,
-                                label: "Lock Scene Scale",
-                                onIcon: "scale.3d",
-                                offIcon: "scale.3d"
-                            )
-                        }
-                    }
-                }
-                
-                HStack {
-                    LargeButton(label: "Reset Scene", icon: "repeat") {
-                        communicator?.world.root_entity.transform = Transform();
-                    }
-                    
-                    LargeButton(label: "New Connection", icon: "note.text.badge.plus"){
-                        openWindow(id: "noodles_browser")
-                    }
-                }
-                
-                Spacer()
                 
                 ImmersiveMethodView(communicator: $communicator)
                 
-                Divider()
-                
-                HStack {
+                Section() {
                     NavigationLink() {
-                        ImmersiveSettingsView()
+                        SceneRootEditorView(communicator: $communicator)
                     } label: {
-                        VStack {
-                            Image(systemName: "photo.artframe.circle.fill")
-                            Text("Image Tracking")
-                        }
-                    }.buttonBorderShape(.roundedRectangle(radius: 8))
+                        Label("Scene Anchoring", systemImage: "gyroscope")
+                    }.frame(maxWidth: .infinity).foregroundStyle(.primary)
                     
-                    LargeToggleButton(
-                        isOn: $info_model.scene_reconstruct,
-                        label: "World Occlusion",
-                        onIcon: "eye.fill",
-                        offIcon: "eye.slash.fill"
-                    )
+                    NavigationLink() {
+                        ImmersiveViewOptions()
+                    } label: {
+                        Label("View Options", systemImage: "eye.fill")
+                    }.frame(maxWidth: .infinity).foregroundStyle(.primary)
+                    
+                    Button {
+                        openWindow(id: "noodles_browser")
+                    } label: {
+                        Label("Add Connection", systemImage: "note.text.badge.plus")
+                    }.frame(maxWidth: .infinity).foregroundStyle(.primary)
                 }
-                
-                Spacer()
-                
-                Divider()
-                
-                Button(role: .destructive) {
-                    Task {
-                        print("Close immersive")
-                        await dismissImmersiveSpace()
-                    }
-                } label: {
-                    Text("Close")
-                }.buttonStyle(.borderless).frame(maxWidth: .infinity)
-                
-            }.formStyle(.columns)
+            }
+            
+            Divider()
+            
+            Button(role: .destructive) {
+                Task {
+                    print("Close immersive")
+                    await dismissImmersiveSpace()
+                }
+            } label: {
+                Text("Close")
+            }.buttonStyle(.borderless).frame(maxWidth: .infinity)
         }
         .frame(minWidth: 100, maxWidth: 400, minHeight: 100, maxHeight: 800).padding().glassBackgroundEffect()
     }
@@ -153,43 +117,23 @@ struct LargeButton : View {
     
     var body: some View {
         Button(action: self.action) {
-            VStack {
-                Spacer(minLength: 0)
-                Image(systemName: icon).padding()
-                Text(label).frame(maxWidth: .infinity)
-                Spacer(minLength: 0)
-            }.multilineTextAlignment(.center)
+            VStack(spacing: 4) {
+                Image(systemName: icon).font(.title).padding()
+                Text(label)
+            }
+            .frame(minWidth: 120, minHeight: 60)
+            .multilineTextAlignment(.center)
         }.buttonBorderShape(.roundedRectangle(radius: 8))
     }
 }
 
-struct ImmersiveSettingsView : View {
-    @EnvironmentObject var image_model: ImageTrackingViewModel
+struct ImmersiveViewOptions : View {
+    @EnvironmentObject var info_model: ControlInfoModel
     
     var body: some View {
-        VStack {
-            Grid() {
-                GridRow {
-                    LargeToggleButton(
-                        isOn: $image_model.is_tracking,
-                        label: "Enable Tracking",
-                        onIcon: "checkmark.circle.fill",
-                        offIcon: "circle"
-                    )
-                    LargeToggleButton(
-                        isOn: $image_model.maintain_vertical,
-                        label: "Vertical Lock",
-                        onIcon: "lock.fill",
-                        offIcon: "lock.open",
-                        activeColor: .blue
-                    )
-                }
-                
-            }
-            Spacer()
-        }
-        .navigationTitle("Image Tracking") // Adds a title like iOS settings
-        .navigationBarTitleDisplayMode(.inline) // Keeps the title compact
+        Form {
+            Toggle("World Occlusion", isOn: $info_model.scene_reconstruct)
+        }.navigationTitle("Immersive View Options")
     }
 }
 
@@ -233,7 +177,78 @@ struct ImmersiveMethodView : View {
     }
 }
 
-//#Preview(windowStyle: .plain) {
-//    TestView()
-//}
+struct SceneRootEditorView : View {
+    @EnvironmentObject var info_model: ControlInfoModel
+    @EnvironmentObject var image_model: ImageTrackingViewModel
+    @EnvironmentObject var finger_model: FingerTrackingViewModel
+    @Binding var communicator: NoodlesCommunicator?
+    
+    //@State private var show_image_tracking: Bool = false
+    
+    @State private var previous_world_occlude: Bool = false
+    
+    var body: some View {
+        
+        Form {
+            Text("The scene anchor can be moved to align with real world objects by pinching and dragging, or using the double-pinch gesture.").font(.subheadline).foregroundStyle(.secondary)
+            
+            Section(header: Text("Scene Control Options")) {
+                Toggle("Keep Horizontal", isOn: $info_model.lock_scene_rotation)
+                Toggle("Scale Lock", isOn: $info_model.lock_scene_scale)
+                Text("Limit rotation to vertical axis and prevent 'double pinch' scaling.").font(.caption).foregroundStyle(.secondary)
+            }
+            
+            Section(header: Text("Image Tracking")) {
+                Toggle("Track Anchor Image", isOn: $image_model.is_tracking)
+                
+                if image_model.is_tracking {
+                    Text("Look at a QR or ARuCO code briefly to set the anchor's location. The horizontal axis can be locked to the vertical.").font(.caption).foregroundStyle(.secondary)
+                    
+                    Toggle("Horizontal Only", isOn: $image_model.maintain_vertical)
+                }
+            }
+            
+            Section {
+                Button {
+                    reset_scene_to_head()
+                } label: {
+                    Label("Anchor to Right Thumb", systemImage: "arrowshape.left.arrowshape.right.fill").foregroundStyle(.primary)
+                }.frame(maxWidth: .infinity)
+            }
+            
+            Section {
+                Button(role: .destructive) {
+                    communicator?.world.root_entity.move(to: Transform(), relativeTo: nil, duration: 2)
+                } label: {
+                    Label("Reset Anchor", systemImage: "repeat").foregroundStyle(.primary)
+                }.frame(maxWidth: .infinity)
+            }
+            
+        }.onAppear {
+            info_model.root_interaction_allowed = true
+            finger_model.head_indicator_entity.isEnabled = true
+            
+            previous_world_occlude = info_model.scene_reconstruct
+            info_model.scene_reconstruct = false
+            
+        }.onDisappear {
+            info_model.root_interaction_allowed = false
+            finger_model.head_indicator_entity.isEnabled = false
+            
+            info_model.scene_reconstruct = previous_world_occlude
+        }
+        .navigationTitle("Scene Anchor Editing")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    func reset_scene_to_head() {
+        let new_pos = finger_model.head_indicator_entity.position(relativeTo: nil)
+        
+        var new_tf = Transform()
+        
+        new_tf.translation = new_pos;
+        
+        communicator?.world.root_entity.move(to: new_tf, relativeTo: nil, duration: 2)
+    }
+}
 

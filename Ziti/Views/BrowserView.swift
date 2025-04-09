@@ -298,24 +298,23 @@ struct ServerActionView: View {
             Divider()
             
             if !is_editing {
-                Text("Choose a content view:")
-                            .foregroundColor(.secondary)
+                Text("Choose a content view:").foregroundStyle(.secondary)
                 
                 Grid {
                     GridRow {
                         LargeButton(label: "Small Window", icon: "widget.small") {
-                            openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: server.ipAddress))
+                            openWindow(id: "noodles_content_window_small", value: NewNoodles(hostname: normalize_websocket_url(server.ipAddress)))
                             onDismiss()
                         }.frame(width: 140, height: 140)
                         
                         LargeButton(label: "Large Window", icon: "widget.large") {
-                            openWindow(id: "noodles_content_window", value: NewNoodles(hostname: server.ipAddress))
+                            openWindow(id: "noodles_content_window", value: NewNoodles(hostname: normalize_websocket_url(server.ipAddress)))
                             onDismiss()
                         }.frame(width: 140, height: 140)
                         
                         LargeButton(label: "Immersive View", icon: "sharedwithyou.circle.fill") {
                             Task {
-                                let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: server.ipAddress))
+                                let result = await openImmersiveSpace(id: "noodles_immersive_space", value: NewNoodles(hostname: normalize_websocket_url(server.ipAddress)))
                     
                                 if case .error = result {
                                     print("An error occurred")

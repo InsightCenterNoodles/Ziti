@@ -30,6 +30,7 @@ struct NooImmersiveView: View {
     @State private var current_doc_method_list = MethodListObservable()
     
     @ObservedObject var image_model: ImageTrackingViewModel = ImageTrackingViewModel()
+    @ObservedObject var finger_model: FingerTrackingViewModel = FingerTrackingViewModel()
     @StateObject private var info_model = ControlInfoModel()
     
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -37,6 +38,7 @@ struct NooImmersiveView: View {
     
     init(new: NewNoodles) {
         new_noodles_config = new
+        //info_model.title_text = new.hostname
     }
     
     var body: some View {
@@ -48,6 +50,10 @@ struct NooImmersiveView: View {
             
             image_model.start()
             image_model.root_entity = current_root
+            
+            finger_model.start()
+            
+            content.add(finger_model.head_indicator_entity)
             
             content.add(reconstruction_model.contentRoot)
             
@@ -71,7 +77,6 @@ struct NooImmersiveView: View {
             
             let anchor = AnchorEntity(.hand(.left, location: .wrist), trackingMode: .predicted)
             anchor.name = "hand_anchor"
-            
             content.add(anchor)
             
             if let att = attachments.entity(for: "hand_label") {
@@ -87,29 +92,21 @@ struct NooImmersiveView: View {
                 anchor.addChild(att)
             }
             
-            
         } attachments: {
             Attachment(id: "hand_label") {
-                ImmersiveControls(communicator: $noodles_state).environment(current_doc_method_list).environmentObject(image_model).environmentObject(info_model)
-                
+                ImmersiveControls(communicator: $noodles_state).environment(current_doc_method_list).environmentObject(image_model).environmentObject(info_model).environmentObject(finger_model)
             }
         } .installGestures()
-        .onChange(of: info_model.interaction) {
-            var root_visible = false
-            
-            switch info_model.interaction {
-            case .none:
-                noodles_world?.set_all_entity_input(enabled: false)
-            case .root:
-                noodles_world?.set_all_entity_input(enabled: false)
-                root_visible = true
-            case .item:
-                noodles_world?.set_all_entity_input(enabled: true)
-            }
-            
-            noodles_world?.root_controller.isEnabled = root_visible
+        .onChange(of: info_model.root_interaction_allowed) {
+            // Set the root controller visibility
+            noodles_world?.root_controller.isEnabled = info_model.root_interaction_allowed
+        }.onChange(of: info_model.item_interaction_allowed) {
+            // Set all item visibility
+            noodles_world?.set_all_entity_input(enabled: info_model.item_interaction_allowed)
         } .onChange(of: info_model.lock_scene_rotation) {
             noodles_world?.root_controller.components[GestureComponent.self]?.lockRotateUpAxis = info_model.lock_scene_rotation
+        } .onChange(of: info_model.lock_scene_scale) {
+            noodles_world?.root_controller.components[GestureComponent.self]?.canScale = !info_model.lock_scene_scale
         } .onChange(of: info_model.scene_reconstruct) {
             reconstruction_model.contentRoot.isEnabled = info_model.scene_reconstruct
         } .task(priority: .low) {
@@ -128,69 +125,7 @@ struct NooImmersiveView: View {
 }
 
 
-@Observable
-@MainActor
-class ARKitManager {
-    static let shared = ARKitManager()
-    
-    let session = ARKitSession()
-    let sceneReconstruction = SceneReconstructionProvider()
-    
-    var is_started = false
-    
-    /// Provider of tracked images
-    let image_info = ImageTrackingProvider(
-        referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: "TrackingImages")
-    )
-    
-    func start() {
-        guard is_started == false else { return }
-        
-        var providers : [any DataProvider] = []
-        
-        if SceneReconstructionProvider.isSupported {
-            print("Reconstruction supported")
-            
-            if sceneReconstruction.state == .initialized {
-                print("Reconstruction able to start")
-                
-                providers.append(sceneReconstruction)
-                
-            }
-        }
-        
-        if ImageTrackingProvider.isSupported {
-            print("Image tracking supported")
-            providers.append(image_info)
-        }
-        
-        is_started = true
-        
-        Task { @MainActor in
-            try await session.run(providers)
-        }
-    }
-    
-    func monitorSessionEvents() async {
-        for await event in session.events {
-            switch event {
-            case .authorizationChanged(type: _, status: let status):
-                print("Authorization status changed: \(status)")
-                
-                if status == .denied {
-                    // error?
-                }
-            case .dataProviderStateChanged(dataProviders: let provider, newState: let newState, error: let err):
-                print("Data provider changed state: \(provider), \(newState)")
-                if let err = err {
-                    print("Associated error \(err)")
-                }
-            @unknown default:
-                print("Unknown event \(event)")
-            }
-        }
-    }
-}
+
 
 
 /// Models tracked images (QR codes). When images are detected, we add an entity to it in the world, and move the root
@@ -273,6 +208,42 @@ class ImageTrackingViewModel: ObservableObject {
             // since we control the root now, remove any initial offset
             self.root_entity?.children.first?.position = .zero
         }
+    }
+}
+
+/// A model to track users fingers. We use this to help position objects in the world (where are you pointing, etc)
+@MainActor
+class FingerTrackingViewModel: ObservableObject {
+    /// The AR Kit session to scan the room
+    private let session = ARKitManager.shared
+    
+    static let identity = simd_float4x4(diagonal: simd_float4(repeating: 1))
+    
+    let head_indicator_entity: Entity
+    
+    init() {
+        head_indicator_entity = ModelEntity(mesh: .generateSphere(radius: 0.01), materials: [SimpleMaterial(color: .green, isMetallic: false)])
+        head_indicator_entity.name = "hand_indicator"
+        head_indicator_entity.isEnabled = false
+    }
+    
+    func start() {
+        session.start()
+
+        Task {
+            for await update in session.hand_tracking.anchorUpdates {
+                await update_anchor(update.anchor)
+            }
+            print("Ending hand updates")
+        }
+    }
+    
+    func update_anchor(_ anchor: HandAnchor) async {
+        guard anchor.chirality == .right else { return }
+        
+        let tf = anchor.originFromAnchorTransform * (anchor.handSkeleton?.joint(.thumbTip).anchorFromJointTransform ?? FingerTrackingViewModel.identity)
+        
+        head_indicator_entity.transform = Transform(matrix: tf)
     }
 }
 

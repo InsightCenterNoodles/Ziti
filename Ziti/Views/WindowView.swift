@@ -50,6 +50,9 @@ struct WindowView: View {
             
             content.add(current_root)
             
+            dump(new_noodles_config.hostname)
+            dump(URL(string: new_noodles_config.hostname))
+            
             let u = URL(string: new_noodles_config.hostname) ?? URL(string: "ws://localhost:50000")!
             
             let error_entity = try! await Entity(named: "NoConnection", in: realityKitContentBundle)
@@ -69,12 +72,15 @@ struct WindowView: View {
             VStack {
                 HStack {
                     Button(action: {
-                        if let current_index = ControlInteractionMode.allCases.firstIndex(of: info_model.interaction) {
-                            let nextIndex = (current_index + 1) % ControlInteractionMode.allCases.count
-                            info_model.interaction = ControlInteractionMode.allCases[nextIndex]
-                        }
+                        info_model.root_interaction_allowed.toggle()
                     }) {
-                        Label(info_model.text_for_current_option(), systemImage: info_model.icon_for_current_option() )
+                        Label("Change Root", systemImage: "scope").labelStyle(.iconOnly)
+                    }.buttonStyle(.borderless)
+                    
+                    Button(action: {
+                        info_model.item_interaction_allowed.toggle()
+                    }) {
+                        Label("Lock Items", systemImage: info_model.item_interaction_allowed ? "pencil" : "lock.document.fill").labelStyle(.iconOnly)
                     }.buttonStyle(.borderless)
                     
                     CompactMethodView(communicator: $noodles_state)
@@ -93,7 +99,7 @@ struct WindowView: View {
             VStack {
                 Button(action: frame_all) {
                     Label("Frame", systemImage: "arrow.up.backward.and.arrow.down.forward.square.fill").labelStyle(.iconOnly)
-                }
+                }.buttonStyle(.borderless)
                 Divider()
                 Button(action: {
                     Task {
@@ -109,12 +115,12 @@ struct WindowView: View {
                     dismiss()
                 }) {
                     Label("Immersive Mode", systemImage: "sharedwithyou.circle.fill").labelStyle(.iconOnly)
-                }
+                }.buttonStyle(.borderless)
                 Button(action: {
                     openWindow(id: "noodles_browser")
                 }) {
                     Label("New Connection", systemImage: "note.text.badge.plus").labelStyle(.iconOnly)
-                }
+                }.buttonStyle(.borderless)
                 Divider()
                 Button( action: {
                     withAnimation {
@@ -126,26 +132,19 @@ struct WindowView: View {
                     }
                 }) {
                     Label("Info", systemImage: "info.circle.fill").labelStyle(.iconOnly)
-                }
-            }
-        }).environment(current_doc_method_list)
-            .onAppear() { show_info_window = false }.onDisappear {
-                reset()
-            }.onChange(of: info_model.interaction) {
-                var root_visible = false
-                
-                switch info_model.interaction {
-                case .none:
-                    noodles_world?.set_all_entity_input(enabled: false)
-                case .root:
-                    noodles_world?.set_all_entity_input(enabled: false)
-                    root_visible = true
-                case .item:
-                    noodles_world?.set_all_entity_input(enabled: true)
-                }
-                
-                noodles_world?.root_controller.isEnabled = root_visible
-            }
+                }.buttonStyle(.borderless)
+            }.padding().glassBackgroundEffect()
+        })
+        .environment(current_doc_method_list)
+        .onAppear() { show_info_window = false }.onDisappear {
+            reset()
+        }.onChange(of: info_model.root_interaction_allowed) {
+            // Set the root controller visibility
+            noodles_world?.root_controller.isEnabled = info_model.root_interaction_allowed
+        }.onChange(of: info_model.item_interaction_allowed) {
+            // Set all item visibility
+            noodles_world?.set_all_entity_input(enabled: info_model.item_interaction_allowed)
+        }
         
     }
     
