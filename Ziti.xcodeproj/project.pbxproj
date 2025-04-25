@@ -15,7 +15,6 @@
 		2D40E60F2B7A6E15003D618A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D40E60E2B7A6E15003D618A /* Preview Assets.xcassets */; };
 		2D40E61A2B7A6E15003D618A /* ZitiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40E6192B7A6E15003D618A /* ZitiTests.swift */; };
 		2DE788062C52A8F70050B905 /* SpatialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE788052C52A8F70050B905 /* SpatialTest.swift */; };
-		2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF315152B851D1B006DCD1D /* NetBrowse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,7 +52,6 @@
 		2D40E6152B7A6E15003D618A /* ZitiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZitiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D40E6192B7A6E15003D618A /* ZitiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZitiTests.swift; sourceTree = "<group>"; };
 		2DE788052C52A8F70050B905 /* SpatialTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialTest.swift; sourceTree = "<group>"; };
-		2DF315152B851D1B006DCD1D /* NetBrowse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBrowse.swift; sourceTree = "<group>"; };
 		2DF315172B89357A006DCD1D /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -115,7 +113,6 @@
 			isa = PBXGroup;
 			children = (
 				2DE787CF2C3C7F940050B905 /* Shaders */,
-				2DF315152B851D1B006DCD1D /* NetBrowse.swift */,
 				2D40E6052B7A6E14003D618A /* ZitiApp.swift */,
 				2DE787D42C3C7F9A0050B905 /* Views */,
 				2D40E60B2B7A6E15003D618A /* Assets.xcassets */,
@@ -260,7 +257,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DF315162B851D1B006DCD1D /* NetBrowse.swift in Sources */,
 				2D40E6062B7A6E14003D618A /* ZitiApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
