@@ -17,25 +17,7 @@ class ControlInfoModel: ObservableObject {
     @Published var root_interaction_allowed = false
     @Published var lock_scene_rotation: Bool = true
     @Published var lock_scene_scale: Bool = true
-    @Published var scene_reconstruct: Bool = true
-    
-//    func icon_for_current_option() -> String {
-//        switch interaction {
-//        case .item:
-//            return "pencil"
-//        case .root:
-//            return "globe"
-//        }
-//    }
-//    
-//    func text_for_current_option() -> String {
-//        switch interaction {
-//        case .item:
-//            return "Items"
-//        case .root:
-//            return "Root"
-//        }
-//    }
+    @Published var scene_reconstruct: Bool = false
 }
 
 

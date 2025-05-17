@@ -230,12 +230,16 @@ struct SceneRootEditorView : View {
             
             previous_world_occlude = info_model.scene_reconstruct
             info_model.scene_reconstruct = false
+            image_model.is_tracking = true
+            
             
         }.onDisappear {
             info_model.root_interaction_allowed = false
             finger_model.head_indicator_entity.isEnabled = false
             
             info_model.scene_reconstruct = previous_world_occlude
+            
+            image_model.is_tracking = false
         }
         .navigationTitle("Scene Anchor Editing")
         .navigationBarTitleDisplayMode(.inline)

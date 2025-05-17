@@ -144,7 +144,7 @@ class ImageTrackingViewModel: ObservableObject {
     public var did_init: Bool = false
     
     /// We can squash all rotations except for the yaw of the image.
-    @Published public var maintain_vertical: Bool = false
+    @Published public var maintain_vertical: Bool = true
     
     
     
